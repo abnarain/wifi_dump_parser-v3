@@ -1,0 +1,24 @@
+frame format
+TX PATH :
+time :
+[tx flags], rts, cts, txagg
+retry count ,
+rate,
+tx_total,
+tx_contention,
+rates retried sequence with no. count on each,
+
+RX PATH :
+time :
+[flags],short_pre,wep,badfcs,frag
+freq ,
+protocol ,
+signal ,
+noise,
+antenna,
+[rx flags],badplcp, rxagg, failed phy
+rate,
+rx queue time,
+caplen,
+rssi
+
