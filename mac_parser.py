@@ -1,5 +1,5 @@
 #Author : Abhinav Narain 
-#Date : 15 Jan, 2012 
+#Date : 3 April, 2013
 #Purpose : Defines all the parsing functions for mac headers and radiotap header 
 import sys
 import struct
@@ -175,6 +175,7 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                 if (actual_rate ==-1):
                         print "actual rate can't be negative"
                 frame_elem[tsf].append(actual_rate)
+                
                 #print "Data Rate in rx :", actual_rate
 		homesaw_oui_1=list(struct.unpack('B',frame[offset]))[0]
 		offset +=1 
@@ -199,7 +200,7 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			radiotap_ofdm_phyerr_count = list(struct.unpack('<I',frame[offset:offset+4]))[0]
 			monitor_elem[tsf].append(radiotap_ofdm_phyerr_count)
 			offset += 4
-		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_RX_QUEUE_TIME :
+		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_TOTAL_TIME :
 			radiotap_rx_queue_time =  list(struct.unpack('<I',frame[offset:offset+4]))[0]
 			frame_elem[tsf].append(radiotap_rx_queue_time)
 			offset +=4
@@ -229,26 +230,30 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			print "homesaw namespace must be 1, but it is " ,homesaw_namespace,
                         print "phyerr is encoded in this byte "
 	elif radiotap_len == RADIOTAP_TX_LEN:
+                print "\n--->"
 		tsf=0
+                radiotap_data_retries=-1
 		radiotap_rate =0
                 bandwidth= -1
                 gi_length=-1
                 mcs=-1
                 actual_rate=-1
+                rad_txflags_elem=[]
 		#print "in TXPATH"
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_TSFT :
 			tsf=list(struct.unpack('<Q',frame[offset:offset+8]))[0]
 			offset +=8
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_RATE :
+                        print "rad rate bytes" , ord(list(frame[offset])[0]),ord(list(frame[offset])[0])
 			radiotap_rate=list(struct.unpack('<H',frame[offset:offset+2]))[0] #
                         if radiotap_rate >= 0x80 and radiotap_rate <=0x8f :
                                 actual_rate = radiotap_rate & 0x7f
 			else:
                                 actual_rate =(radiotap_rate*1.0 /2)
 			offset +=2                 
+                        print "the fucking rate is; actual rate" , actual_rate , "rad rate ",radiotap_rate
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_TX_FLAGS :
 			radiotap_tx_flags=list(struct.unpack('<H',frame[offset:offset+2]))[0]
-                        rad_txflags_elem=[]
                         #rint "RADIOTAP FLAGS" ,radiotap_tx_flags  
                         #rint struct.unpack('>H',struct.pack('<H',flags.IEEE80211_RADIOTAP_F_TX_AGG))
 			if radiotap_tx_flags & list(struct.unpack('>H',struct.pack('<H',0x10)))[0]:
@@ -277,9 +282,11 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                 rad_txflags_elem.append(0)
                         frame_elem[tsf].append(rad_txflags_elem)
 			offset +=2
+                        print "flags are " , rad_txflags_elem
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_DATA_RETRIES :
-			radiotap_data_retries=list(struct.unpack('B',frame[offset]))[0]
-			#print "Data retries =",radiotap_data_retries 
+                        if (rad_txflags_elem[0] ==0 and  rad_txflags_elem[-1] ==1) or (rad_txflags_elem[0] ==0 and rad_txflags_elem[-1] ==0 and  rad_txflags_elem[-1] ==0) :
+                                radiotap_data_retries=list(struct.unpack('B',frame[offset]))[0]
+			print "Data retries count =",radiotap_data_retries 
 			offset +=1
                         frame_elem[tsf].append(radiotap_data_retries)
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_MCS :
@@ -323,42 +330,155 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                         else :
                                 print "802.11 rate not supported,add neg rate"
                                         
-                       # print "Data Rate in tx :",  ht_rates[mcs][bandwidth][gi_length]
+                        print "Data Rate in tx :",  ht_rates[mcs][bandwidth][gi_length]
 
-                frame_elem[tsf].append(actual_rate)
+                else :
+                        print "there is no mcs rate " 
+                        print "actual rate after mcs", actual_rate
+                frame_elem[tsf].append(actual_rate)                
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_TOTAL_TIME :
 			radiotap_tx_total_time=list(struct.unpack('<I',frame[offset:offset+4]))[0]
 			frame_elem[tsf].append(radiotap_tx_total_time)
-			offset += 4
-		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_CONTENTION_TIME :
-			radiotap_rx_contention_time=list(struct.unpack('<I',frame[offset:offset+4]))[0]
-			frame_elem[tsf].append(radiotap_rx_contention_time)
-			#print " contention time", radiotap_rx_contention_time
-			offset += 4
-		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_RATES_TRIED : #10 max			
-			rates_tried =frame[offset:offset+10]
-                        rad_rate_retries=[]
-                        if ord(rates_tried[1])>1 :
-                                rad_rate_retries.append([ht_rates[ord(rates_tried[0])][bandwidth][gi_length],ord(rates_tried[1])-1])
-			for r_i in range (2,10,2):
-                                if ord(rates_tried[r_i])>0 :
-                                        try:
-                                                rad_rate_retries.append([ht_rates[ord(rates_tried[r_i])][bandwidth][gi_length],ord(rates_tried[r_i+1])])
-                                        except:
-                                                print "indices are ",rates_tried[r_i],bandwidth,gi_length
-			offset +=10
-                        #rint "final rate retries array" ,rad_rate_retries
-                        #f len(rad_rate_retries):
-                        #       for i in range(0,10):
-                        #               print ord( rates_tried[i]),
-                        frame_elem[tsf].append(rad_rate_retries)
+			offset += 4                        
+		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_QUEUE_SIZES :
+			radiotap_tx_mpdu_size=list(struct.unpack('<H',frame[offset:offset+2]))[0]
+			frame_elem[tsf].append(radiotap_tx_mpdu_size)
+			offset += 2
+			radiotap_tx_ampdu_size=list(struct.unpack('<H',frame[offset:offset+2]))[0]
+			frame_elem[tsf].append(radiotap_tx_ampdu_size)
+			offset += 2
+                        #print "Qmpdu=",radiotap_tx_mpdu_size ,"Qampdu",radiotap_tx_ampdu_size
+		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_COLLECTION :
+			radiotap_tx_phy_flag=list(struct.unpack('B',frame[offset]))[0]
+			frame_elem[tsf].append(radiotap_tx_phy_flag)
+			#print "tx_phy_flag ", radiotap_tx_phy_flag
+			offset +=1
+			radiotap_tx_queue_no=list(struct.unpack('B',frame[offset]))[0]
+			frame_elem[tsf].append(radiotap_tx_queue_no)
+                        offset +=1
+                        
+
+                        #radiotap_data_retries
+		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_RATES_TRIED : #15 
+			print "rates tried flag is set " , radiotap_rate
+                        print "no of data retries ",radiotap_data_retries 
+			rates_tried =frame[offset:offset+15]
+                        radiotap_rate_retries=[]                                
+                        if (rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==1) or \
+                                    ((rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==0) and radiotap_rate ==0) :#case when first valid frame of ampdu\
+                                        #case when the frame is mpdu of 80211n
+                                if ord(rates_tried[1])>1 :
+                                        radiotap_rate_retries.append([ht_rates[ord(rates_tried[0])][bandwidth][gi_length],ord(rates_tried[1])-1])
+                                        print "the rates tried array:",radiotap_rate_retries
+                        #now we have to develop code so that we can get the rates of each of the rates retried
+                        #We also need to omit the rates when the aggregation flag is set and hence the rates were invalid
+                                print "whole array is " ,
+                                for i in range(0,15):
+                                        print ord(rates_tried[i]),       
+                                print "\n"
+                                for r_i in range (3,15,3):
+                                        """
+                                        print r_i 
+                                        if ord(rates_tried[r_i])>0 :
+                                                bandwidth =-1
+                                                gi_length =-1
+                                                mcs_flags=-1
+                                                can_calculate_rate=-1
+                                                ieee_80211_idx=list(struct.unpack('B',rates_tried[r_i]))[0]
+                                                ieee_80211_count=list(struct.unpack('B',rates_tried[r_i+1]))[0]
+                                                ieee_80211_flags=list(struct.unpack('B',rates_tried[r_i+2]))[0]
+                                                IEEE80211_TX_RC_GREEN_FIELD     = 1<<4
+                                                IEEE80211_TX_RC_40_MHZ_WIDTH    = 1<<5
+                                                IEEE80211_TX_RC_DUP_DATA        = 1<<6
+                                                IEEE80211_TX_RC_SHORT_GI        = 1<<7
+
+                                                mcs_known= mcs_rate.IEEE80211_RADIOTAP_MCS_HAVE_MCS | mcs_rate.IEEE80211_RADIOTAP_MCS_HAVE_GI | mcs_rate.IEEE80211_RADIOTAP_MCS_HAVE_BW
+
+                                                if (ieee_80211_flags & IEEE80211_TX_RC_40_MHZ_WIDTH) :
+                                                        mcs_flags |= mcs_rate.IEEE80211_RADIOTAP_MCS_BW_40
+                                                if (ieee_80211_flags & IEEE80211_TX_RC_SHORT_GI) :
+                                                        mcs_flags |= mcs_rate.IEEE80211_RADIOTAP_MCS_SGI
+                                                if( ieee_80211_flags & IEEE80211_TX_RC_GREEN_FIELD) :
+                                                        mcs_flags |= mcs_rate.IEEE80211_RADIOTAP_MCS_FMT_GF
+                                                mcs=ieee_80211_idx
+                                                can_calculate_rate=1
+                                                if (mcs_known & mcs_rate.IEEE80211_RADIOTAP_MCS_HAVE_BW) :
+                                                        if ((mcs_flags & mcs_rate.IEEE80211_RADIOTAP_MCS_BW_MASK) \
+                                                                    == mcs_rate.IEEE80211_RADIOTAP_MCS_BW_40):
+                                                                bandwidth = 1
+                                                        else :
+                                                                bandwidth = 0
+                                                else :
+                                                        bandwidth = 0;
+                                                        can_calculate_rate =0
+
+                                                if (mcs_known & mcs_rate.IEEE80211_RADIOTAP_MCS_HAVE_GI) :
+                                                        if (mcs_flags & mcs_rate.IEEE80211_RADIOTAP_MCS_SGI) :
+                                                                gi_length = 1
+                                                        else :
+                                                                gi_length = 0
+                                                else :
+                                                        gi_length = 0
+                                                        can_calculate_rate = 0
+
+                                                if (mcs_known & mcs_rate.IEEE80211_RADIOTAP_MCS_HAVE_MCS) :
+                                                        pass  # Wireshark has nothing 
+                                                else :
+                                                        can_calculate_rate = 0 
+                                                if (can_calculate_rate and mcs <= mcs_rate.MAX_MCS_INDEX \
+                                                            and ht_rates[mcs][bandwidth][gi_length] != 0.0) :
+                                                        if (radiotap_rate ==0) :
+                                                                actual_rate= ht_rates[mcs][bandwidth][gi_length]
+                                                        else :
+                                                                print "should not be reaching here ", mcs,bandwidth, gi_length, rad_txflags_elem
+                                                                sys.exit(1)
+                                                else :
+                                                        print "802.11 rate not supported,add neg rate"
+                                                        """
+
+                                        if ord(rates_tried[r_i+1])>0 :
+                                                try:
+                                                        radiotap_rate_retries.append([ht_rates[ord(rates_tried[r_i])][bandwidth][gi_length],ord(rates_tried[r_i+1])])
+                                                except: # NEEDS TO FIX THIS  ; half fixed I suppose 
+                                                        print "indices are ",rates_tried[r_i],bandwidth,gi_length
+                        elif radiotap_rate !=0:  #its 802.11 rates that were retried                                
+                                print "the rates to be found in the retried array should be from g (or lower protocols "
+                                print "whole array is " ,
+                                for j in range(0,15):
+                                        print ord(rates_tried[j]),  
+                                print "\n"
+                                if ord(rates_tried[1])>1:
+                                        if ord(rates_tried[0]) == 9:
+                                                radiotap_rate_retries.append([36.0,ord(rates_tried[1])-1])
+                                        elif ord(rates_tried[0]) == 11:
+                                                radiotap_rate_retries.append([54.0,ord(rates_tried[1])-1])
+                                        else :
+                                                print "this a/b/g rate is to be mapped " 
+                                                sys.exit(1)
+
+                                for i in range(3,15,3):
+                                        if ord(rates_tried[i+1])>1:
+                                                print "this is the retried rate for a/b/g/",ord(rates_tried[0])
+                                        #radiotap_rate_retries.append([,ord(rates_tried[1])-1])
+                                                if ord(rates_tried[i]) == 9:
+                                                        radiotap_rate_retries.append([36.0,ord(rates_tried[i+1])-1])
+                                                elif ord(rates_tried[i]) == 11:
+                                                        radiotap_rate_retries.append([54.0,ord(rates_tried[i+1])-1])
+                                                else :
+                                                        print "this a/b/g rate is to be mapped " 
+                                                        sys.exit(1)
+
+			offset +=15
+                        frame_elem[tsf].append(radiotap_rate_retries)
+                        print "\nthis is the whole frame " ,frame_elem[tsf]                        
+                        print "the last byte is ",ord(frame[offset])
 		#print "Last elem=8 :", struct.unpack('B',frame[offset]) # last element location=39
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE :
 			pass
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_VENDOR_NAMESPACE :
 			pass
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_EXT :
-			pass			
+			pass
 
         return (1,frame_elem,monitor_elem)
         
@@ -407,6 +527,7 @@ def parse_data_fc(fc,radiotap_len,frame_elem):
         
         if ( not(FC_TO_DS(fc)) and not(FC_FROM_DS(fc))) :#	ADDR2 , 1 There shouldn't be such frames
 		#print "part 1 data" src, dest
+                print "THE FUCK IS BACK "
 		print "1" ,frame_elem[tsf][11],frame_elem[tsf][12]
 		#print "frame is ", frame_elem
                 return 1
@@ -415,8 +536,8 @@ def parse_data_fc(fc,radiotap_len,frame_elem):
                 # print "part 2 data"
                 if radiotap_len ==RADIOTAP_TX_LEN :
                         # 7th is the dest mac address ; i.e the client connected
-                        print frame_elem[tsf]
-                        a=frame_elem[tsf][7].split(':')                   
+                        #print frame_elem[tsf]
+                        a=frame_elem[tsf][9].split(':')                   
                         if  not (a[0] =='ff' and a[1] =='ff' and a[2] =='ff' ) :
                                 if not (a[0] =='33' and a[1] =='33'  ) :                                 
                                         if not (a[0] =='01' and a[1] =='00' and a[2] =='5e' ) :                        
@@ -426,6 +547,7 @@ def parse_data_fc(fc,radiotap_len,frame_elem):
                         if bismark_status == 0:
                                 Bismark_mac=frame_elem[tsf][6]
                                 bismark_status =1
+                                print "bismark mac =", Bismark_mac
                 return 2                
                 
         elif (FC_TO_DS(fc) and not(FC_FROM_DS(fc))) :                
@@ -559,7 +681,7 @@ def parse_data_frame(frame,radiotap_len,frame_elem):
 	frame_elem[tsf].append(frame_sequence_number)
 	frame_elem[tsf].append(frame_fragment_number)
 	parse_frame_control(frame_control,radiotap_len,frame_elem)
-	frame_elem[tsf].append(pkt_len)
+	frame_elem[tsf].append(pkt_len)        
         #print pkt_len, frame_sequence_number 
 
 def parse_err_data_frame(frame,radiotap_len,frame_elem):
