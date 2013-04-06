@@ -244,7 +244,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -275,7 +275,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -304,7 +304,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem, monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -333,7 +333,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :	
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :	
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -363,156 +363,81 @@ rx_time_series.sort(key=lambda x:x[0])
 tx_time_series.sort(key=lambda x:x[0])
 
 Station_list=list(Station)
-Station_tx_retx_count = defaultdict(list)
+Station_tx_retx_count = {}# defaultdict(list)
+Station_tx_frame_count= {} #defaultdict(list)
 print Station_list
 
 print "in tx looping "
 Station_tx_series=defaultdict(list)
 for j in range(0,len(Station_list)):
-    frame_count = 0 
-    retransmission_count =0
     for i in range(0,len(tx_time_series)):
         frame = tx_time_series[i]
         if frame[11]==Station_list[j] :            
-            prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000) #frame[-1] is the size of frame in bytes
-            Station_tx_series[frame[11]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[7],frame[8],frame[9],frame[12],frame[13],frame[14],frame[15],frame[16],prop_time]) 
+            #prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000) #frame[-1] is the size of frame in bytes
+            #Station_tx_series[frame[11]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[7],frame[8],frame[9],frame[12],frame[13],frame[14],frame[15],frame[16],prop_time]) 
             # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
             #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
-            frame_count =frame_count +1 
-            retx_count =0
-            if int(frame[2]) -1 <0  :
-                retx_count =0
+
+            if Station_tx_frame_count.has_key(frame[11]):
+                Station_tx_frame_count_value= Station_tx_frame_count.get(frame[11])
+                Station_tx_frame_count_value += 1 #no. of packets 
+                Station_tx_frame_count[frame[11]]= Station_tx_frame_count_value
             else :
-                retx_count =int (frame[2]) -1
-            retransmission_count = retransmission_count + retx_count 
+                Station_tx_frame_count[frame[11]]=1
 
-    Station_tx_retx_count[Station_list[j]].append([retransmission_count, frame_count])
 
-Station_tx_retx_succ_delay=defaultdict(list)
-Station_tx_cont_succ_delay=defaultdict(list)
-Station_tx_overall_succ_delay=[]
-
-Station_tx_retx_contention_delay=defaultdict(list)
-Station_tx_cont_contention_delay=defaultdict(list)
-Station_tx_overall_contention_delay=[]
-co=0
-for j in Station_tx_series.keys():
-    #j is the station name 
-    print " I am going to print here " 
-    list_of_frames= Station_tx_series[j]
-    for i in range(1,len(list_of_frames)):        
-        frame=list_of_frames[i]
-        previous_frame=list_of_frames[i-1]
-        c_frame_departure=frame[0]
-        p_frame_departure=previous_frame[0]    
-        c_frame_total_time=frame[4]
-        p_frame_total_time=previous_frame[4]
-        c_frame_mpdu_queue_size=frame[5]
-        p_frame_mpdu_queue_size=previous_frame[5]
-        c_frame_ampdu_queue_size=frame[6]
-        p_frame_ampdu_queue_size=previous_frame[6]
-        c_frame_queue_no=frame[7]
-        p_frame_queue_no=previous_frame[7]
-        c_frame_phy_flag=frame[8]
-        p_frame_phy_flag=previous_frame[8]
-        c_frame_seq_no=frame[10] 
-        p_frame_seq_no=previous_frame[10]
-        c_frame_frag_no=frame[11]
-        p_frame_frag_no=previous_frame[11]        
-        c_frame_size= frame[-2]
-        p_frame_size= previous_frame[-2]
-
-        c_frame_tx_flags=frame[1]
-            # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
-            #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
-# 12                  ,13                  ,14            ,16
-        delay = -1
-        if int(frame[2]) -1 <0  :
-            if ((c_frame_seq_no - p_frame_seq_no)<2) and c_frame_size >1300 and p_frame_size > 1300:
-                if c_frame_departure - p_frame_departure == 0 : # hence this should be ampdu subframe; need a check here
-                    if not(c_frame_tx_flags[-1]==1  and c_frame_tx_flags[0]==1):
-                        print "This should not happen when its not an ampdu; 802.11 n protocol can make this happen"
-                        sys.exit(1)                    
-                    delay = -0.1
+            if int(frame[2]) -1 <0  :
+                pass
+            else :
+                if Station_tx_retx_count.has_key(frame[11]):
+                    Station_tx_retx_count_value= Station_tx_retx_count.get(frame[11])
+                    Station_tx_retx_count_value += int (frame[2]) -1 #no. of packets 
+                    Station_tx_retx_count[frame[11]]= Station_tx_retx_count_value
                 else :
-                    delay=c_frame_departure- p_frame_departure
-                    if delay <0 :
-                        print "Neg frame ?current frame: ", frame, "prev frame: " ,previous_frame
-                        sys.exit(1)
-                    Station_tx_cont_succ_delay[j].append(delay)            
-                    Station_tx_overall_succ_delay.append(delay)
-        elif int(frame[2]) -1 > 0 :   
-            if ((c_frame_seq_no - p_frame_seq_no)<3) :
-                if c_frame_departure - p_frame_departure == 0 :
-                    global co 
-                    co=co+1
-                    #print j, frame[0],frame[1],frame[2],frame[6],c_frame_seq_no,c_frame_total_time,c_frame_contention_time, frame[-2]
-                    #print "p",j, previous_frame[0],previous_frame[1],previous_frame[2],previous_frame[6], p_frame_seq_no,p_frame_total_time, p_frame_contention_time,frame[-2],frame[1]
-                    delay = 0.0
-                    #print "how is it 000 !!! " 
-                else :
-                    delay=(c_frame_departure)- p_frame_departure
-                    if delay <0 :
-                        print "fucking negative delay for retx frames "
-                        sys.exit(1)
-                    Station_tx_retx_succ_delay[j].append(delay)
-                    Station_tx_overall_succ_delay.append(delay)
-
-    print "who the fuck"
-print "retx count " 
-sys.exit(1)
-print Station_tx_retx_count
-overall_retx =0
-overall_frame_count =0
-for i in Station_tx_retx_count.keys() :
-    l_c_list= Station_tx_retx_count[i]
-    overall_retx = overall_retx +l_c_list[0][0]
-    overall_frame_count = overall_frame_count +l_c_list[0][1] 
-print overall_retx, overall_frame_count 
-print overall_retx*1.0/overall_frame_count 
-
-print "Contention: tx cont delay"
-for station in Station_tx_cont_contention_delay :    
-    print station, percentile(Station_tx_cont_contention_delay[station],50)
-print "Contention :tx retx delay"
-for station in Station_tx_retx_contention_delay :
-    print station, percentile(Station_tx_retx_contention_delay[station],50)
+                    Station_tx_retx_count[frame[11]]=0
 
 
 
-print "Successive:  cont "
-for station in Station_tx_cont_succ_delay :
-    print station, percentile(Station_tx_cont_succ_delay[station],50)
-
-print "Successive:  retx " 
-for station in Station_tx_retx_succ_delay : 
-    print station, percentile(Station_tx_retx_succ_delay[station],50)
+print "frame count " , Station_tx_frame_count
+print "tx retx count ",Station_tx_retx_count
 
 
-print "Overall "
-print "Contention:tx overall contention delay" 
-print percentile(Station_tx_overall_contention_delay,50)
-print "Contention:tx overall successive frame delay"
-print percentile(Station_tx_overall_succ_delay,50)
-
-
-sys.exit(1)
-'''
 print "in rx_looping "
-
-
 Station_rx_series=defaultdict(list)
 
-Station_rx_retx_frames=defaultdict(list)
-Station_rx_cont_frames=defaultdict(list)
+Station_rx_frame_count ={}
+Station_rx_retx_count= {}
 print "RECIVED FRAMES "
 for i in range(0,len(rx_time_series)):
     frame = rx_time_series[i]
+    print frame, "aaaa: ", frame[16]     
+    print "===="
     for i in range(0,len(Station_list)):
         if frame[12]==Station_list[i] :
             prop_time=(frame[10]*8.0 *1000000)/ (frame[8] *1000000)
             Station_rx_series[frame[12]].append([frame[0],frame[8],frame[10],frame[11],frame[14],frame[15],frame[16][1],prop_time]) 
+            #wep, retry, order, power_mgmt, more_flag, more_data
+            if Station_rx_frame_count.has_key(frame[12]):
+                Station_rx_frame_count_value= Station_rx_frame_count.get(frame[12])
+                Station_rx_frame_count_value += 1 #no. of packets 
+                Station_rx_frame_count[frame[12]]= Station_rx_frame_count_value
+            else :
+                Station_tx_frame_count[frame[12]]=1
+
+            #now check for the retransmitted bits 
+            mac_array= frame[16]
+            print mac_array[1]
+            if mac_array[1] ==1  :
+                print "we have retry bit"
+                sys.exit(1)
+                if Station_tx_retx_count.has_key(frame[12]):
+                    Station_tx_retx_count_value= Station_tx_retx_count.get(frame[12])
+                    Station_tx_retx_count_value += int (frame[2]) -1 #no. of packets 
+                    Station_tx_retx_count[frame[12]]= Station_tx_retx_count_value
+                else :
+                    Station_tx_retx_count[frame[12]]=0
+
             #print frame[12],frame[0],frame[8],frame[10],frame[11],frame[14],frame[15],frame[16][1],prop_time
             #time [0], success rate [8], framesize [10], RSSI [11], seq number [14], fragment no [15],retry frame [16][1],prop time 
             #print frame ,prop_time , frame[16][0]
@@ -523,9 +448,7 @@ for j in Station_rx_series.keys():
     for i in range(1,len(list_of_frames)):
         frame= list_of_frames[i]
         print frame
-
-Overall_retx_delay=[]
-Overall_cont_delay=[]
+'''
 print "generating rx stats " 
 for j in Station_rx_series.keys():
     #j is the station name 
@@ -597,4 +520,3 @@ for i in range(0,len(missing_files)):
 	print missing_files[i]
 print "number of files that can't be located ", len(missing_files)	
 '''
-
