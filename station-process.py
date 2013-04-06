@@ -185,13 +185,11 @@ for data_f_name_list in filename_list : #data_fs :
         if success:
             for key in frame_elem.keys():
                 tsf=key                                    
-            #print frame_elem[tsf]
             parse_data_frame(frame,radiotap_len,frame_elem)
+            #print frame_elem[tsf]
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
-            #print temp
-            #sys.exit(1)
-            if radiotap_len == 58 :
+            if radiotap_len == RADIOTAP_RX_LEN:
                 rx_time_series.append(temp)                
             elif radiotap_len ==RADIOTAP_TX_LEN :
                 tx_time_series.append(temp)
@@ -219,7 +217,7 @@ for data_f_name_list in filename_list : #data_fs :
             parse_err_data_frame(frame,radiotap_len,frame_elem)
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
-            if radiotap_len == 58 :                
+            if radiotap_len == RADIOTAP_RX_LEN:                
                 rx_time_series.append(temp)
             elif radiotap_len ==RADIOTAP_TX_LEN :
                 print "3RADIOTAP_TX_LEN"
@@ -246,7 +244,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==58 or  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -277,7 +275,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==58 or  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -306,7 +304,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem, monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==58 or  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -316,7 +314,7 @@ for data_f_name_list in filename_list : #data_fs :
             parse_ctrl_frame(frame,radiotap_len,frame_elem)
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
-            if radiotap_len == 58 :
+            if radiotap_len == RADIOTAP_RX_LEN:
                 rx_time_series.append(temp)
             elif radiotap_len ==RADIOTAP_TX_LEN :
                 tx_time_series.append(temp)
@@ -335,7 +333,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==58 or  radiotap_len == RADIOTAP_TX_LEN) :	
+        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :	
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -345,7 +343,7 @@ for data_f_name_list in filename_list : #data_fs :
             parse_ctrl_err_frame(frame,radiotap_len,frame_elem)
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
-            if radiotap_len == 58 :
+            if radiotap_len == RADIOTAP_RX_LEN:
                 rx_time_series.append(temp)
             elif radiotap_len ==RADIOTAP_TX_LEN :
                 tx_time_series.append(temp)
