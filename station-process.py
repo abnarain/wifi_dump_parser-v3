@@ -1,5 +1,5 @@
 #Author : Abhinav Narain
-#Date : Feb 9, 2012
+#Date : April 2, 2013
 #Purpose : To read the binary files with data from BISmark deployment in homes
 
 import os,sys,re
@@ -181,13 +181,16 @@ for data_f_name_list in filename_list : #data_fs :
         frame_elem=defaultdict(list)
         monitor_elem=defaultdict(list)        
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)       
+        (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)  
         if success:
             for key in frame_elem.keys():
                 tsf=key                                    
+            #print frame_elem[tsf]
             parse_data_frame(frame,radiotap_len,frame_elem)
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
+            #print temp
+            #sys.exit(1)
             if radiotap_len == 58 :
                 rx_time_series.append(temp)                
             elif radiotap_len ==RADIOTAP_TX_LEN :
@@ -366,7 +369,7 @@ Station_tx_retx_count = defaultdict(list)
 print Station_list
 
 print "in tx looping "
-
+sys.exit(1)
 Station_tx_series=defaultdict(list)
 for j in range(0,len(Station_list)):
     frame_count = 0 
@@ -375,7 +378,8 @@ for j in range(0,len(Station_list)):
         frame = tx_time_series[i]
         if frame[8]==Station_list[j] :            
             prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000)
-            Station_tx_series[frame[8]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[9],frame[10],frame[-1],prop_time]) 
+            print "the frame is ", frame, frame[15]
+            Station_tx_series[frame[8]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[9],frame[10],frame[11],frame[12],frame[13],frame[14],frame[15],frame[16],frame[-1],prop_time]) 
             #time [0],flags[1],retx[2],success_rate[3],total_time[4],contention time[5],retx_list[6],seq no[9],fragment no[10],framesize[-1],prop time 
             frame_count =frame_count +1 
             retx_count =0
@@ -397,21 +401,31 @@ Station_tx_overall_contention_delay=[]
 co=0
 for j in Station_tx_series.keys():
     #j is the station name 
+    print " I am going to print here " 
     list_of_frames= Station_tx_series[j]
     for i in range(1,len(list_of_frames)):        
         frame=list_of_frames[i]
         previous_frame=list_of_frames[i-1]
         c_frame_departure=frame[0]
         p_frame_departure=previous_frame[0]    
-        c_frame_contention_time =frame[5]
-        p_frame_contention_time=previous_frame[5]
         c_frame_total_time=frame[4]
         p_frame_total_time=previous_frame[4]
-        c_frame_seq_no=frame[7]            
-        p_frame_seq_no=previous_frame[7]
+        c_frame_mpdu_queue_size=frame[5]
+        p_frame_mpdu_queue_size=previous_frame[5]
+        c_frame_ampdu_queue_size=frame[6]
+        p_frame_ampdu_queue_size=previous_frame[6]
+        c_frame_phy_flag=frame[7]
+        p_frame_phy_flag=previous_frame[7]        
+        c_frame_queue_no=frame[8]
+        p_frame_queue_no=previous_frame[8]
+        c_frame_seq_no=frame[11] 
+        p_frame_seq_no=previous_frame[11]
+        c_frame_queue_no=frame[12]
+        p_frame_queue_no=previous_frame[12]        
         c_frame_size= frame[-2]
         p_frame_size= previous_frame[-2]
-        print j, frame[0],frame[1],frame[2], frame[3], frame[6],c_frame_seq_no,c_frame_total_time,c_frame_contention_time, frame[-2]
+        print j, frame[0],frame[1],frame[2], frame[3], frame[6],c_frame_seq_no,c_frame_total_time, frame[-2]
+        sys.exit(1)
         #frame time[0],frame_flags[1],retx[2],success_rate[3],total time[4],retx_list[5],contentn time[5],seq no [9], fragment no[10], framesize[-1],prop time 
         #[time,retx,rate,total time,contention time, retx_list,sequence no, fragment no, framesize, prop time ]
         delay = -1
@@ -455,8 +469,9 @@ for j in Station_tx_series.keys():
             if c_frame_contention_time < c_frame_total_time :
                 Station_tx_retx_contention_delay[j].append(c_frame_contention_time)
                 Station_tx_overall_contention_delay.append(c_frame_contention_time)
-
+    print "who the fuck"
 print "retx count " 
+sys.exit(1)
 print Station_tx_retx_count
 overall_retx =0
 overall_frame_count =0
