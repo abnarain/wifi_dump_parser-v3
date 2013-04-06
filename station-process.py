@@ -1,5 +1,5 @@
 #Author : Abhinav Narain
-#Date : April 2, 2013
+#Date : April 5, 2013
 #Purpose : To read the binary files with data from BISmark deployment in homes
 
 import os,sys,re
@@ -367,18 +367,18 @@ Station_tx_retx_count = defaultdict(list)
 print Station_list
 
 print "in tx looping "
-sys.exit(1)
 Station_tx_series=defaultdict(list)
 for j in range(0,len(Station_list)):
     frame_count = 0 
     retransmission_count =0
     for i in range(0,len(tx_time_series)):
         frame = tx_time_series[i]
-        if frame[8]==Station_list[j] :            
-            prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000)
-            print "the frame is ", frame, frame[15]
-            Station_tx_series[frame[8]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[9],frame[10],frame[11],frame[12],frame[13],frame[14],frame[15],frame[16],frame[-1],prop_time]) 
-            #time [0],flags[1],retx[2],success_rate[3],total_time[4],contention time[5],retx_list[6],seq no[9],fragment no[10],framesize[-1],prop time 
+        if frame[11]==Station_list[j] :            
+            prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000) #frame[-1] is the size of frame in bytes
+            Station_tx_series[frame[11]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[7],frame[8],frame[9],frame[12],frame[13],frame[14],frame[15],frame[16],prop_time]) 
+            # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
+            #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
+# 12                  ,13                  ,14            ,16
             frame_count =frame_count +1 
             retx_count =0
             if int(frame[2]) -1 <0  :
@@ -412,47 +412,42 @@ for j in Station_tx_series.keys():
         p_frame_mpdu_queue_size=previous_frame[5]
         c_frame_ampdu_queue_size=frame[6]
         p_frame_ampdu_queue_size=previous_frame[6]
-        c_frame_phy_flag=frame[7]
-        p_frame_phy_flag=previous_frame[7]        
-        c_frame_queue_no=frame[8]
-        p_frame_queue_no=previous_frame[8]
-        c_frame_seq_no=frame[11] 
-        p_frame_seq_no=previous_frame[11]
-        c_frame_queue_no=frame[12]
-        p_frame_queue_no=previous_frame[12]        
+        c_frame_queue_no=frame[7]
+        p_frame_queue_no=previous_frame[7]
+        c_frame_phy_flag=frame[8]
+        p_frame_phy_flag=previous_frame[8]
+        c_frame_seq_no=frame[10] 
+        p_frame_seq_no=previous_frame[10]
+        c_frame_frag_no=frame[11]
+        p_frame_frag_no=previous_frame[11]        
         c_frame_size= frame[-2]
         p_frame_size= previous_frame[-2]
-        print j, frame[0],frame[1],frame[2], frame[3], frame[6],c_frame_seq_no,c_frame_total_time, frame[-2]
-        sys.exit(1)
-        #frame time[0],frame_flags[1],retx[2],success_rate[3],total time[4],retx_list[5],contentn time[5],seq no [9], fragment no[10], framesize[-1],prop time 
-        #[time,retx,rate,total time,contention time, retx_list,sequence no, fragment no, framesize, prop time ]
+
+        c_frame_tx_flags=frame[1]
+            # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
+            #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
+# 12                  ,13                  ,14            ,16
         delay = -1
         if int(frame[2]) -1 <0  :
             if ((c_frame_seq_no - p_frame_seq_no)<2) and c_frame_size >1300 and p_frame_size > 1300:
-                if c_frame_departure - p_frame_departure == 0 :
+                if c_frame_departure - p_frame_departure == 0 : # hence this should be ampdu subframe; need a check here
+                    if not(c_frame_tx_flags[-1]==1  and c_frame_tx_flags[0]==1):
+                        print "This should not happen when its not an ampdu; 802.11 n protocol can make this happen"
+                        sys.exit(1)                    
                     delay = -0.1
-                    print "n",c_frame_departure
-                    print "how is it 00-1"
                 else :
-                    delay=(c_frame_departure)- p_frame_departure
+                    delay=c_frame_departure- p_frame_departure
                     if delay <0 :
-                        print frame 
-                        print previous_frame
-                        print "negatve delay for cont frames "
+                        print "Neg frame ?current frame: ", frame, "prev frame: " ,previous_frame
                         sys.exit(1)
                     Station_tx_cont_succ_delay[j].append(delay)            
                     Station_tx_overall_succ_delay.append(delay)
-
-            if c_frame_contention_time < c_frame_total_time :
-                Station_tx_cont_contention_delay[j].append(c_frame_contention_time)
-                Station_tx_overall_contention_delay.append(c_frame_contention_time)
-
         elif int(frame[2]) -1 > 0 :   
             if ((c_frame_seq_no - p_frame_seq_no)<3) :
                 if c_frame_departure - p_frame_departure == 0 :
                     global co 
                     co=co+1
-	                #print j, frame[0],frame[1],frame[2],frame[6],c_frame_seq_no,c_frame_total_time,c_frame_contention_time, frame[-2]
+                    #print j, frame[0],frame[1],frame[2],frame[6],c_frame_seq_no,c_frame_total_time,c_frame_contention_time, frame[-2]
                     #print "p",j, previous_frame[0],previous_frame[1],previous_frame[2],previous_frame[6], p_frame_seq_no,p_frame_total_time, p_frame_contention_time,frame[-2],frame[1]
                     delay = 0.0
                     #print "how is it 000 !!! " 
@@ -464,9 +459,6 @@ for j in Station_tx_series.keys():
                     Station_tx_retx_succ_delay[j].append(delay)
                     Station_tx_overall_succ_delay.append(delay)
 
-            if c_frame_contention_time < c_frame_total_time :
-                Station_tx_retx_contention_delay[j].append(c_frame_contention_time)
-                Station_tx_overall_contention_delay.append(c_frame_contention_time)
     print "who the fuck"
 print "retx count " 
 sys.exit(1)
