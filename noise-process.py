@@ -218,7 +218,7 @@ for data_f_name in data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==58 or  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -252,7 +252,7 @@ for data_f_name in data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)        
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==58 or  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -288,7 +288,7 @@ for data_f_name in data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==58 or  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -320,7 +320,7 @@ for data_f_name in data_fs :
         header = frame[:offset]
         frame_elem, monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==58 or  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -346,7 +346,7 @@ for data_f_name in data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==58 or  radiotap_len == RADIOTAP_TX_LEN) :	
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :	
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
