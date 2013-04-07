@@ -277,7 +277,7 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                 rad_txflags_elem.append(1)
                         else :
                                 rad_txflags_elem.append(0)
-                        frame_elem[tsf].append(-993) #rad_txflags_elem)
+                        frame_elem[tsf].append(rad_txflags_elem)
 			offset +=2
                         #print "flags are " , rad_txflags_elem
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_DATA_RETRIES :
