@@ -188,7 +188,7 @@ for data_f_name_list in filename_list : #data_fs :
             parse_data_frame(frame,radiotap_len,frame_elem)
             #print frame_elem[tsf]
             temp=frame_elem[tsf]
-            temp.insert(0,tsf)
+            temp.insert(0,tsf)            
             if radiotap_len == RADIOTAP_RX_LEN:
                 rx_time_series.append(temp)                
             elif radiotap_len ==RADIOTAP_TX_LEN :
@@ -366,6 +366,8 @@ Station_list=list(Station)
 Station_tx_retx_count = {}# defaultdict(list)
 Station_tx_frame_count= {} #defaultdict(list)
 print Station_list
+Station_list.append('00:16:d3:1f:88:98')
+print Station_list
 
 print "in tx looping "
 Station_tx_series=defaultdict(list)
@@ -379,17 +381,16 @@ for j in range(0,len(Station_list)):
             #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
 
-            if Station_tx_frame_count.has_key(frame[11]):
+
+            if Station_tx_frame_count.has_key(frame[11]):                
                 Station_tx_frame_count_value= Station_tx_frame_count.get(frame[11])
                 Station_tx_frame_count_value += 1 #no. of packets 
                 Station_tx_frame_count[frame[11]]= Station_tx_frame_count_value
             else :
                 Station_tx_frame_count[frame[11]]=1
 
-
-            if int(frame[2]) -1 <0  :
-                pass
-            else :
+    
+            if frame[2]-1>0 :
                 if Station_tx_retx_count.has_key(frame[11]):
                     Station_tx_retx_count_value= Station_tx_retx_count.get(frame[11])
                     Station_tx_retx_count_value += int (frame[2]) -1 #no. of packets 
@@ -402,7 +403,6 @@ for j in range(0,len(Station_list)):
 print "frame count " , Station_tx_frame_count
 print "tx retx count ",Station_tx_retx_count
 
-
 print "in rx_looping "
 Station_rx_series=defaultdict(list)
 
@@ -411,9 +411,9 @@ Station_rx_retx_count= {}
 print "RECIVED FRAMES "
 for i in range(0,len(rx_time_series)):
     frame = rx_time_series[i]
-    print frame, "aaaa: ", frame[16]     
-    print "===="
     for i in range(0,len(Station_list)):
+        #print frame[12]
+        #print frame
         if frame[12]==Station_list[i] :
             prop_time=(frame[10]*8.0 *1000000)/ (frame[8] *1000000)
             Station_rx_series[frame[12]].append([frame[0],frame[8],frame[10],frame[11],frame[14],frame[15],frame[16][1],prop_time]) 
@@ -423,32 +423,32 @@ for i in range(0,len(rx_time_series)):
                 Station_rx_frame_count_value += 1 #no. of packets 
                 Station_rx_frame_count[frame[12]]= Station_rx_frame_count_value
             else :
-                Station_tx_frame_count[frame[12]]=1
+                Station_rx_frame_count[frame[12]]=1
 
             #now check for the retransmitted bits 
             mac_array= frame[16]
-            print mac_array[1]
             if mac_array[1] ==1  :
-                print "we have retry bit"
-                sys.exit(1)
-                if Station_tx_retx_count.has_key(frame[12]):
-                    Station_tx_retx_count_value= Station_tx_retx_count.get(frame[12])
-                    Station_tx_retx_count_value += int (frame[2]) -1 #no. of packets 
-                    Station_tx_retx_count[frame[12]]= Station_tx_retx_count_value
+                print mac_array[1],
+                if Station_rx_retx_count.has_key(frame[12]):
+                    Station_rx_retx_count_value= Station_rx_retx_count.get(frame[12])
+                    Station_rx_retx_count_value += 1 #no. of packets 
+                    Station_rx_retx_count[frame[12]]= Station_rx_retx_count_value
                 else :
-                    Station_tx_retx_count[frame[12]]=0
+                    Station_rx_retx_count[frame[12]]=1
 
             #print frame[12],frame[0],frame[8],frame[10],frame[11],frame[14],frame[15],frame[16][1],prop_time
             #time [0], success rate [8], framesize [10], RSSI [11], seq number [14], fragment no [15],retry frame [16][1],prop time 
             #print frame ,prop_time , frame[16][0]
             #print frame[0],frame[1],1,frame[8],frame[14],frame[15],frame[-1]
 
+print "rx retx frame count",Station_rx_retx_count
+print "rx frame count" , Station_rx_frame_count
+'''
 for j in Station_rx_series.keys():
     list_of_frames= Station_rx_series[j]
     for i in range(1,len(list_of_frames)):
         frame= list_of_frames[i]
         print frame
-'''
 print "generating rx stats " 
 for j in Station_rx_series.keys():
     #j is the station name 
