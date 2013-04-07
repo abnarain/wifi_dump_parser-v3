@@ -379,15 +379,8 @@ for j in range(0,len(Station_list)):
             # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
             #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
-            frame_count =frame_count +1 
-            retx_count =0
-            if int(frame[2]) -1 <0  :
-                retx_count =0
-            else :
-                retx_count =int (frame[2]) -1
-            retransmission_count = retransmission_count + retx_count 
 
-    Station_tx_retx_count[Station_list[j]].append([retransmission_count, frame_count])
+
 
 Station_tx_retx_succ_delay=defaultdict(list)
 Station_tx_cont_succ_delay=defaultdict(list)
@@ -459,8 +452,8 @@ for j in Station_tx_series.keys():
                     Station_tx_retx_succ_delay[j].append(delay)
                     Station_tx_overall_succ_delay.append(delay)
 
-    print "who the fuck"
-print "retx count " 
+    print "done with a station "
+
 sys.exit(1)
 print Station_tx_retx_count
 overall_retx =0
@@ -526,65 +519,6 @@ for j in Station_rx_series.keys():
 
 Overall_retx_delay=[]
 Overall_cont_delay=[]
-print "generating rx stats " 
-for j in Station_rx_series.keys():
-    #j is the station name 
-    list_of_frames= Station_rx_series[j]
-    for i in range(1,len(list_of_frames)):
-        frame= list_of_frames[i]
-        previous_frame= list_of_frames[i-1]
-        current_frame_arrival=frame[0]
-        previous_frame_arrival=previous_frame[0]            
-        c_frame_seq_no = frame[] 
-        p_frame_seq_no = previous_frame[]
-        c_frame_prop_time = frame[-1]
-        delay = -1 
-        if frame[-2] == 1 : #means retransmitted 
-            if ((c_frame_seq_no - p_frame_seq_no)<6) :
-                if current_frame_arrival - previous_frame_arrival == 0 : 
-                    delay = 0.0
-                else :
-                    delay=current_frame_departure-c_frame_prop_time - previous_frame_arrival
-                    if delay <0 :
-                        print "negatve delay for cont frames "
-                        sys.exit(1)
-                    Station_rx_overall_delay.append(delay)
-        else :
-            if current_frame_arrival - previous_frame_arrival == 0 :
-                delay = 0.0
-            else :
-                delay=(current_frame_arrival-frame[-1])- previous_frame_arrival            
-            Station_rx_cont_frames[j].append(delay)
-            Overall_cont_delay.append(delay)
-               
-#print Station_rx_retx_frames
-print "for Devices \nfor cont frames" 
-for i in Station_tx_cont_frames.keys():
-    print i 
-    if len(Station_tx_cont_frames[i]) >1 :
-        print avg(Station_tx_cont_frames[i]), variance(Station_tx_cont_frames[i]), percentile(Station_tx_cont_frames[i],90 )
-    print 
-print "for retx frames" 
-for i in Station_tx_retx_frames.keys():
-    print i
-    if len(Station_tx_retx_frames[i]) >1 :
-        print avg(Station_tx_retx_frames[i] ), variance(Station_tx_retx_frames[i]), percentile(Station_tx_retx_frames[i],90)
-    else :
-        print "no elem in tx_retx"
-    print 
-
-print "Overall delays" 
-print "for retx overall delay " 
-if len(Overall_retx_delay)>0:
-    print avg(Overall_retx_delay), variance(Overall_retx_delay), percentile(Overall_retx_delay,90)
-print "for continuous overall delays "
-if len(Overall_cont_delay)>0:
-    print avg(Overall_cont_delay), variance(Overall_cont_delay), percentile(Overall_cont_delay,90)
-print 
-print "Accumulating all delay " 
-if len(Overall_delay)>0:
-    print avg(Overall_delay), variance(Overall_delay), percentile(Overall_delay,90)
-
 
 sys.exit(1)
 f_n= output_station_filename
