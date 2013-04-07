@@ -209,16 +209,15 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			frame_elem[tsf].append(radiotap_caplen)
 			offset +=2
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_RSSI :
-			radiotap_rssi= list(struct.unpack('B',frame[offset]))[0]
-			#TODO : FIX THIS IN NEXT VERSION ; instead of constant, get the real value, though redundant field
+			radiotap_rssi= list(struct.unpack('b',frame[offset]))[0]
+                        frame_elem[tsf].append(radiotap_rssi) #TODO:XXX fixed the rssi value from last version 
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE :
 			pass # radiotap artifact  
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_VENDOR_NAMESPACE :
 			pass #radiotap artifact 
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_EXT :
 			pass #radiotap artifact
-		radiotap_calc_rssi =radiotap_signal-radiotap_noise 
-		frame_elem[tsf].append(radiotap_calc_rssi)
+
 		if (not( homesaw_oui_1 ==11 and homesaw_oui_2 ==11 and  homesaw_oui_3 ==11 )):
 			print homesaw_oui_1, homesaw_oui_2,  homesaw_oui_3 
 			print "homesaw oui are corrupted " 
