@@ -1,12 +1,28 @@
-frame format
+
+
+
+frame format for each of the paths, the frames are collected frm : 
+
 TX PATH :
 time :
 [tx flags], rts, cts, txagg
 retry count ,
 rate,
 tx_total,
-tx_contention,
+mpdu-queue-size
+ampdu-queue-size
+Queue-no(depending on the type of traffic AC class) 
+phy_type
 rates retried sequence with no. count on each,
+<mac header follows>
+src mac address 
+dst mac address
+seq number
+fragment number 
+[mac layer flags]wep, retry, order, power_mgmt, more_flag, more_data
+[frame-type]to-from fields
+frame size 
+propogation time
 
 RX PATH :
 time :
@@ -21,4 +37,12 @@ rate,
 rx queue time,
 caplen,
 rssi
-
+<mac header follows>
+src mac address 
+dst mac address
+seq number
+fragment number 
+[mac layer flags]wep, retry, order, power_mgmt, more_flag, more_data
+[frame-type]to-from fields
+frame size 
+propogation time
