@@ -413,7 +413,7 @@ for j in Station_tx_series.keys():
 
             c_frame_tx_flags=frame[1]
             '''            
-            #print frame 
+            print frame 
 # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
             #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
