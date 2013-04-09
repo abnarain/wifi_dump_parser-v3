@@ -3,7 +3,14 @@
 #Purpose : To read the binary files with data from BISmark deployment in homes
 #          Gives the frames: transmitted and received by the Access point in human readable form 
 #          To test the output of the files with the dumps on clients; and understanding the trace 
-
+#
+# I am printing certain parts of fields of the packets (almost all, but not everything 
+# print transmitted frames for each station attached ; then print all the received frames of each station
+#
+#
+#
+#
+#
 
 import os,sys,re
 import gzip
@@ -24,7 +31,7 @@ tx_time_series= []
 rx_time_series= []
 if len(sys.argv) !=5:	
 	print len(sys.argv)
-	print "Usage : python station-process.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz> <output=all,transmit,receive> "
+	print "Usage : python station-process.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz> <output=all,transmit,receive>(flag doesnt work) "
 	sys.exit(1)
 #compare regular expression for filenameif argv[1] for the lexicographic /time ordering so that we load them in order in the first place
 #t1= 
