@@ -84,7 +84,7 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			offset +=1
 		else :
 			radiotap_rate=  list(struct.unpack('B',frame[offset]))[0]
-			offset +=1                        
+			offset +=1
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_CHANNEL : 			
 			#print "offset before channel ",offset 
 			radiotap_freq=list(struct.unpack('<H',frame[offset:offset+2]))[0] #18:20
@@ -332,6 +332,7 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                         pass #print "there is no mcs rate " 
                         
                 frame_elem[tsf].append(actual_rate)                
+                
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_TOTAL_TIME :
 			radiotap_tx_total_time=list(struct.unpack('<I',frame[offset:offset+4]))[0]
 			frame_elem[tsf].append(radiotap_tx_total_time)
@@ -354,7 +355,12 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_RATES_TRIED : #15 bytes to use
                         #print "no of data retries ",radiotap_data_retries 
 			rates_tried =frame[offset:offset+15]
-                        radiotap_rate_retries=[]                                
+                        radiotap_rate_retries=[]                              
+                        if actual_rate == 5.5 :
+                                print "the array when rate is 5.5 is " 
+                                for j in range(0,15):
+                                        print ord(rates_tried[j]),  
+                                sys.exit(1)
                         if (rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==1) or \
                                     ((rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==0) and radiotap_rate ==0) :#case when first valid frame of ampdu\
                                         #case when the frame is mpdu of 80211n
@@ -438,11 +444,26 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                  #       print ord(rates_tried[j]),  
                                 #print "\n"
                                 if ord(rates_tried[1])>1:
-                                        if ord(rates_tried[0]) == 9:
+                                        if ord(rates_tried[0]) == 10:
+                                                radiotap_rate_retries.append([48.0,ord(rates_tried[1])-1])
+                                        elif ord(rates_tried[0]) == 9:
                                                 radiotap_rate_retries.append([36.0,ord(rates_tried[1])-1])
                                         elif ord(rates_tried[0]) == 11:
                                                 radiotap_rate_retries.append([54.0,ord(rates_tried[1])-1])
-                                        else :
+                                        elif ord(rates_tried[0]) == 7:
+                                                radiotap_rate_retries.append([18.0,ord(rates_tried[1])-1])
+                                        elif ord(rates_tried[0]) == 8:
+                                                radiotap_rate_retries.append([24.0,ord(rates_tried[1])-1])
+                                        elif ord(rates_tried[0]) == 3:
+                                                radiotap_rate_retries.append([11.0,ord(rates_tried[1])-1])
+                                                        
+                                        else:
+                                                print "the rates to be found in the retried array should be from g (or lower protocols)"
+                                                print "whole array is " ,
+                                                for j in range(0,15):
+                                                        print ord(rates_tried[j]),  
+                                                print " the successfule rate is " , actual_rate
+                                                print "\n"                                                        
                                                 print "this a/b/g rate is to be mapped " 
                                                 sys.exit(1)
 
@@ -452,8 +473,22 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                                 if ord(rates_tried[i]) == 9:
                                                         radiotap_rate_retries.append([36.0,ord(rates_tried[i+1])])
                                                 elif ord(rates_tried[i]) == 11:
-                                                        radiotap_rate_retries.append([54.0,ord(rates_tried[i+1])])
+                                                        radiotap_rate_retries.append([54.0,ord(rates_tried[i+1])])              
+                                                elif ord(rates_tried[i]) == 8:
+                                                        radiotap_rate_retries.append([24.0,ord(rates_tried[i+1])])
+                                                elif ord(rates_tried[i]) == 7:
+                                                        radiotap_rate_retries.append([18.0,ord(rates_tried[i+1])])
+                                                elif ord(rates_tried[i]) == 0:
+                                                        radiotap_rate_retries.append([-1.0,ord(rates_tried[i+1])])                                         
+                                                elif ord(rates_tried[i]) == 3:
+                                                        radiotap_rate_retries.append([11.0,ord(rates_tried[i+1])])
+                                                
                                                 else :
+                                                        print "the next rate array"
+                                                        print "whole array is " ,
+                                                        for j in range(0,15):
+                                                                print ord(rates_tried[j]),  
+                                                        print " the successfule rate is " , actual_rate
                                                         print "this a/b/g rate is to be mapped " 
                                                         sys.exit(1)
 

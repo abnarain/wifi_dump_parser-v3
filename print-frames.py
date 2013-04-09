@@ -189,9 +189,9 @@ for data_f_name_list in filename_list : #data_fs :
             for key in frame_elem.keys():
                 tsf=key                                    
             parse_data_frame(frame,radiotap_len,frame_elem)
-            #print frame_elem[tsf]
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
+            #print temp
             if radiotap_len == RADIOTAP_RX_LEN:
                 rx_time_series.append(temp)                
             elif radiotap_len ==RADIOTAP_TX_LEN :
@@ -377,16 +377,16 @@ for j in range(0,len(Station_list)):
         if frame[11]==Station_list[j] :            
             prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000) #frame[-1] is the size of frame in bytes
             Station_tx_series[frame[11]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[7],frame[8],frame[9],frame[12],frame[13],frame[14],frame[15],frame[16],prop_time]) 
-            if output_type ==1:
-                print frame 
+            #if output_type ==1:
+            #print frame 
             # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
             #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
 
 for j in Station_tx_series.keys():
     #j is the station name
-    if output_type ==2 :
-        print "Station :", j 
+    if 1:
+        print "TX Station :", j 
         list_of_frames= Station_tx_series[j]
         for i in range(1,len(list_of_frames)):        
             '''
@@ -413,8 +413,8 @@ for j in Station_tx_series.keys():
 
             c_frame_tx_flags=frame[1]
             '''            
-            print frame 
-        # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
+            #print frame 
+# 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
             #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
 
@@ -429,14 +429,14 @@ for i in range(0,len(rx_time_series)):
         if frame[12]==Station_list[i] :
             prop_time=(frame[10]*8.0 *1000000)/ (frame[8] *1000000)
             Station_rx_series[frame[12]].append([frame[0],frame[1],frame[2],frame[7],frame[8],frame[9] ,frame[10],frame[4],frame[11],frame[14],frame[15],frame[16][1],prop_time]) 
-            print frame
+           # print frame
             #print frame[12],frame[0],frame[1],frame[7],frame[8],frame[10],frame[11],frame[14],frame[15],frame[16][1],prop_time
             #time [0],flags[1],freq[2], rx_flags[7],success rate [8], rx_queue_time[9],framesize [10], signal [4],RSSI [11], seq number [14], fragment no [15],retry frame [16][1],prop time 
 
 
 for j in Station_rx_series.keys():
     list_of_frames= Station_rx_series[j]
-    print "Station ",j
+    print "RX Station ",j
     for i in range(1,len(list_of_frames)):
         frame= list_of_frames[i]
         print frame
