@@ -391,38 +391,37 @@ for j in range(0,len(Station_list)):
 # 12                  ,13                  ,14            ,16
 
 for j in Station_tx_series.keys():
-    #j is the station name
-    if 1:
-        print "TX Station :", j 
-        list_of_frames= Station_tx_series[j]
-        for i in range(1,len(list_of_frames)):        
-            '''
-            frame=list_of_frames[i]
-            previous_frame=list_of_frames[i-1]
-            c_frame_departure=frame[0]
-            p_frame_departure=previous_frame[0]    
-            c_frame_total_time=frame[4]
-            p_frame_total_time=previous_frame[4]
-            c_frame_mpdu_queue_size=frame[5]
-            p_frame_mpdu_queue_size=previous_frame[5]
-            c_frame_ampdu_queue_size=frame[6]
-            p_frame_ampdu_queue_size=previous_frame[6]
-            c_frame_queue_no=frame[7]
-            p_frame_queue_no=previous_frame[7]
-            c_frame_phy_flag=frame[8]
-            p_frame_phy_flag=previous_frame[8]
-            c_frame_seq_no=frame[10] 
-            p_frame_seq_no=previous_frame[10]
-            c_frame_frag_no=frame[11]
-            p_frame_frag_no=previous_frame[11]        
-            c_frame_size= frame[-2]
-            p_frame_size= previous_frame[-2]
-
-            c_frame_tx_flags=frame[1]
-            '''            
-            print frame 
-# 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
-            #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
+    #j is the station name    
+    print "TX Station :", j 
+    list_of_frames= Station_tx_series[j]
+    for i in range(1,len(list_of_frames)):                
+        frame=list_of_frames[i]
+        '''
+        previous_frame=list_of_frames[i-1]
+        c_frame_departure=frame[0]
+        p_frame_departure=previous_frame[0]    
+        c_frame_total_time=frame[4]
+        p_frame_total_time=previous_frame[4]
+        c_frame_mpdu_queue_size=frame[5]
+        p_frame_mpdu_queue_size=previous_frame[5]
+        c_frame_ampdu_queue_size=frame[6]
+        p_frame_ampdu_queue_size=previous_frame[6]
+        c_frame_queue_no=frame[7]
+        p_frame_queue_no=previous_frame[7]
+        c_frame_phy_flag=frame[8]
+        p_frame_phy_flag=previous_frame[8]
+        c_frame_seq_no=frame[10] 
+        p_frame_seq_no=previous_frame[10]
+        c_frame_frag_no=frame[11]
+        p_frame_frag_no=previous_frame[11]        
+        c_frame_size= frame[-2]
+        p_frame_size= previous_frame[-2]
+        
+        c_frame_tx_flags=frame[1]
+        '''            
+        print frame 
+        # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
+#time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
 
     print "done with a station "
