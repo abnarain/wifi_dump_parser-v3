@@ -389,6 +389,7 @@ for j in range(0,len(Station_list)):
             # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
             #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
+print"format:tsf   txflags,retx, successful bitrate, total time,Qlen,AMPDU-Q len,Q no, phy-type,retx rate list,seq no, frag no, mac-layer flags, frame prop type,frame size, frame-prop time"
 
 for j in Station_tx_series.keys():
     #j is the station name    
@@ -429,6 +430,11 @@ for j in Station_tx_series.keys():
 print "in rx_looping "
 Station_rx_series=defaultdict(list)
 print "RECIVED FRAMES "
+
+
+
+print "format : time,flags,freq, rx_flags,success rate, rx_queue_time,framesize , signal,RSSI, seq number,frag no,retry frame,prop time"
+
 for i in range(0,len(rx_time_series)):
     frame = rx_time_series[i]
     for i in range(0,len(Station_list)):
