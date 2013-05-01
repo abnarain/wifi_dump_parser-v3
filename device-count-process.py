@@ -1,5 +1,5 @@
 #Author : Abhinav Narain
-#Date : Feb 5, 2012
+#Date : Feb 5, 2013
 #Purpose : To read the binary files with data from BISmark deployment in homes
 
 import os,sys,re

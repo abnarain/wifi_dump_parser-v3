@@ -1,7 +1,9 @@
 #Author : Abhinav Narain 
 #Date : 14 Jan 
 #Purpose : header file defining all the constants used c structs used 
+from collections import defaultdict
 
+Frame_count = defaultdict(list)
 
 T_MGMT =0x0  # management 
 T_CTRL =0x1  # control 

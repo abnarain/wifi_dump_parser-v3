@@ -20,6 +20,7 @@ import struct
 from  header import *
 from mac_parser import * 
 from stats import *
+from rate import *
 
 try:
     import cPickle as pickle
@@ -254,7 +255,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -285,7 +286,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -314,7 +315,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem, monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -332,6 +333,7 @@ for data_f_name_list in filename_list : #data_fs :
         else :
             print "success denied"
         ctrl_index=ctrl_index+CTRL_STRUCT_SIZE
+        
         del frame_elem
         del monitor_elem                    
 
@@ -343,7 +345,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==RADIOTAP_RX_LENor  radiotap_len == RADIOTAP_TX_LEN) :	
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :	
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -362,7 +364,7 @@ for data_f_name_list in filename_list : #data_fs :
         ctrl_index= ctrl_index+CTRL_ERR_STRUCT_SIZE
         del frame_elem
         del monitor_elem
-        '''
+        ''' 
     file_counter +=1
     if file_counter %10 == 0:
         print file_counter
@@ -374,7 +376,11 @@ tx_time_series.sort(key=lambda x:x[0])
 
 Station_list=list(Station)
 Station_tx_retx_count = defaultdict(list)
-print Station_list
+#print Station_list
+IEEE80211_TX_RC_USE_SHORT_PREAMBLE  = 1<< 2
+IEEE80211_TX_RC_40_MHZ_WIDTH        = 1<< 5
+IEEE80211_TX_RC_SHORT_GI            = 1<< 7
+
 
 print "in tx looping "
 Station_tx_series=defaultdict(list)
@@ -382,17 +388,36 @@ for j in range(0,len(Station_list)):
     for i in range(0,len(tx_time_series)):
         frame = tx_time_series[i]
         if frame[11]==Station_list[j] :            
-            prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000) #frame[-1] is the size of frame in bytes
-            Station_tx_series[frame[11]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[7],frame[8],frame[9],frame[12],frame[13],frame[14],frame[15],frame[16],prop_time]) 
+            prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000) #frame[-1] is the size of frame in bytes                    
+            print frame 
+            temp= frame[10] 
+            #print temp 
+            rix=temp[0]
+            pktlen=frame[17]
+            width =0
+            half_gi=0
+            shortPreamble=0
+            k=ath_pkt_duration(rix, pktlen, width, half_gi,shortPreamble)
+            phy=frame[7]
+            kbps=temp[0]*500
+            frameLen=frame[17]
+            #print frameLen
+            rateix= -22
+            shortPreamble= 0 
+            curChan= -23
+            c_t=ath9k_hw_computetxtime(phy,kbps,frameLen,rateix,shortPreamble,curChan)            
+            #print "g airtime ", c_t , "n airtime " , k, "rop tim",prop_time
+            #sys.exit(1)
+            Station_tx_series[frame[11]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[8],frame[7],frame[9],frame[13],frame[14],frame[15],frame[16],frame[17],c_t,prop_time,k]) 
             #if output_type ==1:
-            #print frame 
+            print frame 
             # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
-            #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
-# 12                  ,13                  ,14            ,16
+            #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[13],fragment no[14],mac-layer-flags[15], frame-prop-type[16], framesize[17],prop time,temp 
+# 12                  ,13                  ,14            ,16, 17
 print"format:tsf   txflags,retx, successful bitrate, total time,Qlen,AMPDU-Q len,Q no, phy-type,retx rate list,seq no, frag no, mac-layer flags, frame prop type,frame size, frame-prop time"
 
 for j in Station_tx_series.keys():
-    #j is the station name    
+    #j is the station name  
     print "TX Station :", j 
     list_of_frames= Station_tx_series[j]
     for i in range(1,len(list_of_frames)):                
@@ -418,21 +443,19 @@ for j in Station_tx_series.keys():
         c_frame_size= frame[-2]
         p_frame_size= previous_frame[-2]
         
-        c_frame_tx_flags=frame[1]
-        '''            
-        print frame 
+        c_frame_tx_flags=frame[1]'''
+
+        #if frame[4] < frame[-2]:
+    	print frame 
         # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
 #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
 
-    print "done with a station "
+    print "done with a station " 
 
 print "in rx_looping "
 Station_rx_series=defaultdict(list)
 print "RECIVED FRAMES "
-
-
-
 print "format : time,flags,freq, rx_flags,success rate, rx_queue_time,framesize , signal,RSSI, seq number,frag no,retry frame,prop time"
 
 for i in range(0,len(rx_time_series)):
@@ -441,7 +464,7 @@ for i in range(0,len(rx_time_series)):
         if frame[12]==Station_list[i] :
             prop_time=(frame[10]*8.0 *1000000)/ (frame[8] *1000000)
             Station_rx_series[frame[12]].append([frame[0],frame[1],frame[2],frame[7],frame[8],frame[9] ,frame[10],frame[4],frame[11],frame[14],frame[15],frame[16][1],prop_time]) 
-           # print frame
+            print frame
             #print frame[12],frame[0],frame[1],frame[7],frame[8],frame[10],frame[11],frame[14],frame[15],frame[16][1],prop_time
             #time [0],flags[1],freq[2], rx_flags[7],success rate [8], rx_queue_time[9],framesize [10], signal [4],RSSI [11], seq number [14], fragment no [15],retry frame [16][1],prop time 
 
@@ -452,6 +475,7 @@ for j in Station_rx_series.keys():
     for i in range(1,len(list_of_frames)):
         frame= list_of_frames[i]
         print frame
+
 
 sys.exit(1)
 

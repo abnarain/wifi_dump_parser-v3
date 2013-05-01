@@ -14,6 +14,18 @@ def ath_pkt_duration(rix, pktlen, width, half_gi,shortPreamble):
     def NUM_SYMBOLS_PER_USEC_HALFGI(_usec): 
         return (((_usec*5)-4)/18)
 
+
+
+    bits_per_symbol = [    
+    [    26,   54 ],     
+    [    52,  108 ],     
+    [    78,  162 ],     
+    [   104,  216 ],     
+    [   156,  324 ],     
+    [   208,  432 ],     
+    [   234,  486 ],    
+    [   260,  540 ],      ]
+
     
     nbits, nsymbits, duration, nsymbols, streams=0,0,0,0,0
 
@@ -41,7 +53,7 @@ def ath_pkt_duration(rix, pktlen, width, half_gi,shortPreamble):
 
 
 #phy, int kbps, u32 frameLen, u16 rateix,shortPreamble)
-def ath9k_hw_computetxtime(phy,kbps,frameLen,rateix,shortPreamble,curChan):
+def ath9k_hw_computetxtime(phy,kbps,frameLen,rateix,shortPreamble,curchan):
     bitsPerSymbol, numBits, numSymbols, phyTime, txTime=0,0,0,0,0
     WLAN_RC_PHY_OFDM=0
     WLAN_RC_PHY_CCK=1
@@ -77,39 +89,42 @@ def ath9k_hw_computetxtime(phy,kbps,frameLen,rateix,shortPreamble,curChan):
     OFDM_PLCP_BITS_QUARTER     = 22
     OFDM_SYMBOL_TIME_QUARTER   = 16
 
+    CHANNEL_HALF     = 0x04000
+    CHANNEL_QUARTER  = 0x08000
+
+    def IS_CHAN_HALF_RATE(_c) :
+        return (not(_c & CHANNEL_HALF) == 0)
+    def IS_CHAN_QUARTER_RATE(_c) :
+        return (not (_c & CHANNEL_QUARTER) == 0)
+
     def DIV_ROUND_UP(n, d):
         return (((n) + (d) - 1) / (d))
-
     
     if (kbps == 0):
         return 0
-
+    #print phy, WLAN_RC_PHY_CCK, WLAN_RC_PHY_OFDM
     if phy == WLAN_RC_PHY_CCK:
         phyTime = CCK_PREAMBLE_BITS + CCK_PLCP_BITS
         if shortPreamble:
             phyTime >>= 1
         numBits = frameLen << 3
-        txTime = CCK_SIFS_TIME + phyTime + ((numBits * 1000) / kbps)
+        txTime = CCK_SIFS_TIME + phyTime + ((numBits * 1000) / kbps)    
     elif  phy ==WLAN_RC_PHY_OFDM:
         if (curchan and IS_CHAN_QUARTER_RATE(curchan)) :
             bitsPerSymbol = (kbps * OFDM_SYMBOL_TIME_QUARTER) / 1000
             numBits = OFDM_PLCP_BITS + (frameLen << 3)
-            numSymbols = DIV_ROUND_UP(numBits, bitsPerSymbol);
+            numSymbols = DIV_ROUND_UP(numBits, bitsPerSymbol)
             txTime = OFDM_SIFS_TIME_QUARTER+OFDM_PREAMBLE_TIME_QUARTER+(numSymbols * OFDM_SYMBOL_TIME_QUARTER)
         elif (curchan and IS_CHAN_HALF_RATE(curchan)) :
             bitsPerSymbol = (kbps * OFDM_SYMBOL_TIME_HALF) / 1000;
-            numBits = OFDM_PLCP_BITS + (frameLen << 3);
+            numBits = OFDM_PLCP_BITS + (frameLen << 3)
             numSymbols = DIV_ROUND_UP(numBits, bitsPerSymbol);
-            txTime = OFDM_SIFS_TIME_HALF + OFDM_PREAMBLE_TIME_HALF + (numSymbols * OFDM_SYMBOL_TIME_HALF);
+            txTime = OFDM_SIFS_TIME_HALF + OFDM_PREAMBLE_TIME_HALF + (numSymbols * OFDM_SYMBOL_TIME_HALF)
         else :
-            bitsPerSymbol = (kbps * OFDM_SYMBOL_TIME) / 1000;
-            numBits = OFDM_PLCP_BITS + (frameLen << 3);
-            numSymbols = DIV_ROUND_UP(numBits, bitsPerSymbol);
-            txTime = OFDM_SIFS_TIME + OFDM_PREAMBLE_TIME + (numSymbols * OFDM_SYMBOL_TIME);
-            
-    txTime = 0;
-
-    
-
+            bitsPerSymbol = (kbps * OFDM_SYMBOL_TIME) / 1000
+            numBits = OFDM_PLCP_BITS + (frameLen << 3)
+            numSymbols = DIV_ROUND_UP(numBits, bitsPerSymbol)
+            txTime = OFDM_SIFS_TIME + OFDM_PREAMBLE_TIME + (numSymbols * OFDM_SYMBOL_TIME)            
+            #check the default case and change txTime accordingly
     return txTime;
 
