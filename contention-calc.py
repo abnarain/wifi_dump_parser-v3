@@ -25,7 +25,8 @@ except ImportError:
 missing_files=[]
 tx_time_series= []
 rx_time_series= []
-if len(sys.argv) !=5:	
+tx_time_mgmt_common_series=[]
+if len(sys.argv) !=5 :
 	print len(sys.argv)
 	print "Usage : python station-process.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz> <outputfile> "
 	sys.exit(1)
@@ -207,7 +208,8 @@ for data_f_name_list in filename_list : #data_fs :
         data_index=data_index+DATA_STRUCT_SIZE
         del frame_elem
         del monitor_elem
-    '''
+
+        '''
     data_index=0
     for idx in xrange(0,len(err_data_frames)-DATA_ERR_STRUCT_SIZE,DATA_ERR_STRUCT_SIZE ):	
         frame=err_data_frames[data_index:data_index+DATA_ERR_STRUCT_SIZE]
@@ -226,8 +228,8 @@ for data_f_name_list in filename_list : #data_fs :
             if radiotap_len == RADIOTAP_RX_LEN:                
                 rx_time_series.append(temp)
             elif radiotap_len ==RADIOTAP_TX_LEN :
-                print "RADIOTAP_TX_LEN"
                 tx_time_series.append(temp)
+                print "wrong err data tx frame " 
             else :
                 print "impossible radiotap len detected ; Report CERN" 
             
@@ -236,7 +238,7 @@ for data_f_name_list in filename_list : #data_fs :
                    
         data_index= data_index+DATA_ERR_STRUCT_SIZE
         del frame_elem
-        del monitor_elem
+        del monitor_elem    
         '''
 
     #The following code block parses the mgmt files 
@@ -262,16 +264,42 @@ for data_f_name_list in filename_list : #data_fs :
             parse_mgmt_beacon_frame(frame,radiotap_len,frame_elem)
             if radiotap_len== RADIOTAP_TX_LEN :
                 tx_time_mgmt_series.append(temp)
-                
+                print temp                
         else :
             print "beacon success denied"
+
         mgmt_index=mgmt_index+MGMT_BEACON_STRUCT_SIZE
         del frame_elem
         del monitor_elem
 
+    mgmt_index=0
+    for idx in xrange(0,len(common_mgmt_frames)-MGMT_COMMON_STRUCT_SIZE,MGMT_COMMON_STRUCT_SIZE ):
+        global file_timestamp
+        frame=common_mgmt_frames[mgmt_index:mgmt_index+MGMT_COMMON_STRUCT_SIZE]
+        offset,success,tsf= 8,-1,0
+        header = frame[:offset]
+        frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
+        (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
+        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
+            print "the radiotap header is not correct "
+            sys.exit(1)
+        (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
+        if success==1 :
+            for key in frame_elem.keys():
+                tsf=key
+            temp=frame_elem[tsf]
+            temp.insert(0,tsf)
+            parse_mgmt_beacon_frame(frame,radiotap_len,frame_elem)
+            if radiotap_len== RADIOTAP_TX_LEN :
+                tx_time_mgmt_common_series.append(temp)
+                print "common frame" , temp                
+        else :
+            print "common mgmt success denied"
 
-        
-    '''
+        mgmt_index= mgmt_index+MGMT_COMMON_STRUCT_SIZE
+        del frame_elem
+        del monitor_elem
+        '''         
     mgmt_index=0
     for idx in xrange(0,len(err_mgmt_frames)-MGMT_ERR_STRUCT_SIZE,MGMT_ERR_STRUCT_SIZE ):
         global file_timestamp
@@ -287,21 +315,19 @@ for data_f_name_list in filename_list : #data_fs :
         if success==1 :
             for key in frame_elem.keys():
                 tsf=key
-            parse_mgmt_err_frame(frame,radiotap_len,frame_elem)                                                                                            
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
-            time_series.append(temp)
+            parse_mgmt_err_frame(frame,radiotap_len,frame_elem)                                                                                            
+            if radiotap_len== RADIOTAP_TX_LEN :
+                tx_time_mgmt_common_series.append(temp)
+                print "err: mgmt tx frame" 
         else:
             print "success denied"
         mgmt_index= mgmt_index+MGMT_ERR_STRUCT_SIZE
         del frame_elem
         del monitor_elem
-
-    '''
-
-    
-    #print "----------done with missed .. now with actual ctrl data "
-
+    '''    
+    #print "----------done with missed .. now with actual ctrl data "        
     correct_ctrl_frames=header_and_correct_ctrl_frames[ctrl_file_header_byte_count+1:]
     ctrl_index=0
     for idx in xrange(0,len(correct_ctrl_frames)-CTRL_STRUCT_SIZE ,CTRL_STRUCT_SIZE ):			
@@ -321,19 +347,18 @@ for data_f_name_list in filename_list : #data_fs :
             parse_ctrl_frame(frame,radiotap_len,frame_elem)
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
-            if radiotap_len == RADIOTAP_RX_LEN:
-                rx_time_series.append(temp)
-            elif radiotap_len ==RADIOTAP_TX_LEN :
+            if radiotap_len ==RADIOTAP_TX_LEN :
                 tx_time_series.append(temp)
-
+                print "c" , temp 
         else :
-            print "success denied"
+            print "ctrl success denied"
+        
         ctrl_index=ctrl_index+CTRL_STRUCT_SIZE
         
         del frame_elem
         del monitor_elem                    
 
-    '''
+        '''
     ctrl_index=0
     for idx in xrange(0,len(err_ctrl_frames)-CTRL_ERR_STRUCT_SIZE,CTRL_ERR_STRUCT_SIZE):			
         global file_timestamp
@@ -356,13 +381,14 @@ for data_f_name_list in filename_list : #data_fs :
                 rx_time_series.append(temp)
             elif radiotap_len ==RADIOTAP_TX_LEN :
                 tx_time_series.append(temp)
+                print "wrong: ctrl frame " 
         else :
             print "success denied"
         ctrl_index= ctrl_index+CTRL_ERR_STRUCT_SIZE
         del frame_elem
         del monitor_elem
-    '''
- 
+        '''
+
     file_counter +=1
     if file_counter %10 == 0:
         print file_counter
@@ -386,7 +412,7 @@ for j in range(0,len(Station_list)):
             width, half_gi, shortPreamble= 0,0,0 
             phy,kbps=frame[7],temp[0]*500
             prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000) #frame[-1] is the size of frame in bytes                    
-            temp= frame[10]           
+            temp= frame[10]
             #print temp
             abg_rix,pktlen= temp[0], frame[17]  
             airtime,curChan=-1,-23
@@ -434,7 +460,7 @@ for j in Station_tx_series.keys():
         c_frame_mpdu_queue_size= frame[5]
         c_frame_retx= frame[2]
         if c_frame_mpdu_queue_size ==0 and c_frame_retx==0 :            
-            print frame 
+            pass #print frame 
 
         # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
 #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
@@ -453,7 +479,7 @@ for i in range(0,len(rx_time_series)):
         if frame[12]==Station_list[i] :
             prop_time=(frame[10]*8.0 *1000000)/ (frame[8] *1000000)
             Station_rx_series[frame[12]].append([frame[0],frame[1],frame[2],frame[7],frame[8],frame[9] ,frame[10],frame[4],frame[11],frame[14],frame[15],frame[16][1],prop_time]) 
-            print frame
+            #print frame
             #print frame[12],frame[0],frame[1],frame[7],frame[8],frame[10],frame[11],frame[14],frame[15],frame[16][1],prop_time
             #time [0],flags[1],freq[2], rx_flags[7],success rate [8], rx_queue_time[9],framesize [10], signal [4],RSSI [11], seq number [14], fragment no [15],retry frame [16][1],prop time 
 
@@ -463,7 +489,7 @@ for j in Station_rx_series.keys():
     print "RX Station ",j
     for i in range(1,len(list_of_frames)):
         frame= list_of_frames[i]
-        print frame
+        #print frame
 
 
 sys.exit(1)
