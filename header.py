@@ -1,9 +1,7 @@
 #Author : Abhinav Narain 
 #Date : 14 Jan 
 #Purpose : header file defining all the constants used c structs used 
-from collections import defaultdict
 
-Frame_count = defaultdict(list)
 
 IEEE80211_TX_RC_USE_SHORT_PREAMBLE  = 1<< 2
 IEEE80211_TX_RC_40_MHZ_WIDTH        = 1<< 5
