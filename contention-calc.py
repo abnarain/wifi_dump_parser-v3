@@ -402,9 +402,10 @@ for data_f_name_list in filename_list : #data_fs :
 
 
 print "now processing the files to calculate time "
-rx_time_series.sort(key=lambda x:x[0])
-tx_time_series.sort(key=lambda x:x[0])
 
+tx_time_data_series.sort(key=lambda x:x[0])
+tx_time_ctrl_series.sort(key=lambda x:x[0])
+tx_time_mgmt_series.sort(key=lambda x:x[0])
 Station_list=list(Station)
 Station_tx_retx_count = defaultdict(list)
 #print Station_list
@@ -434,6 +435,10 @@ for j in range(0,len(Station_list)):
             # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
             #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[13],fragment no[14],mac-layer-flags[15], frame-prop-type[16], framesize[17],prop time,temp 
 # 12                  ,13                  ,14            ,16, 17
+            
+            
+            
+            
 print"format:tsf, txflags, retx, successful bitrate, total time,Qlen,AMPDU-Q len,Q no, phy-type,retx rate list,seq no, frag no, mac-layer flags, frame prop type,frame size, frame-prop time"
 
 for j in Station_tx_series.keys():
@@ -464,10 +469,11 @@ for j in Station_tx_series.keys():
         p_frame_size= previous_frame[-1]        
         c_frame_tx_flags=frame[1]
         '''
+
         c_frame_mpdu_queue_size= frame[5]
         c_frame_retx= frame[2]
         if c_frame_mpdu_queue_size ==0 and c_frame_retx==0 :            
-            pass #print frame 
+            print frame 
 
         # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
 #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
@@ -496,7 +502,7 @@ for j in Station_rx_series.keys():
     print "RX Station ",j
     for i in range(1,len(list_of_frames)):
         frame= list_of_frames[i]
-        #print frame
+        print frame
 
 
 sys.exit(1)
