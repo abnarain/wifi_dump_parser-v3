@@ -648,7 +648,7 @@ def parse_ctrl_fc(frame_control):
 
 	if FC_SUBTYPE(frame_control) ==  CTRL_BA  :
                 return 1
-	elif FC_SUBTYPE(frame_control) == CTRL_BA :
+	elif FC_SUBTYPE(frame_control) == CTRL_BAR :
                 return 2
 	elif FC_SUBTYPE(frame_control) == CTRL_PS_POLL :
                 return 3
@@ -662,7 +662,9 @@ def parse_ctrl_fc(frame_control):
                 return 7
 	elif FC_SUBTYPE(frame_control) == CTRL_END_ACK :
                 return 8
-
+	else :
+		print "no subtype found ", FC_SUBTYPE(frame_control) 
+		sys.exit(1)
 
 def parse_frame_control(frame_control,radiotap_len,frame_elem) :	
 	tsf= 0
@@ -829,14 +831,13 @@ def parse_mgmt_beacon_frame(frame,radiotap_len,frame_elem):
 	else:
                 private=0 # print "NOT PRIVATE"
 
-
 	frame_elem[tsf].append(frame_sequence_number)
 	frame_elem[tsf].append(frame_fragment_number)
 	frame_elem[tsf].append(ht_support)
 	frame_elem[tsf].append(cap_ess)
 	frame_elem[tsf].append(private)
-	frame_elem[tsf].append(pkt_len)
 	parse_frame_control(frame_control,radiotap_len,frame_elem)
+	frame_elem[tsf].append(pkt_len)
 
 
 def parse_mgmt_common_frame(frame,radiotap_len,frame_elem):
