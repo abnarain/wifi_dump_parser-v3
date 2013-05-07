@@ -553,6 +553,9 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 
         return (1,frame_elem,monitor_elem)
         
+
+
+
 def parse_mgmt_fc(frame_control):
         def FC_SUBTYPE(fc) :
                 return (((fc) >> 4) & 0xF)
@@ -885,7 +888,7 @@ def parse_ctrl_frame(frame,radiotap_len,frame_elem):
 	tsf=0
 	for key in frame_elem:
 		tsf=key
-	offset = radiotap_len
+	offset = 58 #radiotap_len ; fixed according to the c code running on the router 
 	pkt_len =list(struct.unpack('>I',frame[offset:offset+4]))[0]-radiotap_len
 	offset +=4
 	src_mac_address= frame[offset:offset+6]	 

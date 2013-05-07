@@ -5,6 +5,11 @@ from collections import defaultdict
 
 Frame_count = defaultdict(list)
 
+IEEE80211_TX_RC_USE_SHORT_PREAMBLE  = 1<< 2
+IEEE80211_TX_RC_40_MHZ_WIDTH        = 1<< 5
+IEEE80211_TX_RC_SHORT_GI            = 1<< 7
+
+
 T_MGMT =0x0  # management 
 T_CTRL =0x1  # control 
 T_DATA =0x2  # data 
