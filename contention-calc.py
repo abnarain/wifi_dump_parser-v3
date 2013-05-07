@@ -23,9 +23,15 @@ except ImportError:
     import pickle
 
 missing_files=[]
-tx_time_series= []
-rx_time_series= []
-tx_time_mgmt_common_series=[]
+tx_time_data_series=[]
+tx_time_mgmt_series=[]
+tx_time_ctrl_series=[]
+rx_time_data_series=[]
+rx_time_mgmt_series=[]
+rx_time_ctrl_series=[]
+
+
+
 if len(sys.argv) !=5 :
 	print len(sys.argv)
 	print "Usage : python station-process.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz> <outputfile> "
@@ -197,9 +203,9 @@ for data_f_name_list in filename_list : #data_fs :
             temp.insert(0,tsf)
             #print temp
             if radiotap_len == RADIOTAP_RX_LEN:
-                rx_time_series.append(temp)                
+                rx_time_data_series.append(temp)                
             elif radiotap_len ==RADIOTAP_TX_LEN :
-                tx_time_series.append(temp)
+                tx_time_data_series.append(temp)
             else :
                 print "impossible radiotap len detected ; Report CERN", radiotap_len 
             
@@ -241,8 +247,7 @@ for data_f_name_list in filename_list : #data_fs :
         del monitor_elem    
         '''
 
-    #The following code block parses the mgmt files 
-    
+    #The following code block parses the mgmt files     
     beacon_mgmt_frames=header_and_beacon_mgmt_frames[mgmt_file_header_byte_count+1:]
     mgmt_index=0
     for idx in xrange(0,len(beacon_mgmt_frames)-MGMT_BEACON_STRUCT_SIZE ,MGMT_BEACON_STRUCT_SIZE ):
@@ -291,8 +296,7 @@ for data_f_name_list in filename_list : #data_fs :
             temp.insert(0,tsf)
             parse_mgmt_beacon_frame(frame,radiotap_len,frame_elem)
             if radiotap_len== RADIOTAP_TX_LEN :
-                tx_time_mgmt_common_series.append(temp)
-                print "common frame" , temp                
+                tx_time_mgmt_series.append(temp)
         else :
             print "common mgmt success denied"
 
@@ -337,7 +341,7 @@ for data_f_name_list in filename_list : #data_fs :
         header = frame[:offset]
         frame_elem, monitor_elem=defaultdict(list),defaultdict(list)
         (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-        if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
+        if not( radiotap_len ==RADIOTAP_RX_LEN or radiotap_len == RADIOTAP_TX_LEN) :
             print "the radiotap header is not correct "		
             sys.exit(1)
         (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -347,16 +351,19 @@ for data_f_name_list in filename_list : #data_fs :
             parse_ctrl_frame(frame,radiotap_len,frame_elem)
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
+            for j in range(0,len(frame)):
+                print ord(frame[j]),
             if radiotap_len ==RADIOTAP_TX_LEN :
-                tx_time_series.append(temp)
-                print "c" , temp 
+                tx_time_ctrl_series.append(temp)
+            elif radiotap_len ==RADIOTAP_RX_LEN :
+                rx_time_ctrl_series.append(temp)
         else :
             print "ctrl success denied"
         
         ctrl_index=ctrl_index+CTRL_STRUCT_SIZE
         
         del frame_elem
-        del monitor_elem                    
+        del monitor_elem
 
         '''
     ctrl_index=0
