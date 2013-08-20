@@ -261,7 +261,7 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			radiotap_tx_flags=list(struct.unpack('<H',frame[offset:offset+2]))[0]
                         #print "RADIOTAP FLAGS" ,radiotap_tx_flags  
                         #print struct.unpack('>H',struct.pack('<H',flags.IEEE80211_RADIOTAP_F_TX_AGG))
-			if radiotap_tx_flags & list(struct.unpack('>H',struct.pack('<H',0x10)))[0]:
+			if radiotap_tx_flags & list(struct.unpack('>H',struct.pack('<H',0x10)))[0]: #for ampdu 
                                 rad_txflags_elem.append(1)
                         else : 
                                 rad_txflags_elem.append(0)

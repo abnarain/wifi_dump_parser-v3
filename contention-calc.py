@@ -11,6 +11,7 @@
 import os,sys,re
 import gzip
 import struct 
+from collections import defaultdict
 
 from  header import *
 from mac_parser import * 
@@ -185,7 +186,6 @@ for data_f_name_list in filename_list : #data_fs :
     correct_data_frames=header_and_correct_data_frames[data_file_header_byte_count+1:]
     data_index=0
     for idx in xrange(0,len(correct_data_frames)-DATA_STRUCT_SIZE ,DATA_STRUCT_SIZE ):	
-        global file_timestamp
         frame=correct_data_frames[data_index:data_index+DATA_STRUCT_SIZE]
         offset,success,tsf= 8,-1,0
         header = frame[:offset]
@@ -217,7 +217,7 @@ for data_f_name_list in filename_list : #data_fs :
     beacon_mgmt_frames=header_and_beacon_mgmt_frames[mgmt_file_header_byte_count+1:]
     mgmt_index=0
     for idx in xrange(0,len(beacon_mgmt_frames)-MGMT_BEACON_STRUCT_SIZE ,MGMT_BEACON_STRUCT_SIZE ):
-        global file_timestamp
+        #global file_timestamp
         frame=beacon_mgmt_frames[mgmt_index:mgmt_index+MGMT_BEACON_STRUCT_SIZE]
         offset,success,tsf= 8,-1,0
         header = frame[:offset]
@@ -245,7 +245,7 @@ for data_f_name_list in filename_list : #data_fs :
 
     mgmt_index=0
     for idx in xrange(0,len(common_mgmt_frames)-MGMT_COMMON_STRUCT_SIZE,MGMT_COMMON_STRUCT_SIZE ):
-        global file_timestamp
+        #global file_timestamp
         frame=common_mgmt_frames[mgmt_index:mgmt_index+MGMT_COMMON_STRUCT_SIZE]
         offset,success,tsf= 8,-1,0
         header = frame[:offset]
@@ -273,7 +273,7 @@ for data_f_name_list in filename_list : #data_fs :
     correct_ctrl_frames=header_and_correct_ctrl_frames[ctrl_file_header_byte_count+1:]
     ctrl_index=0
     for idx in xrange(0,len(correct_ctrl_frames)-CTRL_STRUCT_SIZE ,CTRL_STRUCT_SIZE ):			
-        global file_timestamp
+        #global file_timestamp
         frame=correct_ctrl_frames[ctrl_index:ctrl_index+CTRL_STRUCT_SIZE]
         offset,success,tsf= 8,-1,0
         header = frame[:offset]
@@ -312,6 +312,7 @@ tx_time_data_series.sort(key=lambda x:x[0])
 tx_time_ctrl_series.sort(key=lambda x:x[0])
 tx_time_mgmt_series.sort(key=lambda x:x[0])
 
+dic= defaultdict(list) 
 mgmt_zero_tx=[]
 mgmt_retx_count=[]
 
@@ -332,11 +333,10 @@ for i in range(0,len(tx_time_ctrl_series)):
     c_frame_retx=frame[2]
     c_frame_total_time=frame[4]
     if c_frame_tx_flags_radiotap[0]==0 and not(c_frame_retx ==0):
-        ctrl_retx_count.append(c_frame_retx)
+        dic['ctrl_retx_count'].append(c_frame_retx)
 
     if c_frame_mpdu_queue_size ==0 and c_frame_retx==0 :
-        print c_frame_retx
-        ctrl_zero_tx.append(c_frame_total_time)
+        dic['ctrl_zero_tx'].append(c_frame_total_time)
         
         
 for i in range(0,len(tx_time_mgmt_series)):
@@ -347,9 +347,9 @@ for i in range(0,len(tx_time_mgmt_series)):
     c_frame_retx=frame[2]
     c_frame_total_time=frame[4]
     if c_frame_tx_flags_radiotap[0]==0 and not(c_frame_retx ==0):
-        mgmt_retx_count.append(c_frame_retx)
+        dic['mgmt_retx_count'].append(c_frame_retx)
     if c_frame_mpdu_queue_size ==0 and c_frame_retx==0 :
-        mgmt_zero_tx.append(c_frame_total_time)
+        dic['mgmt_zero_tx'].append(c_frame_total_time)
 
 for i in range(0,len(tx_time_data_series)):
     frame = tx_time_data_series[i]
@@ -373,24 +373,27 @@ for i in range(0,len(tx_time_data_series)):
         airtime= -1 #ath9k_hw_computetxtime(phy,kbps,pktlen,abg_rix,shortPreamble,curChan)x
 
     if c_frame_tx_flags_radiotap[0]==0 and not(c_frame_retx ==0):
-        data_retx_count.append(c_frame_retx)
+        dic['data_retx_count'].append(c_frame_retx)
     if c_frame_mpdu_queue_size ==0 and c_frame_retx==0 :
-        data_zero_tx.append(c_frame_total_time)
+        dic['data_zero_tx'].append(c_frame_total_time)
         
     # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
     #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[13],fragment no[14],mac-layer-flags[15], frame-prop-type[16], framesize[17],
 # 12                  ,13                  ,14     
  
 print "data: " 
-print "avg " , avg(data_zero_tx),len(data_zero_tx)
-print "variance " , variance(data_zero_tx)
-print "median", median(data_zero_tx)
-print "75th perc", percentile(data_zero_tx,75)
-print "25th perc", percentile(data_zero_tx,25)
+print "avg " , avg(dic['data_zero_tx']),len(dic['data_zero_tx'])
+print "variance " , variance(dic['data_zero_tx'])
+print "median", median(dic['data_zero_tx'])
+print "75th perc", percentile(dic['data_zero_tx'],75)
+print "25th perc", percentile(dic['data_zero_tx'],25)
 
-print "retx", sum(data_retx_count), len(data_retx_count)
+print "retx", sum(dic['data_retx_count']), len(dic['data_retx_count'])
 
-
+f_d= output_file+'.pickle'
+output_device = open(f_d, 'wb')
+pickle.dump(dic,output_device)
+output_device.close()
 
 for i in range(0,len(missing_files)):
 	print missing_files[i]
