@@ -1,11 +1,7 @@
-
-
-
-frame format for each of the paths, the frames are collected frm : 
-
+DATA FRAME frame format for each of the paths, the frames are collected frm :
 TX PATH :
 time :
-[tx flags], rts, cts, txagg
+[txflags:],ampdu bit, fail, rts, cts, txagg
 retry count ,
 rate,
 tx_total,
@@ -36,7 +32,7 @@ antenna,
 rate,
 rx queue time,
 caplen,
-rssi
+rssi,
 <mac header follows>
 src mac address 
 dst mac address
@@ -46,3 +42,14 @@ fragment number
 [frame-type]to-from fields
 frame size 
 propogation time
+
+
+
+The tx descriptor has the timestamp of the starting of the last retransmission of the frame
+=>If there are no retransmission, its exactly the time spent in queue and the contention of channel
+=>If the queue is empty and there are no retransmissions : then it is contention time of the channel
+
+When retransmission occur, subtract the propogation time of the #retransmission count from the total time 
+
+
+Debug : Have to look at frames with screwed tx descriptors with time lost
