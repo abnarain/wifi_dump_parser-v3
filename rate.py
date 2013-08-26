@@ -1,4 +1,7 @@
 
+# Author : Abhinav Narain
+# Date : 23 April 2013 
+#purpose : part of library regarding the rate information
 #static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, int pktlen,
 def ath_pkt_duration(rix, pktlen, width, half_gi,shortPreamble):
     def HT_RC_2_STREAMS(_rc):
@@ -49,8 +52,6 @@ def ath_pkt_duration(rix, pktlen, width, half_gi,shortPreamble):
     duration += L_STF + L_LTF + L_SIG + HT_SIG + HT_STF + HT_LTF(streams)
 
     return duration
-
-
 
 #phy, int kbps, u32 frameLen, u16 rateix,shortPreamble)
 def ath9k_hw_computetxtime(phy,kbps,frameLen,rateix,shortPreamble,curchan):

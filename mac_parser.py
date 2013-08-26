@@ -366,12 +366,12 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_RATES_TRIED : #15 bytes to use
                         #print "no of data retries ",radiotap_data_retries 
 			rates_tried =frame[offset:offset+15]
-                        radiotap_rate_retries=[]                              
-                        if actual_rate == 5.5 :
-                                print "the array when rate is 5.5 is " 
+                        radiotap_rate_retries=[]
+                        if not ((actual_rate == 5.5) or (actual_rate == 11.0) or (actual_rate == 18.0) or (actual_rate == 36.0) or (actual_rate == 48.0) or (actual_rate == 54.0) or (actual_rate == 24.0) or (actual_rate == 1.0) or actual_rate == 52.0 or actual_rate ==13.0 or actual_rate ==26.0 or actual_rate ==39.0 or actual_rate ==19.5 or actual_rate ==6.5 or actual_rate ==130.0 or actual_rate ==117.0 or actual_rate ==58.5 or actual_rate==78.0 or actual_rate==65.0 or actual_rate ==104.0 or actual_rate==12.0)  :
+                                print "the rate index is not yet identified and hence reading the transmitted rates indices ",actual_rate 
                                 for j in range(0,15):
                                         print ord(rates_tried[j]),  
-                                sys.exit(1)
+		                sys.exit(1)
                         if (rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==1) or \
                                     ((rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==0) and radiotap_rate ==0) :#case when first valid frame of ampdu\
                                         #when 802.11 n in operation                 
@@ -448,7 +448,11 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                                 try:
                                                         radiotap_rate_retries.append([ht_rates[ord(rates_tried[r_i])][bandwidth][gi_length],ord(rates_tried[r_i+1])])
                                                 except: # NEED TO FIX THIS  ; half fixed I suppose 
-                                                        print "indices are ",rates_tried[r_i],bandwidth,gi_length
+							print "FIXIT: indices for 802.11 n  rates are ",rates_tried[r_i],bandwidth,gi_length
+							for j in range(0,15): 
+								print ord(rates_tried[j]),
+							sys.exit
+
                         elif radiotap_rate !=0:  #its 802.11 a/b/g rates that were retried                                
                                 #print "i m a/b/g with rate array " 
                                 #for j in range(0,15):
@@ -460,25 +464,17 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                         if ord(rates_tried[0]) == 0:
                                                 radiotap_rate_retries.append([1.0,ord(rates_tried[1])-1])
                                         elif ord(rates_tried[0]) == 1: 
-                                                radiotap_rate_retries.append([-1.0,ord(rates_tried[1])-1])
-                                                print "rate index 1 unknown"
-                                                #sys.exit(1)
+                                                radiotap_rate_retries.append([2.0,ord(rates_tried[1])-1]) #IEE802.11(b) page
                                         elif ord(rates_tried[0]) == 2:
-                                                radiotap_rate_retries.append([-2.0,ord(rates_tried[1])-1])
-                                                print "rate index 2 unknown"
-                                                sys.exit(1)
+                                                radiotap_rate_retries.append([5.5,ord(rates_tried[1])-1])
                                         elif ord(rates_tried[0]) == 3:
                                                 radiotap_rate_retries.append([11.0,ord(rates_tried[1])-1])
                                         elif ord(rates_tried[0]) == 4:
-                                                radiotap_rate_retries.append([-4.0,ord(rates_tried[1])-1])
-                                                print "rate index 4 unknown"
-                                                sys.exit(1)
+                                                radiotap_rate_retries.append([6.0,ord(rates_tried[1])-1])
                                         elif ord(rates_tried[0]) == 5:
-                                                print "rate index 5 unknown"
-                                                sys.exit(1)
-                                                radiotap_rate_retries.append([-5.0,ord(rates_tried[1])-1])
+                                                radiotap_rate_retries.append([9.0,ord(rates_tried[1])-1]) #http://en.wikipedia.org/wiki/IEEE_802.11
                                         elif ord(rates_tried[0]) == 6:
-                                                radiotap_rate_retries.append([-6.0,ord(rates_tried[1])-1])
+						radiotap_rate_retries.append([12.0,ord(rates_tried[1])-1])
                                         elif ord(rates_tried[0]) == 7:
                                                 radiotap_rate_retries.append([18.0,ord(rates_tried[1])-1])
                                         elif ord(rates_tried[0]) == 8:
@@ -497,7 +493,6 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                                 for j in range(0,15):
                                                         print ord(rates_tried[j]),
                                                 print " the successfule rate is " , actual_rate
-                                                print "\n"                                                        
                                                 print "this a/b/g rate is to be mapped " 
                                                 sys.exit(1)
 
@@ -507,19 +502,21 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                                 if ord(rates_tried[i]) == 0:
                                                         radiotap_rate_retries.append([1.0,ord(rates_tried[i+1])])                                         
                                                 elif ord(rates_tried[i]) == 1:
-                                                        radiotap_rate_retries.append([-1.0,ord(rates_tried[i+1])])     
-                                                        print "rate index 1 unknown m"
-                                                        #sys.exit(1)
+                                                        radiotap_rate_retries.append([2.0,ord(rates_tried[i+1])]) #IEEE802.11(b) wiki page 
                                                 elif ord(rates_tried[i]) == 2:
-                                                        print "rate index 2 unknown m"
-                                                        sys.exit(1)
-                                                        radiotap_rate_retries.append([-2.0,ord(rates_tried[i+1])])     
+                                                        radiotap_rate_retries.append([5.5,ord(rates_tried[i+1])])     
                                                 elif ord(rates_tried[i]) == 3:
                                                         radiotap_rate_retries.append([11.0,ord(rates_tried[i+1])])
+                                                elif ord(rates_tried[i]) == 4:
+                                                        radiotap_rate_retries.append([6.0,ord(rates_tried[i+1])])
+                                                elif ord(rates_tried[i]) == 5:
+                                                        radiotap_rate_retries.append([9.0,ord(rates_tried[i+1])])
                                                 elif ord(rates_tried[i]) == 8:
                                                         radiotap_rate_retries.append([24.0,ord(rates_tried[i+1])])
                                                 elif ord(rates_tried[i]) == 7:
                                                         radiotap_rate_retries.append([18.0,ord(rates_tried[i+1])])                                      
+						elif ord(rates_tried[i]) == 6 :
+							radiotap_rate_retries.append([12.0,ord(rates_tried[i+1])])
                                                 elif ord(rates_tried[i]) == 9:
                                                         radiotap_rate_retries.append([36.0,ord(rates_tried[i+1])])
                                                 elif ord(rates_tried[i]) == 10:
@@ -527,7 +524,7 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                                 elif ord(rates_tried[i]) == 11:
                                                         radiotap_rate_retries.append([54.0,ord(rates_tried[i+1])])  
                                                 else :
-                                                        print "the next rate array"
+                                                        print "the next rate array",i, "rates_tried[i]",rates_tried[i]
                                                         print "whole array is " ,
                                                         for j in range(0,15):
                                                                 print ord(rates_tried[j]),  
