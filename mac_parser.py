@@ -219,15 +219,12 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			pass #radiotap artifact
 
 		if (not( homesaw_oui_1 ==11 and homesaw_oui_2 ==11 and  homesaw_oui_3 ==11 )):
-			print homesaw_oui_1, homesaw_oui_2,  homesaw_oui_3 
-			print "homesaw oui are corrupted " 
+			print "homesaw oui are corrupted ", homesaw_oui_1, homesaw_oui_2,  homesaw_oui_3 
 			for i in range(0,58):
                                 print ord(frame[i]) ," ",
-                                print "homesaw namespace= " ,homesaw_namespace 
 			return (0,frame_elem,monitor_elem)				
 		if homesaw_namespace != 1:
-			print "homesaw namespace must be 1, but it is " ,homesaw_namespace,
-                        print "phyerr is encoded in this byte "
+			print "homesaw namespace must be 1 (phy error is encoded in it); true value= " ,homesaw_namespace,
 	elif radiotap_len == RADIOTAP_TX_LEN:
                 #print "\n--->"
 		radiotap_abg_rate_for_airtime_calc=-1
@@ -593,15 +590,14 @@ def parse_data_fc(fc,radiotap_len,frame_elem):
 	def FC_FROM_DS(fc) :
 		return ((fc) & 0x0200)
         
-        if ( not(FC_TO_DS(fc)) and not(FC_FROM_DS(fc))) :#	ADDR2 , 1 There shouldn't be such frames
+        if ( not(FC_TO_DS(fc)) and not(FC_FROM_DS(fc))) :#	ADDR2 , 1 
 		#print "part 1 data" src, dest
-                print "THE FUCK IS BACK "
-		print "1" ,frame_elem[tsf][12],frame_elem[tsf][13]
+		#print "1" ,frame_elem[tsf][12],frame_elem[tsf][13]
 		#print "frame is ", frame_elem
                 return 1
         elif ( not(FC_TO_DS(fc)) and  FC_FROM_DS(fc)) :
                 #		ADDR3,2
-                # print "part 2 data"
+                # This is only for the transmitted frames
                 if radiotap_len ==RADIOTAP_TX_LEN :
                         # 9th is the dest mac address ; i.e the client connected
                         a=frame_elem[tsf][11].split(':')                   
@@ -617,10 +613,8 @@ def parse_data_fc(fc,radiotap_len,frame_elem):
                                 #print "bismark mac[10] =", Bismark_mac
                 return 2                 
         elif (FC_TO_DS(fc) and not(FC_FROM_DS(fc))) :                
-                #  part 3 data : index of mac header ADDR 2,3
-                #print "last three bytes of fucked up mac address"
+                #  part 3 data : index of mac header ADDR 2,3; may be needed for received frames
                 #print frame_elem[tsf][11][3], frame_elem[tsf][11][4],frame_elem[tsf][11][5]
-                #print "bad fcs ", frame_elem[tsf][0], frame_elem[tsf][2]
                 #for key in Station.keys():
                    #     if key == frame_elem[11]:
                     #            Station[frame_elem[tsf][11]].append(tsf)                                
@@ -631,7 +625,6 @@ def parse_data_fc(fc,radiotap_len,frame_elem):
                  #       pass
                 return 3
         elif (FC_TO_DS(fc) and (FC_FROM_DS(fc))) :#		ADDR4,3	There shouldn't be such frames	
-		#print " fucking hte last shit on the code planet 4"
 		#print frame_elem src,dest
 		#print "src is " ,frame_elem[tsf][11]
 		#print "dest is " ,frame_elem[tsf][12]
