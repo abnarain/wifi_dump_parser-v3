@@ -7,10 +7,6 @@
 # I am printing certain parts of fields of the packets (almost all, but not everything 
 # print transmitted frames for each station attached ; then print all the received frames of each station
 #
-#
-#
-#
-#
 
 import os,sys,re
 import gzip
@@ -158,7 +154,7 @@ for data_f_name_list in filename_list : #data_fs :
     err_ctrl_frames_missed=ctrl_contents[3]
     #done with reading the binary blobs from file ; now check for timestamps are correct
     if (not (ctrl_file_current_timestamp == mgmt_file_current_timestamp == data_file_current_timestamp )) :
-        print "timestamps don't match " 		
+        print "timestamps don't match ", data_f_name
         sys.exit(1)
     else :
         file_timestamp=ctrl_file_current_timestamp	
@@ -377,10 +373,6 @@ tx_time_series.sort(key=lambda x:x[0])
 Station_list=list(Station)
 Station_tx_retx_count = defaultdict(list)
 #print Station_list
-IEEE80211_TX_RC_USE_SHORT_PREAMBLE  = 1<< 2
-IEEE80211_TX_RC_40_MHZ_WIDTH        = 1<< 5
-IEEE80211_TX_RC_SHORT_GI            = 1<< 7
-
 
 print "in tx looping "
 Station_tx_series=defaultdict(list)
@@ -389,8 +381,8 @@ for j in range(0,len(Station_list)):
         frame = tx_time_series[i]
         if frame[11]==Station_list[j] :            
             prop_time=(frame[-1]*8.0 *1000000)/ (frame[3] *1000000) #frame[-1] is the size of frame in bytes                    
-            print frame 
-            temp= frame[10] 
+
+            #temp= frame[10] 
             #print temp 
             rix=temp[0]
             pktlen=frame[17]
@@ -410,7 +402,7 @@ for j in range(0,len(Station_list)):
             #sys.exit(1)
             Station_tx_series[frame[11]].append([frame[0],frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[8],frame[7],frame[9],frame[13],frame[14],frame[15],frame[16],frame[17],c_t,prop_time,k]) 
             #if output_type ==1:
-            print frame 
+            #print frame 
             # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
             #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[13],fragment no[14],mac-layer-flags[15], frame-prop-type[16], framesize[17],prop time,temp 
 # 12                  ,13                  ,14            ,16, 17
