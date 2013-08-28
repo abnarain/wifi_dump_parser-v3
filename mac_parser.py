@@ -654,7 +654,7 @@ def parse_ctrl_fc(frame_control):
                 return 8
 	else :
 		print "no subtype found ", FC_SUBTYPE(frame_control) 
-		sys.exit(1)
+		return -1 
 
 def parse_frame_control(frame_control,radiotap_len,frame_elem) :	
 	tsf= 0
