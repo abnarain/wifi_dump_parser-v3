@@ -1,7 +1,9 @@
 #Author : Abhinav Narain
 #Date : April 5, 2013
 #Purpose : To read the binary files with data from BISmark deployment in homes
-
+# Comment on Aug 26, 2013 
+#This file parsing is obsolete as the kernel/device driver patch gets more verbose data 
+# There is 4 days of data(jan-feb) which can be mined using this file 
 import os,sys,re
 import gzip
 import struct 
