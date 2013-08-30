@@ -15,7 +15,7 @@ from collections import defaultdict
 
 from  header import *
 from mac_parser import * 
-from stats import *
+from utils import *
 from rate import *
 
 try:

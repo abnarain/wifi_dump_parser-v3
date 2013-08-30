@@ -9,7 +9,7 @@ import struct
 
 from  header import *
 from mac_parser import * 
-from stats import *
+from utils import *
 
 try:
     import cPickle as pickle
