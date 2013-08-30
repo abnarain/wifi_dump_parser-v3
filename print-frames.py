@@ -75,6 +75,8 @@ for data_f_name_list in filename_list : #data_fs :
             start_64_timestamp_data_file= int(ents[1])
             data_file_seq_no= int(ents[2])
             data_file_current_timestamp=int(ents[3])
+	    print data_file_current_timestamp
+	    sys.exit(1)
             data_file_header_byte_count =i
             break
 

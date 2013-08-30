@@ -497,7 +497,7 @@ for j in Station_tx_series.keys():
         '''
 
         c_tx_flags_radiotap=frame[1]
-        if c_tx_flags_radiotap[0]==0 :
+        #if c_tx_flags_radiotap[0]==0 :
             
         c_frame_mpdu_queue_size= frame[5]
         c_frame_retx= frame[2]
