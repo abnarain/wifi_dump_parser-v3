@@ -119,5 +119,3 @@ def timeStamp_Conversion(start_time,end_time,router_id):
     '''
     return [local_start_timestamp,local_end_timestamp]
 
-req_timestamp=timeStamp_Conversion("2013-08-29 12:00:00", "2013-08-29 15:00:00",'OWC43DC7B0AE54')
-print "returned value",req_timestamp
