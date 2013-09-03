@@ -75,22 +75,22 @@ def timeStamp_Conversion(start_time,end_time,router_id):
 
     #print "original:",datetime.datetime.fromtimestamp(UTC_timestamp)
     table={
-        'C43DC7B0AE69' :"US/Eastern",
-        'C43DC79B5D25' :"US/Eastern",
-        'C43DC79DE0F7' :"US/Eastern",
-        'C43DC79DE112' :"US/Eastern",
-        'C43DC7A37C01' :"US/Eastern",
-        'C43DC7A37C4C' :"US/Eastern",
-        'C43DC7B0AE69' :"US/Eastern",
-        'C43DC7B0AE78' :"US/Eastern",
-        'C43DC7B0AEDB' :"US/Eastern",
-        'C43DC7B0AE1B' :"US/Eastern",
-        'C43DC7A3EE22' :"US/Eastern",
-        'OWC43DC78EE081':"US/Pacific",
-        'OWC43DC7B0AE54':"US/Pacific",
-        'C43DC7A3EDEC' :"US/Pacific",
-        'C43DC79DE0D6' :"US/Pacific",
-        'C43DC7A3EE3A' :"US/Pacific",
+        'OWC43DC7B0AE69' :"US/Eastern",
+        'OWC43DC79B5D25' :"US/Eastern",
+        'OWC43DC79DE0F7' :"US/Eastern",
+        'OWC43DC79DE112' :"US/Eastern",
+        'OWC43DC7A37C01' :"US/Eastern",
+        'OWC43DC7A37C4C' :"US/Eastern",
+        'OWC43DC7B0AE69' :"US/Eastern",
+        'OWC43DC7B0AE78' :"US/Eastern",
+        'OWC43DC7B0AEDB' :"US/Eastern",
+        'OWC43DC7B0AE1B' :"US/Eastern",
+        'OWC43DC7A3EE22' :"US/Eastern",
+        'OWC43DC78EE081' :"US/Pacific",
+        'OWC43DC7B0AE54' :"US/Pacific",
+        'OWC43DC7A3EDEC' :"US/Pacific",
+        'OWC43DC79DE0D6' :"US/Pacific",
+        'OWC43DC7A3EE3A' :"US/Pacific",
         #'OWC43DC7B0CAB6'
         #'OW4C60DEE6C9AB' 
         #'OWA021B7A9BF83' 
