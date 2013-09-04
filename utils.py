@@ -91,14 +91,18 @@ def timeStamp_Conversion(start_time,end_time,router_id):
         'OWC43DC7A3EDEC' :"US/Pacific",
         'OWC43DC79DE0D6' :"US/Pacific",
         'OWC43DC7A3EE3A' :"US/Pacific",
-        #'OWC43DC7B0CAB6'
-        #'OW4C60DEE6C9AB' 
-        #'OWA021B7A9BF83' 
-        #'OWA021B7A9BEF0' 
-        #'OWA021B7A9BDA6' 
-        #'OW204E7F91A331' 
-        #'OW100D7F64CA77'  
-        #'OW2CB05DA0C23E' 
+        'OWA021B7A9BF83' :"US/Pacific",
+        'OW204E7F91A331' :"US/Pacific",
+	'OW2CB05DA0D183' :"US/Eastern",
+        'OWA021B7A9BDA6' :"US/Eastern",
+        'OWC43DC7B0CAB6' :"US/Eastern",
+        'OW2CB05DA0C23E' :"US/Eastern",
+        'OWA021B7A9BEF0' :"US/Eastern",
+	'OW4C60DED0F74B' :"US/Eastern",
+	'OW4C60DEE6B01C' :"US/Eastern",
+        'OW100D7F64CA77' :"US/Pacific",
+	'OW4C60DEE6B037' :"US/Pacific",
+        'OW4C60DEE6C9AB' :"US/Central",
         }
     # re-interpret 
     originalTimeZone = table[router_id]
