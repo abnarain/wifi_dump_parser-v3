@@ -1,6 +1,11 @@
 #Author : Abhinav Narain
-#Date : Sept 5, 2013
+#Date : Sept-5, 2013
 #Purpose : To read the binary files with data from BISmark deployment in homes
+#          Gives the frames: transmitted and received by the Access point in human readable form 
+#          To test the output of the files with the dumps on clients; and understanding the trace 
+#
+# Pickles the noise sample from each home  
+# 
 
 import os,sys,re
 import gzip
@@ -8,7 +13,8 @@ import struct
 
 from  header import *
 from mac_parser import * 
-from stats import *
+from utils import *
+from rate import *
 
 try:
     import cPickle as pickle
@@ -16,29 +22,24 @@ except ImportError:
     import pickle
 
 missing_files=[]
-noise_map=defaultdict(list)
+Noise= []
+unix_time=set()
+def write_pickle(t1,t2):
+    data_fs=os.listdir(data_f_dir)
+    file_counter,file_timestamp=0,0
+    data_file_header_byte_count, ctrl_file_header_byte_count, mgmt_file_header_byte_count=0,0,0
+    filename_list=[]
+    for data_f_n in data_fs :
+        filename_list.append(data_f_n.split('-'))
+        unix_time.add(int(data_f_n.split('-')[1]))
+        if not (data_f_n.split('-')[2]=='d'):
+            print "its not a data file ; skip "
+            continue 
+    filename_list.sort(key=lambda x : int(x[3]))
+    filename_list.sort(key=lambda x : int(x[1]))
 
-if len(sys.argv) !=5:	
-	print len(sys.argv)
-	print "Usage : python reader.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz> <output noise filename> "
-	sys.exit(1)
-#compare regular expression for filenameif argv[1]
-
-data_f_dir=sys.argv[1]
-mgmt_f_dir=sys.argv[2]
-ctrl_f_dir=sys.argv[3]
-output_noise_filename=sys.argv[4]
-
-data_fs=os.listdir(data_f_dir)
-ctrl_fs=os.listdir(ctrl_f_dir)
-
-data_file_header_byte_count=0
-ctrl_file_header_byte_count=0
-mgmt_file_header_byte_count=0
-file_counter=0
-file_timestamp=0
-def write_pickle():
-    for data_f_name in data_fs :
+    for data_f_name_list in filename_list : #data_fs :    
+        data_f_name="-".join(data_f_name_list)
         data_f= gzip.open(data_f_dir+data_f_name,'rb')
         data_file_content=data_f.read()
         data_f.close()
@@ -74,8 +75,8 @@ def write_pickle():
             missing_files.append([ctrl_f_name,data_file_current_timestamp])
             continue 
         ctrl_f.close()
-    
-    
+        
+        
         mgmt_f_name = data_f_name
         mgmt_f_name = re.sub("-d-","-m-",mgmt_f_name)
         try : 
@@ -92,12 +93,11 @@ def write_pickle():
         mgmt_file_seq_no=0
         bismark_id_mgmt_file=0
         start_64_timestamp_mgmt_file=0
-	
+        
         ctrl_file_current_timestamp=0
         ctrl_file_seq_no=0
         bismark_id_ctrl_file=0
         start_64_timestamp_ctrl_file=0
-    #frame_coint[timestamp].append([mgmt missed+collected correct,missed+collected incorr])
 
         for i in xrange(len(mgmt_file_content )):
             if mgmt_file_content[i]=='\n':
@@ -132,7 +132,7 @@ def write_pickle():
         err_ctrl_frames = ctrl_contents[1]
         correct_ctrl_frames_missed=ctrl_contents[2]
         err_ctrl_frames_missed=ctrl_contents[3]
-    #done with reading the binary blobs from file ; now check for timestamps are correct
+        #done with reading the binary blobs from file ; now check for timestamps are correct
         if (not (ctrl_file_current_timestamp == mgmt_file_current_timestamp == data_file_current_timestamp )) :
             print "timestamps don't match " 		
             sys.exit(1)
@@ -141,42 +141,43 @@ def write_pickle():
         if (not (ctrl_file_seq_no == mgmt_file_seq_no == data_file_seq_no)):
             print "sequence number don't match "
             sys.exit(1)
-	
+
+        
         if (len(ctrl_contents) != 4 or  len(data_contents) != 4 or len(mgmt_contents) !=6) :
             print "for ctrl " ,len (ctrl_contents) ,"for data", len(data_contents), "for mgmt", len(mgmt_contents) 
             print "file is malformed or the order of input folders is wrong "
             continue 
-	
-        #The following code block parses the data file 	
-        val_data_missed= list(struct.unpack('I',correct_data_frames_missed))[0]
-        val_err_data_missed= list(struct.unpack('I',err_data_frames_missed))[0]
         
-        Frame_count[file_timestamp].append([val_data_missed,val_err_data_missed])
-	#print "----------done with missed .. now with actual data "
+        if  (data_file_current_timestamp < t1-1):
+            continue 
+
+
+        if (data_file_current_timestamp >t2+1):
+            break 
+       
+        #The following code block parses the data file 	
+        #print "----------done with missed .. now with actual data "
         correct_data_frames=header_and_correct_data_frames[data_file_header_byte_count+1:]
         data_index=0
         for idx in xrange(0,len(correct_data_frames)-DATA_STRUCT_SIZE ,DATA_STRUCT_SIZE ):	
-            global file_timestamp
             frame=correct_data_frames[data_index:data_index+DATA_STRUCT_SIZE]
             offset,success,tsf= 8,-1,0
             header = frame[:offset]
             frame_elem=defaultdict(list)
             monitor_elem=defaultdict(list)        
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-            (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)       
+            (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)  
             if success:
                 for key in frame_elem.keys():
-                    tsf=key                        
-            #Frame_count[file_timestamp][0][0] = Frame_count[file_timestamp][0][0]  +1
-            #parse_data_frame(frame,radiotap_len,frame_elem)
+                    tsf=key
                 if len(monitor_elem)>0:
-                    Monitor[file_timestamp].append(monitor_elem[tsf][0])
-                #Physical_errs[file_timestamp].append([tsf,monitor_elem[tsf]])
+                    Noise.append(monitor_elem[tsf][0])
             else:
-                print "success denied"                    
+                print "success denied; correct data frame"                    
             data_index=data_index+DATA_STRUCT_SIZE
             del frame_elem
             del monitor_elem
+
             
         data_index=0
         for idx in xrange(0,len(err_data_frames)-DATA_ERR_STRUCT_SIZE,DATA_ERR_STRUCT_SIZE ):	
@@ -190,194 +191,154 @@ def write_pickle():
             if success:
                 for key in frame_elem.keys():
                     tsf=key
-            #Frame_count[file_timestamp][0][1] = Frame_count[file_timestamp][0][1]  +1
-            #parse_err_data_frame(frame,radiotap_len,frame_elem)
-                if len(monitor_elem)>0:                
-                    Monitor[file_timestamp].append(monitor_elem[tsf][0])
-               # Physical_errs[file_timestamp].append([tsf,monitor_elem[tsf]])                    
+                if len(monitor_elem)>0:
+                    Noise.append(monitor_elem[tsf][0])
             else :
-                print "success denied"                    
+                print "success denied; incorrect data frame" 
+                       
             data_index= data_index+DATA_ERR_STRUCT_SIZE
             del frame_elem
-            del monitor_elem
-
+            del monitor_elem    
             
-    #The following code block parses the mgmt files 
-        val_beacon_missed= list(struct.unpack('I',beacon_mgmt_frames_missed))[0]
-        val_common_missed= list(struct.unpack('I',common_mgmt_frames_missed))[0]
-        val_err_mgmt_missed= list(struct.unpack('I',err_mgmt_frames_missed))[0]
-        Frame_count[file_timestamp].append([val_beacon_missed+val_common_missed,val_err_mgmt_missed])     
-    #print "----------done with missed .. now with actual mgmt data "
+
+        #The following code block parses the mgmt files     
         beacon_mgmt_frames=header_and_beacon_mgmt_frames[mgmt_file_header_byte_count+1:]
         mgmt_index=0
-        for idx in xrange(0,len(beacon_mgmt_frames)-MGMT_BEACON_STRUCT_SIZE ,MGMT_BEACON_STRUCT_SIZE ):		
-            global file_timestamp
+        for idx in xrange(0,len(beacon_mgmt_frames)-MGMT_BEACON_STRUCT_SIZE ,MGMT_BEACON_STRUCT_SIZE ):
             frame=beacon_mgmt_frames[mgmt_index:mgmt_index+MGMT_BEACON_STRUCT_SIZE]
             offset,success,tsf= 8,-1,0
             header = frame[:offset]
             frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-            if not( radiotap_len ==58 or  radiotap_len == 42) :
-                print "the radiotap header is not correct "		
+            if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
+                print "the radiotap header is not correct "
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success :
                 for key in frame_elem.keys():
-                    tsf=key           
-            #Frame_count[file_timestamp][1][0] = Frame_count[file_timestamp][1][0] + 1
+                    tsf=key
                 if len(monitor_elem)>0:
-                    Monitor[file_timestamp].append(monitor_elem[tsf][0])
-               # Physical_errs[file_timestamp].append([tsf,monitor_elem[tsf]])
-                    '''    
-                    parse_mgmt_beacon_frame(frame,radiotap_len,frame_elem)
-                    if radiotap_len== 58:
-                    frame_elem[tsf].insert(0,tsf)
-                    temp={}
-                    temp[file_timestamp]=frame_elem[tsf]
-                    Access_point[frame_elem[tsf][12]]=temp      '''
+                    Noise.append(monitor_elem[tsf][0])
+
             else :
-                print "success denied"        
-            
+                print "beacon success denied; beacon frame"
+
             mgmt_index=mgmt_index+MGMT_BEACON_STRUCT_SIZE
             del frame_elem
             del monitor_elem
-            
+
         mgmt_index=0
-        for idx in xrange(0,len(common_mgmt_frames)-MGMT_COMMON_STRUCT_SIZE ,MGMT_COMMON_STRUCT_SIZE ):
-            global file_timestamp	
+        for idx in xrange(0,len(common_mgmt_frames)-MGMT_COMMON_STRUCT_SIZE,MGMT_COMMON_STRUCT_SIZE ):
             frame=common_mgmt_frames[mgmt_index:mgmt_index+MGMT_COMMON_STRUCT_SIZE]
-            offset,success,tsf= 8, -1,0
+            offset,success,tsf= 8,-1,0
             header = frame[:offset]
-            frame_elem,monitor_elem=defaultdict(list),defaultdict(list)        
+            frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-            if not( radiotap_len ==58 or  radiotap_len == 42) :
-                print "the radiotap header is not correct "		
+            if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
+                print "the radiotap header is not correct "
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success==1 :
                 for key in frame_elem.keys():
                     tsf=key
-                Frame_count[file_timestamp][1][0] = Frame_count[file_timestamp][1][0]  +1
-                parse_mgmt_common_frame(frame,radiotap_len,frame_elem)
                 if len(monitor_elem)>0:
-                    Monitor[file_timestamp].append(monitor_elem[tsf][0])
-                #Physical_errs[file_timestamp].append([tsf,monitor_elem[tsf]])  
-                    '''
-                    if  not (type(frame_elem[tsf][11])==type([])):
-                    if frame_elem[tsf][-1][1] == 1 :
-                    frame_elem[tsf].insert(0,tsf)
-                    temp={}
-                    temp[file_timestamp]=frame_elem[tsf]
-                    Access_point[frame_elem[tsf][12]]=temp
-                    else :
-                    pass
-                    '''
-                else:
-                    print "success denied"
-            mgmt_index=mgmt_index+MGMT_COMMON_STRUCT_SIZE
+                    Noise.append(monitor_elem[tsf][0])
+            else :
+                print "common mgmt success denied; common frame"
+
+            mgmt_index= mgmt_index+MGMT_COMMON_STRUCT_SIZE
             del frame_elem
             del monitor_elem
-
+                
         mgmt_index=0
-        for idx in xrange(0,len(err_mgmt_frames)-MGMT_ERR_STRUCT_SIZE,MGMT_ERR_STRUCT_SIZE ):	
-            global file_timestamp
+        for idx in xrange(0,len(err_mgmt_frames)-MGMT_ERR_STRUCT_SIZE,MGMT_ERR_STRUCT_SIZE ):
             frame=err_mgmt_frames[mgmt_index:mgmt_index+MGMT_ERR_STRUCT_SIZE]
             offset,success,tsf= 8,-1,0
             header = frame[:offset]
             frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-            if not( radiotap_len ==58 or  radiotap_len == 42) :
-                print "the radiotap header is not correct "		
+            if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
+                print "the radiotap header is not correct "
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success==1 :
                 for key in frame_elem.keys():
                     tsf=key
-            #Frame_count[file_timestamp][1][1] = Frame_count[file_timestamp][1][1]  +1
-            #parse_mgmt_err_frame(frame,radiotap_len,frame_elem)             
                 if len(monitor_elem)>0:
-                    Monitor[file_timestamp].append(monitor_elem[tsf][0])
-                #Physical_errs[file_timestamp].append([tsf,monitor_elem[tsf]])        
-            else: 
-                print "success denied"
+                    Noise.append(monitor_elem[tsf][0])
+            else:
+                print "success denied; incorrect management frame"
             mgmt_index= mgmt_index+MGMT_ERR_STRUCT_SIZE
             del frame_elem
-            del monitor_elem                    
-                
-    #he following code block parses the ctrl files 
-        val_ctrl_missed= list(struct.unpack('I',correct_ctrl_frames_missed))[0]
-        val_err_ctrl_missed= list(struct.unpack('I',err_ctrl_frames_missed))[0]
-    #print "----------done with missed .. now with actual ctrl data "
-        Frame_count[file_timestamp].append([val_ctrl_missed,val_err_ctrl_missed])
+            del monitor_elem
+        
+        #print "----------done with missed .. now with actual ctrl data "        
         correct_ctrl_frames=header_and_correct_ctrl_frames[ctrl_file_header_byte_count+1:]
         ctrl_index=0
-        for idx in xrange(0,len(correct_ctrl_frames)-CTRL_STRUCT_SIZE ,CTRL_STRUCT_SIZE ):			
-            global file_timestamp
+        for idx in xrange(0,len(correct_ctrl_frames)-CTRL_STRUCT_SIZE ,CTRL_STRUCT_SIZE ):
             frame=correct_ctrl_frames[ctrl_index:ctrl_index+CTRL_STRUCT_SIZE]
             offset,success,tsf= 8,-1,0
             header = frame[:offset]
             frame_elem, monitor_elem=defaultdict(list),defaultdict(list)
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-            if not( radiotap_len ==58 or  radiotap_len == 42) :
+            if not( radiotap_len ==RADIOTAP_RX_LEN or radiotap_len == RADIOTAP_TX_LEN) :
                 print "the radiotap header is not correct "		
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success :
                 for key in frame_elem.keys():
                     tsf=key
-            #Frame_count[file_timestamp][2][0] = Frame_count[file_timestamp][2][0]  +1
-            #parse_ctrl_frame(frame,radiotap_len,frame_elem)
-                if len(monitor_elem)>0:		
-                    Monitor[file_timestamp].append(monitor_elem[tsf][0])
-                #Physical_errs[file_timestamp].append([tsf,monitor_elem[tsf]])            
+                if len(monitor_elem)>0:
+                    Noise.append(monitor_elem[tsf][0])
             else :
-                print "success denied"
-            ctrl_index=ctrl_index+CTRL_STRUCT_SIZE
+                print " success denied; control frame"
+            
+            ctrl_index=ctrl_index+CTRL_STRUCT_SIZE            
             del frame_elem
-            del monitor_elem                    
-
+            del monitor_elem
+        
         ctrl_index=0
         for idx in xrange(0,len(err_ctrl_frames)-CTRL_ERR_STRUCT_SIZE,CTRL_ERR_STRUCT_SIZE):			
-            global file_timestamp
             frame=err_ctrl_frames[ctrl_index:ctrl_index+CTRL_ERR_STRUCT_SIZE]
             offset,success,tsf= 8,-1,0
             header = frame[:offset]
             frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-            if not( radiotap_len ==58 or  radiotap_len == 42) :	
+            if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :	
                 print "the radiotap header is not correct "		
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success ==1:
                 for key in frame_elem.keys():
                     tsf=key
-            #Frame_count[file_timestamp][2][1] = Frame_count[file_timestamp][2][1]  +1
-            #parse_ctrl_err_frame(frame,radiotap_len,frame_elem)
                 if len(monitor_elem)>0:
-                    Monitor[file_timestamp].append(monitor_elem[tsf][0])
-                #Physical_errs[file_timestamp].append([tsf,monitor_elem[tsf]])
+                    Noise.append(monitor_elem[tsf][0])
             else :
-                print "success denied"
+                print "success denied; incorrect control frame "
+
             ctrl_index= ctrl_index+CTRL_ERR_STRUCT_SIZE
             del frame_elem
             del monitor_elem
-
+            
         file_counter +=1
         if file_counter %10 == 0:
             print file_counter
 
-#not needed for phy errs
-for k in Monitor.keys() :            
-    noise_map[k]=mode(Monitor[k])
 
-
-print "done; writing to a file "
-f_n= output_noise_filename
-output_noise = open(f_n, 'wb')
-pickle.dump( noise_map,output_noise )
-output_noise.close()
-print "done with print the keys and noise "
-
-for i in range(0,len(missing_files)):
+if __name__=='__main__':
+    if len(sys.argv) !=8 :
+	print len(sys.argv)
+	print "Usage : python file.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz> <outputfile> "
+        sys.exit(1)
+    data_f_dir=sys.argv[1]
+    mgmt_f_dir=sys.argv[2]
+    ctrl_f_dir=sys.argv[3]
+    router_id=sys.argv[4]
+    time1=sys.argv[5]
+    time2=sys.argv[6]
+    output_type=sys.argv[7]
+    [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
+    write_pickle(t1,t2)
+    for i in range(0,len(missing_files)):
 	print missing_files[i]
-print "number of files that can't be located ", len(missing_files)	
+    print "number of files that can't be located ", len(missing_files)
