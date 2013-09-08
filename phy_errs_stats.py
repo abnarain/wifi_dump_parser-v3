@@ -156,7 +156,6 @@ def raw_file_reader(t1,t2):
             continue 
         if (data_file_current_timestamp >t2+1):
             break 
-        print t1, data_file_current_timestamp, t2
             #The following code block parses the data file 	
         phy_err_time_series=defaultdict(list)
         phy_ofdm_err_time_series=defaultdict(list)
@@ -174,13 +173,12 @@ def raw_file_reader(t1,t2):
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)  
             if success==1:
-                print "d_c"
                 for key in frame_elem.keys():
                     tsf=key 
                 if len(monitor_elem)>0:
-                    phy_err_time_series[tsf].append(monitor_elem[tsf][0])
-                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][1])
-                    phy_cck_err_time_series[tsf].append(monitor_elem[tsf][2])
+                    phy_err_time_series[tsf].append(monitor_elem[tsf][1])
+                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][2])
+                    phy_cck_err_time_series[tsf].append(monitor_elem[tsf][3])
             else:
                 print "success denied; correct data frame"                    
             data_index=data_index+DATA_STRUCT_SIZE
@@ -197,13 +195,12 @@ def raw_file_reader(t1,t2):
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success==1:
-                print "d_e"
                 for key in frame_elem.keys():
                     tsf=key
                 if len(monitor_elem)>0:
-                    phy_err_time_series[tsf].append(monitor_elem[tsf][0])
-                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][1])
-                    phy_cck_err_time_series[tsf].append(monitor_elem[tsf][2])
+                    phy_err_time_series[tsf].append(monitor_elem[tsf][1])
+                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][2])
+                    phy_cck_err_time_series[tsf].append(monitor_elem[tsf][3])
             else :
                 print "data err frame :success denied " 
                        
@@ -225,13 +222,12 @@ def raw_file_reader(t1,t2):
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success==1 :
-                print "m_b"
                 for key in frame_elem.keys():
                     tsf=key
                 if len(monitor_elem)>0:	   
-                    phy_err_time_series[tsf].append(monitor_elem[tsf][0])
-                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][1])
+                    phy_err_time_series[tsf].append(monitor_elem[tsf][1])
                     phy_cck_err_time_series[tsf].append(monitor_elem[tsf][2])
+                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][3])
 
             else :
                 print "beacon frame: success denied"
@@ -252,13 +248,12 @@ def raw_file_reader(t1,t2):
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success==1 :
-                print "m_c"
                 for key in frame_elem.keys():
                     tsf=key
                 if len(monitor_elem)>0:
-                    phy_err_time_series[tsf].append(monitor_elem[tsf][0])
-                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][1])
+                    phy_err_time_series[tsf].append(monitor_elem[tsf][1])
                     phy_cck_err_time_series[tsf].append(monitor_elem[tsf][2])
+                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][3])
             else :
                 print "common mgmt frame: success denied"
                 
@@ -278,13 +273,12 @@ def raw_file_reader(t1,t2):
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success==1 :
-                print "m_e"
                 for key in frame_elem.keys():
                     tsf=key
                 if len(monitor_elem)>0:
-                    phy_err_time_series[tsf].append(monitor_elem[tsf][0])
-                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][1])
+                    phy_err_time_series[tsf].append(monitor_elem[tsf][1])
                     phy_cck_err_time_series[tsf].append(monitor_elem[tsf][2])
+                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][3])
             else:
                 print "mgmt error frame : succesr denied"
             mgmt_index= mgmt_index+MGMT_ERR_STRUCT_SIZE
@@ -304,13 +298,12 @@ def raw_file_reader(t1,t2):
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success :
-                print "c_c"
                 for key in frame_elem.keys():
                     tsf=key
                 if len(monitor_elem)>0:
-                    phy_err_time_series[tsf].append(monitor_elem[tsf][0])
-                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][1])
+                    phy_err_time_series[tsf].append(monitor_elem[tsf][1])
                     phy_cck_err_time_series[tsf].append(monitor_elem[tsf][2])
+                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][3])
             else :
                 print "ctrl frame: success denied"
             
@@ -330,13 +323,12 @@ def raw_file_reader(t1,t2):
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success ==1:
-                print "c_e"
                 for key in frame_elem.keys():
                     tsf=key
-                if len(monitor_elem)>0:
-                    phy_err_time_series[tsf].append(monitor_elem[tsf][0])
-                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][1])
+                if len(monitor_elem)>0:                    
+                    phy_err_time_series[tsf].append(monitor_elem[tsf][1])
                     phy_cck_err_time_series[tsf].append(monitor_elem[tsf][2])
+                    phy_ofdm_err_time_series[tsf].append(monitor_elem[tsf][3])
             else :
                 print "ctrl err frames : success denied"
             ctrl_index= ctrl_index+CTRL_ERR_STRUCT_SIZE
@@ -383,7 +375,6 @@ def raw_file_reader(t1,t2):
                 a=phy_err_time_series[i]
                 s=a[0]
             err_seq.append(s)
-
      
 #        phy_cck = sum (map ( lambda x:x  , [i[2]  for i in temp_errs] ))
 #        phy_ofdm= sum (map ( lambda x:x  , [i[3]  for i in temp_errs] ))
@@ -407,7 +398,7 @@ if __name__=='__main__':
     print "now processing the files to calculate time "
     raw_file_reader(t1,t2)
     output_device = open(outfile_name, 'wb')
-    pickle.dump(Physical_errors,output_device)
+    pickle.dump([router_id,Physical_errors],output_device)
     output_device.close()
 
     for i in range(0,len(missing_files)):
