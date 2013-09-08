@@ -24,7 +24,7 @@ except ImportError:
 missing_files=[]
 Noise= []
 unix_time=set()
-def write_pickle(t1,t2):
+def read_raw_file(t1,t2):
     data_fs=os.listdir(data_f_dir)
     file_counter,file_timestamp=0,0
     data_file_header_byte_count, ctrl_file_header_byte_count, mgmt_file_header_byte_count=0,0,0
@@ -328,7 +328,7 @@ def write_pickle(t1,t2):
 if __name__=='__main__':
     if len(sys.argv) !=8 :
 	print len(sys.argv)
-	print "Usage : python file.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz> <outputfile> "
+	print "Usage : python file.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz> <routerId> <t1> <t2> <outputfile> "
         sys.exit(1)
     data_f_dir=sys.argv[1]
     mgmt_f_dir=sys.argv[2]
@@ -336,9 +336,13 @@ if __name__=='__main__':
     router_id=sys.argv[4]
     time1=sys.argv[5]
     time2=sys.argv[6]
-    output_type=sys.argv[7]
+    outfile_name=sys.argv[7]
     [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
-    write_pickle(t1,t2)
+    read_raw_file(t1,t2)
+    output_device = open(outfile_name, 'wb')
+    pickle.dump([router_id,Noise],output_device)
+    output_device.close()
+
     for i in range(0,len(missing_files)):
 	print missing_files[i]
     print "number of files that can't be located ", len(missing_files)
