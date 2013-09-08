@@ -30,7 +30,6 @@ ap_map=defaultdict(list)
 def file_reader() : 
     data_fs=os.listdir(data_f_dir)
     data_file_header_byte_count=0
-    ctrl_file_header_byte_count=0
     mgmt_file_header_byte_count=0
     file_timestamp=0
     file_counter=0 
@@ -58,18 +57,6 @@ def file_reader() :
         err_data_frames = data_contents[1]
         correct_data_frames_missed=data_contents[2]
         err_data_frames_missed=data_contents[3]
-
-        ctrl_f_name = data_f_name
-        ctrl_f_name =re.sub("-d-","-c-",ctrl_f_name)
-
-        try :
-            ctrl_f= gzip.open(ctrl_f_dir+ctrl_f_name,'rb')	
-            ctrl_file_content=ctrl_f.read()
-        except :
-            print  "CTRL file not present ", ctrl_f_name 
-            missing_files.append([ctrl_f_name,data_file_current_timestamp])
-            continue 
-        ctrl_f.close()
             
         mgmt_f_name = data_f_name
         mgmt_f_name = re.sub("-d-","-m-",mgmt_f_name)
@@ -88,10 +75,6 @@ def file_reader() :
         bismark_id_mgmt_file=0
         start_64_timestamp_mgmt_file=0
         
-        ctrl_file_current_timestamp=0
-        ctrl_file_seq_no=0
-        bismark_id_ctrl_file=0
-        start_64_timestamp_ctrl_file=0
 
         for i in xrange(len(mgmt_file_content )):
             if mgmt_file_content[i]=='\n':
@@ -111,34 +94,19 @@ def file_reader() :
         common_mgmt_frames_missed=mgmt_contents[4]
         err_mgmt_frames_missed=mgmt_contents[5]
 
-        for i in xrange(len(ctrl_file_content )):
-            if ctrl_file_content[i]=='\n':
-                bismark_ctrl_file_header = str(ctrl_file_content[0:i])
-                ents= bismark_ctrl_file_header.split(' ')
-                bismark_id_ctrl_file= ents[0]
-                start_64_timestamp_ctrl_file= int(ents[1])
-                ctrl_file_seq_no= int(ents[2])
-                ctrl_file_current_timestamp=int(ents[3])
-                ctrl_file_header_byte_count =i
-                break
-        ctrl_contents=ctrl_file_content.split('\n----\n')
-        header_and_correct_ctrl_frames = ctrl_contents[0]
-        err_ctrl_frames = ctrl_contents[1]
-        correct_ctrl_frames_missed=ctrl_contents[2]
-        err_ctrl_frames_missed=ctrl_contents[3]
         #done with reading the binary blobs from file ; now check for timestamps are correct
-        if (not (ctrl_file_current_timestamp == mgmt_file_current_timestamp == data_file_current_timestamp )) :
+        if (not ( mgmt_file_current_timestamp == data_file_current_timestamp )) :
             print "timestamps don't match " 		
             sys.exit(1)
         else :
-            file_timestamp=ctrl_file_current_timestamp	
-        if (not (ctrl_file_seq_no == mgmt_file_seq_no == data_file_seq_no)):
+            file_timestamp=mgm_file_current_timestamp	
+        if (not ( mgmt_file_seq_no == data_file_seq_no)):
             print "sequence number don't match "
             sys.exit(1)
 
         
-        if (len(ctrl_contents) != 4 or  len(data_contents) != 4 or len(mgmt_contents) !=6) :
-            print "for ctrl " ,len (ctrl_contents) ,"for data", len(data_contents), "for mgmt", len(mgmt_contents) 
+        if ( len(data_contents) != 4 or len(mgmt_contents) !=6) :
+            print "for data", len(data_contents), "for mgmt", len(mgmt_contents) 
             print "file is malformed or the order of input folders is wrong "
             continue 
         
@@ -238,17 +206,16 @@ def file_reader() :
 #not needed for phy errs
 
 if __name__=='__main__':
-    if len(sys.argv) !=6:	
+    if len(sys.argv) !=5:	
 	print len(sys.argv)
-        print "Usage : python reader.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz> <router_id> <o/p pickle> "
+        print "Usage : python reader.py data/<data.gz> mgmt/<mgmt.gz>  <router_id> <o/p pickle> "
         sys.exit(1)
 #compare regular expression for filenameif argv[1]
 
     data_f_dir=sys.argv[1]
     mgmt_f_dir=sys.argv[2]
-    ctrl_f_dir=sys.argv[3]
-    router_id=sys.argv[4]
-    output_file=sys.argv[5]
+    router_id=sys.argv[3]
+    output_file=sys.argv[4]
     file_reader()
     print "mac address of devices "
     print len(device_macs)
