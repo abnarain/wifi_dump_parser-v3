@@ -14,7 +14,7 @@ mcs_rate=mcs_flags()
 channel_flags=channel_flag()
 flags=flag()	 
 
-mystery=0
+
 def print_hex_mac(src_mac_address):
         return "%02x:%02x:%02x:%02x:%02x:%02x" % struct.unpack("BBBBBB",src_mac_address)
 
@@ -272,12 +272,10 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			if radiotap_tx_flags & list(struct.unpack('>H',struct.pack('<H',flags.IEEE80211_RADIOTAP_F_TX_RTS)))[0]:
 				print " TX RTS SHIIIIT "                                
                                 rad_txflags_elem.append(1)
-                                mystery=1
                         else :
                                 rad_txflags_elem.append(0)
 			if radiotap_tx_flags & list(struct.unpack('>H',struct.pack('<H',flags.IEEE80211_RADIOTAP_F_TX_CTS)))[0]:
 				print "TX CTS shhiiiit "
-                                mystery=2
                                 rad_txflags_elem.append(1)
                         else :
                                 rad_txflags_elem.append(0)
@@ -549,11 +547,8 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			pass
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_EXT :
 			pass
-        if mystery==0:
-                return (1,frame_elem,monitor_elem)
-        else :
-                print mystery
-                return (0,frame_elem,monitor_elem)
+
+        return (1,frame_elem,monitor_elem)
 
 def parse_mgmt_fc(frame_control):
         def FC_SUBTYPE(fc) :

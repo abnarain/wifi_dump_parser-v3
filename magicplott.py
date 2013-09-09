@@ -26,8 +26,15 @@ RATE_MARKERS = {
         13.0:'H',18.0:'>',19.5:'h',26.0:'v',36.0:'p',
         39.0:'<',48.0:'*',54.0:'D',52.0:'1',58.5:'2',
         65.0:'3',78.0:'4',117.0 :'8',130.0:'_',
-        104.0:'|',6.0:'CARETDOWN',45.0:'CARETUP',60.0:'CARETRIGHT',40.5:'CARETLEFT',
-        135:'TICKDOWN', 270.0:'TICKUP',108.0:'TICKRIGHT',120.0:'TICKLEFT'
+        104.0:'|',
+        6.0: '$6$',#CARETDOWN,
+        60.0: '$60$',#'CARETRIGHT',
+        40.5: '$40.5$',#'CARETLEFT',
+        45.0:  '$45$', #CARETUP,
+        135.0 : '$135$', #'TICKDOWN',
+        270.0: '$270$',#'TICKUP',
+        108.0: '$108$',#'TICKRIGHT',
+        120.0: '$120$',#'TICKLEFT'
         }
 
 color= ['black', 'blue', 'green', 'brown', 'red', 'purple', 'cyan', 'magenta', 'orange', 'yellow', 'pink',
@@ -58,6 +65,10 @@ def plotter_scatter(x_axis,y_axis,x_axis_label,y_axis_label,x_logscale,y_logscal
     for key,rates_array in x_axis.iteritems():
         for val in range(0,len(rates_array)) :
             lp=None
+#            print len(y_axis[key])
+#            print "key is " , key
+#            print "rates are ", rates_array
+#            print "median is " , median(y_axis[key])
             if len(rates_array[val])==0 :
                 break
             if val==0 :
@@ -85,10 +96,14 @@ def plotter_scatter(x_axis,y_axis,x_axis_label,y_axis_label,x_logscale,y_logscal
         _subplot.set_xscale('log')
     if y_logscale :
         _subplot.set_yscale('log')
-    _subplot.set_xlim([0,1])
+#    _subplot.set_xlim([0,1])
+#    _subplot.set_ylim([0,20])
     canvas = FigureCanvasAgg(fig)
     if '.eps' in outfile_name:
         canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:        
+        canvas.print_figure(outfile_name, dpi = 110)
+
 
 
 def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name):
@@ -116,3 +131,31 @@ def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name
     if '.png' in outfile_name:
         canvas.print_figure(outfile_name, dpi = 110)
 
+
+
+def bar_graph_plotter(x_axis,y1_axis,y2_axis, x_axis_label, y_axis_label,title,outfile_name):
+    legend = []
+    ind = np.arange(len(x_axis))  # the x locations for the groups
+    width = 0.65       # the width of the bars
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    _subplot = fig.add_subplot(1,1,1)
+    rect1=_subplot.bar(ind,y1_axis,color='b')
+    rect2=_subplot.bar(ind+width,y2_axis,color='g')
+    _subplot.legend((rect2[0],rect1[0]),('Home Device Count','Access Points Count'))
+    _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
+    _subplot.set_ylabel(y_axis_label)
+    _subplot.set_xlabel(x_axis_label)
+    a= [i for i in range(0,len(x_axis))]
+    _subplot.set_xticklabels(x_axis)
+    _subplot.set_xticks(a)
+    _subplot.set_title(title)
+    labels = _subplot.get_xticklabels()
+    for label in labels:
+        label.set_rotation(30)
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)

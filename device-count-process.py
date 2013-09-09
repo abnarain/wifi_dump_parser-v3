@@ -99,7 +99,7 @@ def file_reader() :
             print "timestamps don't match " 		
             sys.exit(1)
         else :
-            file_timestamp=mgm_file_current_timestamp	
+            file_timestamp=mgmt_file_current_timestamp	
         if (not ( mgmt_file_seq_no == data_file_seq_no)):
             print "sequence number don't match "
             sys.exit(1)
@@ -148,7 +148,7 @@ def file_reader() :
                 elif radiotap_len ==RADIOTAP_TX_LEN :
                     rate.append(frame_elem[tsf][2])
             else:
-                print "success denied"                    
+                print "data frames; success denied"                    
             data_index=data_index+DATA_STRUCT_SIZE
             del frame_elem
             del monitor_elem
@@ -174,11 +174,12 @@ def file_reader() :
             header = frame[:offset]
             frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
+            print "beacon"
             if not( radiotap_len == RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
                 print "the radiotap header is not correct "		
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
-            if success :
+            if success ==1:
                 for key in frame_elem.keys():
                     tsf=key           
                 parse_mgmt_beacon_frame(frame,radiotap_len,frame_elem)
@@ -193,6 +194,31 @@ def file_reader() :
             mgmt_index=mgmt_index+MGMT_BEACON_STRUCT_SIZE
             del frame_elem
             del monitor_elem
+        mgmt_index=0
+        for idx in xrange(0,len(common_mgmt_frames)-MGMT_COMMON_STRUCT_SIZE,MGMT_COMMON_STRUCT_SIZE ):
+            global file_timestamp
+            frame=common_mgmt_frames[mgmt_index:mgmt_index+MGMT_COMMON_STRUCT_SIZE]
+            offset,success,tsf= 8,-1,0
+            header = frame[:offset]
+            frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
+            (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
+            if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
+                print "the radiotap header is not correct "
+                sys.exit(1)
+            (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
+            if success==1 :
+                for key in frame_elem.keys():
+                    tsf=key
+                temp=frame_elem[tsf]
+                temp.insert(0,tsf)
+                parse_mgmt_common_frame(frame,radiotap_len,frame_elem) # ?? what should be here to parse common frame ?
+                print "common" 
+            else :
+                print "common mgmt success denied"
+            mgmt_index= mgmt_index+MGMT_COMMON_STRUCT_SIZE
+            del frame_elem
+            del monitor_elem
+        
 
         ap_map[file_timestamp]=ap_local_map
         del ap_local_map
@@ -228,7 +254,7 @@ if __name__=='__main__':
     print "rate maps are " 
     print len(rate_map)
     print "done; writing to a file "
-    global_list=[router_id,ap_macs,ap_map,device_macs,device_map,rate_map]
+    global_list=[router_id,ap_macs,device_macs,ap_map,device_map,rate_map]
     output_device = open(output_file, 'wb')
     pickle.dump(global_list,output_device )
     output_device.close()
