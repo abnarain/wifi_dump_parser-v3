@@ -5,7 +5,7 @@ import sys
 import struct
 from header import *
 from collections import defaultdict
-Station=set()
+Sttion=set()
 Bismark_mac=[]
 bismark_status =0
 
@@ -14,6 +14,7 @@ mcs_rate=mcs_flags()
 channel_flags=channel_flag()
 flags=flag()	 
 
+mystery=0
 def print_hex_mac(src_mac_address):
         return "%02x:%02x:%02x:%02x:%02x:%02x" % struct.unpack("BBBBBB",src_mac_address)
 
@@ -45,7 +46,8 @@ def print_chaninfo(flags) :
         elif (flags & IEEE80211_CHAN_HT40U):
                 return "ht/40+"
 
-def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem):	
+def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem):
+        mystery=0
 	if radiotap_len == RADIOTAP_RX_LEN:
 		actual_rate =-1 # this is filled at the end of the parse with ht/non ht rate
 		radiotap_data_retries = 0 
@@ -270,10 +272,12 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			if radiotap_tx_flags & list(struct.unpack('>H',struct.pack('<H',flags.IEEE80211_RADIOTAP_F_TX_RTS)))[0]:
 				print " TX RTS SHIIIIT "                                
                                 rad_txflags_elem.append(1)
+                                mystery=1
                         else :
                                 rad_txflags_elem.append(0)
 			if radiotap_tx_flags & list(struct.unpack('>H',struct.pack('<H',flags.IEEE80211_RADIOTAP_F_TX_CTS)))[0]:
 				print "TX CTS shhiiiit "
+                                mystery=2
                                 rad_txflags_elem.append(1)
                         else :
                                 rad_txflags_elem.append(0)
@@ -368,7 +372,8 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                 print "the rate index is not yet identified and hence reading the transmitted rates indices ",actual_rate 
                                 for j in range(0,15):
                                         print ord(rates_tried[j]),  
-		                sys.exit(1)
+                                if mystery ==0:
+                                        sys.exit(1)
                         if (rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==1) or \
                                     ((rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==0) and radiotap_rate ==0) :#case when first valid frame of ampdu\
                                         #when 802.11 n in operation                 
@@ -544,11 +549,11 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
 			pass
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_EXT :
 			pass
-
-        return (1,frame_elem,monitor_elem)
-        
-
-
+        if mystery==0:
+                return (1,frame_elem,monitor_elem)
+        else :
+                print mystery
+                return (0,frame_elem,monitor_elem)
 
 def parse_mgmt_fc(frame_control):
         def FC_SUBTYPE(fc) :
