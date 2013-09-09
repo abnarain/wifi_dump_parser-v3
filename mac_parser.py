@@ -5,7 +5,7 @@ import sys
 import struct
 from header import *
 from collections import defaultdict
-Sttion=set()
+Station=set()
 Bismark_mac=[]
 bismark_status =0
 
