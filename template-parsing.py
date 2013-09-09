@@ -292,7 +292,7 @@ for data_f_name_list in filename_list : #data_fs :
                 tsf=key
             temp=frame_elem[tsf]
             temp.insert(0,tsf)
-            parse_mgmt_beacon_frame(frame,radiotap_len,frame_elem)
+            parse_mgmt_common_frame(frame,radiotap_len,frame_elem)
             if radiotap_len== RADIOTAP_TX_LEN :
                 tx_time_mgmt_series.append(temp)
         else :

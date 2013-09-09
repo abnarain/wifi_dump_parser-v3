@@ -22,34 +22,93 @@ def pickle_reader(input_folder):
 
 
 if __name__=='__main__':    
-    if len(sys.argv) !=3:
-        print "usage : python unpickeler.py data_folder filename.png  "
+    if len(sys.argv) !=4:
+        print "usage : python unpickeler.py data_folder_2GHz data_folder_5GHz filename.png  "
         sys.exit(0)
-    outfile_name = sys.argv[2]
-    input_folder = sys.argv[1]
-    if '.eps' not in outfile_name and '.png' not in outfile_name:
-        print "Do you really want to write graph to %s?" % (outfile_name)
-        sys.exit(0)
-    [home_ap_table,home_device_table]=pickle_reader(input_folder)
-    d= home_device_table
-    new_list=[]
-    for k,v in home_ap_table.iteritems():        
-        list_devices=home_device_table[k]
-        new_list_devices= [x for x in list_devices if x not in v]
-        new_list.append([k,len(new_list_devices),len(v)])
 
-    new_list.sort(key=lambda x: x[1])
-    labels,home_device_count,home_ap_count=[],[],[]
-    for i in new_list :
-        labels.append(i[0])
-        home_device_count.append(i[1])
-        home_ap_count.append(i[2])
-    bar_graph_plotter(labels,
-                      home_device_count,
-                      home_ap_count,
+    input_folder = sys.argv[1]
+    input_folder5 = sys.argv[2]
+    outfile_name = sys.argv[3]
+#    if '.eps' not in outfile_name and '.png' not in outfile_name:
+ #       print "Do you really want to write graph to %s?" % (outfile_name)
+  #      sys.exit(0)
+    home_ap_2_table=defaultdict(list)
+    home_ap_5_table=defaultdict(list)
+    home_device_2_table=defaultdict(list)
+    home_device_5_table=defaultdict(list)
+    [home_ap_2_table,home_device_2_table]=pickle_reader(input_folder)
+    [home_ap_5_table,home_device_5_table]=pickle_reader(input_folder5)
+    new_list_2=[]
+    for k,v in home_ap_2_table.iteritems():
+        list_devices=home_device_2_table[k]
+        new_list_devices= [x for x in list_devices if x not in v]
+        new_list_2.append([k,len(new_list_devices),len(v)])
+        
+    new_list_2.sort(key=lambda x: x[1])
+    labels_2,home_device_count_2,home_ap_count_2=[],[],[]
+    for i in new_list_2 :
+        labels_2.append(i[0])
+        home_device_count_2.append(i[1])
+        home_ap_count_2.append(i[2])
+
+    new_list_5=[]
+    for k,v in home_ap_5_table.iteritems():        
+        list_devices=home_device_5_table[k]
+        new_list_devices= [x for x in list_devices if x not in v]
+        new_list_5.append([k,len(new_list_devices),len(v)])
+
+    new_list_5.sort(key=lambda x: x[1])
+    labels_5,home_device_count_5,home_ap_count_5=[],[],[]
+    for i in new_list_5 :
+        labels_5.append(i[0])
+        home_device_count_5.append(i[1])
+        home_ap_count_5.append(i[2])
+
+    
+    bar_graph_plotter(labels_5, 
+                      home_device_count_5,
                       'RouterID',
                       'Device Count',
-                      'Number of Devices and Access Points observed in homes(5 GHz)',
-                      outfile_name
+                      'Number of Devices observed in homes(5 GHz)',
+                      outfile_name+'5_devices.png'
                       )
 
+    bar_graph_plotter(labels_2, 
+                      home_device_count_2,
+                      'RouterID',
+                      'Device Count',
+                      'Number of Devices observed in homes(2.4 GHz)',
+                      outfile_name+'2_4_devices.png'
+                      )
+
+
+
+    new_list_2.sort(key=lambda x: x[2])
+    labels_2,home_device_count_2,home_ap_count_2=[],[],[]
+    for i in new_list_2 :
+        labels_2.append(i[0])
+        home_device_count_2.append(i[1])
+        home_ap_count_2.append(i[2])
+
+    new_list_5.sort(key=lambda x: x[2])
+    labels_5,home_device_count_5,home_ap_count_5=[],[],[]
+    for i in new_list_5 :
+        labels_5.append(i[0])
+        home_device_count_5.append(i[1])
+        home_ap_count_5.append(i[2])
+
+    bar_graph_plotter(labels_5, 
+                      home_ap_count_5,
+                      'RouterID',
+                      'Access Points Count',
+                      'Number of Access Points observed in homes(5 GHz)',
+                      outfile_name+'5_ap.png'
+                      )
+
+    bar_graph_plotter(labels_2, 
+                      home_ap_count_2,
+                      'RouterID',
+                      'Device Count',
+                      'Number of Devices and Access Points observed in homes(2.4 GHz)',
+                      outfile_name+'2_4_ap.png'
+                      )                  
