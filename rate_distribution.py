@@ -126,7 +126,7 @@ def all_devices_rates_file_reader(t1,t2,data_fs):
             print file_count
 
 
-
+tx_timeseries,rx_timeseries=[],[]
 def connected_devices_rates_file_reader(t1,t2,data_fs):
     global damaged_frames
     file_count=0
@@ -188,10 +188,12 @@ def connected_devices_rates_file_reader(t1,t2,data_fs):
                 for key in frame_elem.keys():
                     tsf=key                                    
                     parse_data_frame(frame,radiotap_len,frame_elem)
+                    temp=frame_elem[tsf]
+                    temp.insert(0,tsf)
                     if radiotap_len ==RADIOTAP_RX_LEN :
-                        rate_distribution[frame_elem[tsf][7]] +=1
+                        rx_timeseries.append(temp)
                     elif radiotap_len==RADIOTAP_TX_LEN :
-                        rate_distribution[frame_elem[tsf][2]] +=1
+                        tx_timeseries.append(temp)
                     else :
                         print "data frame: impossible radiotap len"
             else:
@@ -202,6 +204,7 @@ def connected_devices_rates_file_reader(t1,t2,data_fs):
             del monitor_elem
         
         data_index=0
+
         for idx in xrange(0,len(err_data_frames)-DATA_ERR_STRUCT_SIZE,DATA_ERR_STRUCT_SIZE ):   
             frame=err_data_frames[data_index:data_index+DATA_ERR_STRUCT_SIZE]
             offset,success,tsf= 8,-1,0
@@ -214,10 +217,12 @@ def connected_devices_rates_file_reader(t1,t2,data_fs):
                 for key in frame_elem.keys():
                     tsf=key
                 parse_err_data_frame(frame,radiotap_len,frame_elem)
+                temp=frame_elem[tsf]
+                temp.insert(0,tsf)
                 if radiotap_len == RADIOTAP_RX_LEN:                                    
-                    rate_distribution[frame_elem[tsf][7]] +=1
+                    rx_timeseries.append(temp)
                 elif radiotap_len ==RADIOTAP_TX_LEN :
-                    print "err tx", frame_elem
+                    print "THIS IS err tx",frame_elem
                     sys.exit(1)
                 else :
                     print "impossible radiotap len detected ; Report CERN"             
@@ -231,24 +236,7 @@ def connected_devices_rates_file_reader(t1,t2,data_fs):
         if file_count %10 == 0:
             print file_count
 
-if __name__=='__main__':
-    if len(sys.argv) !=6 :
-	print len(sys.argv)
-	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2> <outputfile> "
-	sys.exit(1)
-    data_f_dir=sys.argv[1]
-    router_id= sys.argv[2]
-    time1 =sys.argv[3]
-    time2 =sys.argv[4]
-    output_file=sys.argv[5]
-    data_fs=os.listdir(data_f_dir)
-    [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
-    data_file_header_byte_count=0
-    filename_list=[]
-    damaged_frames=0
-    unix_time=set()
-    print "now processing the files to calculate time "
-    all_devices_rates_file_reader(t1,t2,data_fs)
+def plot_all_devices():
     import operator
     #print max(rate_distribution.iteritems(), key=operator.itemgetter(1))[0]
     max_freq= rate_distribution[max(rate_distribution.iteritems(), key=operator.itemgetter(1))[0]]
@@ -268,4 +256,36 @@ if __name__=='__main__':
                       'Distribution of bitrates of all devices in a Home Network(' +router_id+')',
                       output_file+router_id+'_bitrate_dist_2_4.png')
 
-    sys.exit(1)
+def process_connected_devices():
+    pass
+
+if __name__=='__main__':
+    if len(sys.argv) !=6 :
+	print len(sys.argv)
+	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2> <outputfile> "
+	sys.exit(1)
+    data_f_dir=sys.argv[1]
+    router_id= sys.argv[2]
+    time1 =sys.argv[3]
+    time2 =sys.argv[4]
+    output_file=sys.argv[5]
+    data_fs=os.listdir(data_f_dir)
+    [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
+    data_file_header_byte_count=0
+    filename_list=[]
+    damaged_frames=0
+    unix_time=set()
+    print "now processing the files to calculate time "
+    #to process rate distribution of complete home 
+    #all_devices_rates_file_reader(t1,t2,data_fs)
+    #plot_all_devices()
+    connected_devices_rates_file_reader(t1,t2,data_fs)
+    rx_timeseries.sort(key=lambda x:x[0])
+    tx_timeseries.sort(key=lambda x:x[0])
+    Station_list=list(Station)
+    for j in range(0,len(Station_list)):
+        for i in range(0,len(tx_timeseries)):
+            frame = tx_timeseries[i]
+            print frame
+            if frame[12]==Station_list[j] :
+                pass
