@@ -1,3 +1,10 @@
+# Date : 10 September ,2013
+#Purpose : To calculate the entropy of the physical layer error counters 
+#          and plot the entropy of the counters
+# Also calculates the FFT and Autocorrelation of an input series
+#
+
+
 import matplotlib.font_manager
 import numpy as np
 from matplotlib.figure import Figure

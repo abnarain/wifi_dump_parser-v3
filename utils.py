@@ -106,6 +106,7 @@ def timeStamp_Conversion(start_time,end_time,router_id):
 	'OWC43DC7A3F0D4' :"US/Pacific",
 	'OW2CB05DA0D4DA' :"US/Eastern",
     'OWC43DC7A376D3':"US/Eastern",
+    'OWC43DC7A3EE2E':"US/Eastern", # for lab
         }
     # re-interpret 
     originalTimeZone = table[router_id]

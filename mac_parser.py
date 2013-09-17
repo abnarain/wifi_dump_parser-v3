@@ -370,8 +370,10 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                                 print "the rate index is not yet identified and hence reading the transmitted rates indices ",actual_rate 
                                 for j in range(0,15):
                                         print ord(rates_tried[j]),  
-                                if mystery ==0:
-                                        sys.exit(1)
+                                if actual_rate==-1:
+                                        print "wrong actual rate; skipping the frame"
+                                        return (0,frame_elem,monitor_elem)
+                                sys.exit(1)
                         if (rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==1) or \
                                     ((rad_txflags_elem[0]==0 and  rad_txflags_elem[-1] ==0) and radiotap_rate ==0) :#case when first valid frame of ampdu\
                                         #when 802.11 n in operation                 

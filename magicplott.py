@@ -37,8 +37,8 @@ RATE_MARKERS = {
         120.0: '$120$',#'TICKLEFT'
         }
 
-color= ['black', 'blue', 'green', 'brown', 'red', 'purple', 'cyan', 'magenta', 'orange', 'yellow', 'pink',
-        'lime', 'olive', 'chocolate','navy', 'teal', 'gray', 'crimson',  'darkred' , 'darkslategray',
+color= ['crimson', 'blue', 'green', 'brown', 'red', 'purple', 'cyan', 'magenta', 'orange', 'yellow', 'pink',
+        'lime', 'olive', 'chocolate','navy', 'teal', 'gray', 'black',  'darkred' , 'darkslategray',
         'violet', 'mediumvioletred' ,'orchid','tomato' , 'coral', 'goldenrod', 'tan', 'peru',  'sienna',
         'rosybrown','darkgoldenrod','navajowhite','darkkhaki','darkseagreen' ,'firebrick','lightst'
         ]
@@ -78,7 +78,7 @@ def plotter_scatter(x_axis,y_axis,x_axis_label,y_axis_label,x_logscale,y_logscal
             else:
                 lp='_nolegend_'
             print rates_array[val][0]
-            a = _subplot.scatter(rates_array[val][1],median(y_axis[key]),s=50,color=color[index],marker=RATE_MARKERS[rates_array[val][0]],label=lp)
+            a = _subplot.scatter(rates_array[val][1], percentile(y_axis[key],90),s=50,color=color[index],marker=RATE_MARKERS[rates_array[val][0]],label=lp)
             #_subplot.boxplot(contention_table[key]),positions=rates_array[val][1])
             if rates_array[val][0] in rates_encountered:
                 pass
@@ -119,12 +119,11 @@ def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name
     a= [i for i in range(0,len(x_axis))]
     _subplot.set_xticklabels(x_axis)
     _subplot.set_xticks(a)
-    _subplot.set_ylim([0,100])
+    #_subplot.set_ylim([0,100])
     _subplot.set_title(title)
     labels = _subplot.get_xticklabels()
     for label in labels:
-        label.set_rotation(30)
-
+        label.set_rotation(30)    
     canvas = FigureCanvasAgg(fig)
     if '.eps' in outfile_name:
         canvas.print_eps(outfile_name, dpi = 110)
@@ -133,17 +132,17 @@ def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name
 
 
 
-def bar_graph_plotter(x_axis,y1_axis,y2_axis, x_axis_label, y_axis_label,title,outfile_name):
+def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_name):
     legend = []
     ind = np.arange(len(x_axis))  # the x locations for the groups
-    width = 0.65       # the width of the bars
+    width = 0.35       # the width of the bars
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     _subplot = fig.add_subplot(1,1,1)
-    rect1=_subplot.bar(ind,y1_axis,color='b')
-    rect2=_subplot.bar(ind+width,y2_axis,color='g')
-    _subplot.legend((rect2[0],rect1[0]),('Home Device Count','Access Points Count'))
+    rect1=_subplot.bar(ind,y_axis,color='b')
+    #rect2=_subplot.bar(ind+width,y2_axis,color='g')
+    #_subplot.legend((rect1[0]),('Device Counts'))
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
     _subplot.set_ylabel(y_axis_label)
     _subplot.set_xlabel(x_axis_label)

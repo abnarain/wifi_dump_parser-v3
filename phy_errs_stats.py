@@ -346,44 +346,45 @@ def raw_file_reader(t1,t2):
         ofdm_err.sort()
         s=0
         for i in ofdm_err:    
-            if len(phy_ofdm_err_time_series[i]):
+            if len(phy_ofdm_err_time_series[i])>1:
                 k=0
                 a=phy_ofdm_err_time_series[i]
-                s= sum (map ( lambda x:x  , [  i for i in a] ))
+                d= sum (map ( lambda x:x  , [  i for i in a] ))
+                s=[i,d]
             else :
                 a=phy_ofdm_err_time_series[i]
-                s=a[0]
+                s=[i,a[0]]
             ofdm_err_seq.append(s)
 
 
         for i in cck_err:    
-            if len(phy_cck_err_time_series[i]):
+            if len(phy_cck_err_time_series[i])>1:
                 k=0
                 a=phy_cck_err_time_series[i]
-                s= sum (map ( lambda x:x  , [ i for i in a] ))
+                d= sum (map ( lambda x:x  , [  i for i in a] ))
+                s=[i,d]
             else :
                 a=phy_cck_err_time_series[i]
-                s=a[0]
+                s=[i,a[0]]
             cck_err_seq.append(s)
 
         for i in err:
-            if len(phy_err_time_series[i]):
+            if len(phy_err_time_series[i])>1:
                 k=0
                 a=phy_err_time_series[i]
-                s= sum (map ( lambda x:x  , [ i for i in a] ))
+                d= sum (map ( lambda x:x  , [  i for i in a] ))
+                s=[i,d]
             else :
                 a=phy_err_time_series[i]
-                s=a[0]
-            err_seq.append(s)
-     
-#        phy_cck = sum (map ( lambda x:x  , [i[2]  for i in temp_errs] ))
+                s=[i,a[0]]
+            err_seq.append(s)     
 #        phy_ofdm= sum (map ( lambda x:x  , [i[3]  for i in temp_errs] ))
         Physical_errors[file_timestamp].append([err_seq,cck_err_seq,ofdm_err_seq])
 
 if __name__=='__main__':
     if len(sys.argv) !=8 :
 	print len(sys.argv)
-	print "Usage : python station-process.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz>  <router_id> <t1> <t2>  <outputfile> "
+	print "Usage : python file.py data/<data.gz> mgmt/<mgmt.gz> ctrl/<ctrl.gz>  <router_id> <t1> <t2>  <outputfile> "
 	sys.exit(1)
 
     data_f_dir=sys.argv[1]

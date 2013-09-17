@@ -139,32 +139,34 @@ for ctrl_f_name_list in filename_list : #data_fs :
     file_counter +=1
     if file_counter %10 == 0:
         print file_counter
-print "now processing the files to calculate time "
-tx_time_ctrl_series.sort(key=lambda x:x[0])
-rx_time_ctrl_series.sort(key=lambda x:x[0])
-print "number of tx frames ",len(tx_time_ctrl_series)
-print "number of rx frames ",len(rx_time_ctrl_series)
+
+if __name__ =='__main__':
+    print "now processing the files to calculate time "
+    tx_time_ctrl_series.sort(key=lambda x:x[0])
+    rx_time_ctrl_series.sort(key=lambda x:x[0])
+    print "number of tx frames ",len(tx_time_ctrl_series)
+    print "number of rx frames ",len(rx_time_ctrl_series)
 #print"format:tsf, txflags, retx, successful bitrate, total time,Qlen,AMPDU-Q len,Q no, phy-type,retx rate list,seq no, frag no, mac-layer flags, frame prop type,frame size, frame-prop time"
 #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[12],fragment no[13],mac-layer-flags[14], frame-prop-type[15], framesize[16],prop time 
 # 12                  ,13                  ,14            ,16
-rts_count=0
-cts_count=0
-ack_count=0
-print "in rx_looping "
-print "format : time,flags,freq, rx_flags,success rate, rx_queue_time,framesize , signal,RSSI, seq number,frag no,retry frame,prop time"
-for i in range(0,len(rx_time_ctrl_series)):
-    frame = rx_time_ctrl_series[i]
-    if (frame[13][0] ==3 and frame[13][1]==5):
-    	cts_count=cts_count+1
-    if (frame[13][0] ==3 and frame[13][1]==4):
-    	rts_count=rts_count+1
-    if (frame[13][0] ==3 and frame[13][1]==6):	
-	ack_count=ack_count+1
+    rts_count=0
+    cts_count=0
+    ack_count=0
+    print "in rx_looping "
+    print "format : time,flags,freq, rx_flags,success rate, rx_queue_time,framesize , signal,RSSI, seq number,frag no,retry frame,prop time"
+    for i in range(0,len(rx_time_ctrl_series)):
+        frame = rx_time_ctrl_series[i]
+        if (frame[13][0] ==3 and frame[13][1]==5):
+            cts_count=cts_count+1
+        if (frame[13][0] ==3 and frame[13][1]==4):
+            rts_count=rts_count+1
+        if (frame[13][0] ==3 and frame[13][1]==6):	
+            ack_count=ack_count+1
 
     #print frame[12],frame[0],frame[1],frame[2],frame[7],frame[8],frame[9],frame[10],frame[4],frame[11],frame[14],frame[15],frame[16][1],prop_time
     #time [0],flags[1],freq[2], rx_flags[7],success rate [8], rx_queue_time[9],framesize [10], signal [4],RSSI [11], seq number [14], fragment no [15],retry frame [16][1],prop time 
 
-print "Ack count ", ack_count 
-print "RTS count ", rts_count 
-print "CTS count ", cts_count 
-print "%of RTS+CTS", ((rts_count +cts_count) *100.0)/(rts_count+cts_count+ack_count)
+    print "Ack count ", ack_count 
+    print "RTS count ", rts_count 
+    print "CTS count ", cts_count 
+    print "RTS*100/RTS+CTS", ((rts_count) *100.0)/(rts_count+cts_count)
