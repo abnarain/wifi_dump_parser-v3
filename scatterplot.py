@@ -90,7 +90,7 @@ if __name__=='__main__':
     plotter_scatter(retx_rate_table,
         contention_table,
         'retransmits(no. of frames retransmitted /no. of successful transmissions)',
-        'Contention Delay(microsecond)',
+        'Contention Delay(microsecond) 90th percentile',
                     0,
                     0,
                     'Scatterplot for retransmission vs Contention Delay in homes for 5GHz band',
