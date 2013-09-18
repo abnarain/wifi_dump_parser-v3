@@ -58,10 +58,12 @@ def plotter_scatter_rssi_rate(x_axis,y_axis,x_axis_label,y_axis_label,title,outf
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     _subplot = fig.add_subplot(1,1,1)
     index=0
-    for device_id in x_axis :
-        for k,v in y_axis.iteritems():
-            #rssi, rates
-            a = _subplot.scatter(v[1],v[0],color=color[index],label=k)
+    for k,v in y_axis.iteritems():
+        print 'k is', k
+        #rssi, rates
+        print len(v[1]), len(v[0])
+        if len(v[1])>0 and len(v[0])>0 :                
+            _subplot.scatter(v[1],v[0],color=color[index],label=k)
             index=index+1
             
     _subplot.minorticks_on()
