@@ -331,7 +331,6 @@ if __name__=='__main__':
                     router_id+'_rssi_rate.png')
     '''
 
-    print rates_hist_table
     for k,bitrates_list in rates_hist_table.iteritems():
         from_device_bitrate_dict=bitrates_list[0]
         to_device_bitrate_dict=bitrates_list[1]
