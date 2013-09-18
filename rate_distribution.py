@@ -304,10 +304,15 @@ if __name__=='__main__':
         s=0
         for k,v in rate_rx_hist.iteritems():
             s= s+v
-
         for k,v in rate_rx_hist.iteritems():
             rate_rx_hist[k]=  v*1.0/s
             
+        s=0
+        for k,v in rate_tx_hist.iteritems():
+            s= s+v
+        for k,v in rate_tx_hist.iteritems():
+            rate_tx_hist[k]=  v*1.0/s
+                                                        
         rate_rssi_table[Station_list[j]].append(rates_list)
         rate_rssi_table[Station_list[j]].append(rssi_list)
         rates_hist_table[Station_list[j]].append(rate_rx_hist)
@@ -334,8 +339,8 @@ if __name__=='__main__':
         y_axis_2=to_device_bitrate_dict.values()
         bar_graph_plotter_distr( x_axis_1, y_axis_1, x_axis_2,y_axis_2,
                  'Bitrates in Home ('+router_id+')',
-                 'Probability of device transmitting at certain bitrates ',
-                 'Distribution of bitrates of frames received from Device',
-                 'Distribution of bitrates of frames transmitted to Device'+k,
-                 router_id+'rate_dist.png')
+                 'Probability of bitrates ',
+                 'Distribution of bitrates of frames received from Device ' +k,
+                 'Distribution of bitrates of frames transmitted to Device '+k,
+                 ''.join(k.split(':'))+'_rate_dist.png')
    #do a distribution of packets transmitted ?
