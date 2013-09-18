@@ -238,7 +238,7 @@ def connected_devices_rates_file_reader(t1,t2,data_fs):
         if file_count %10 == 0:
             print file_count
 
-def plot_all_devices():
+def plot_all_devices(router_id):
     import operator
     #print max(rate_distribution.iteritems(), key=operator.itemgetter(1))[0]
     max_freq= rate_distribution[max(rate_distribution.iteritems(), key=operator.itemgetter(1))[0]]
@@ -262,15 +262,14 @@ def process_connected_devices():
     pass
 
 if __name__=='__main__':
-    if len(sys.argv) !=6 :
+    if len(sys.argv) !=5 :
 	print len(sys.argv)
-	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2> <outputfile> "
+	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2>  "
 	sys.exit(1)
     data_f_dir=sys.argv[1]
     router_id= sys.argv[2]
     time1 =sys.argv[3]
     time2 =sys.argv[4]
-    output_file=sys.argv[5]
     data_fs=os.listdir(data_f_dir)
     [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
     data_file_header_byte_count=0
@@ -312,14 +311,20 @@ if __name__=='__main__':
         rate_rssi_table[Station_list[j]].append(rssi_list)
         print rates_hist_table[Station_list[j]].append(rate_hist)
         #do a scatterplot of rssi vs rates
-    
-    plotter_scatter(Station_list,
+    from magicplott import * 
+    img=router_id+'_rssi_rate.png'
+    plotter_scatter_rssi_rate(Station_list,
                     rate_rssi_table,
                     'RSSI',
                     'Rate at which device transmitted to Access Point',
-                    'Scatterplot for retransmission vs Contention Delay in homes for 5GHz band',
-                    outfile_name)
-
-
-        # do a distribution of rates
-        #do a distribution of packets transmitted ?
+                    'Scatterplot for device bitrate vs RSSI',
+                    img)
+    '''
+    plotter_hist(Station_list,
+                 rates_hist_table,
+                 'Device ID'
+                 'Probability of device transmitting at certain bitrates '
+                 'Distribution of bitrates of frames received from Devices',
+                 device_rate_dist)
+                 '''
+   #do a distribution of packets transmitted ?

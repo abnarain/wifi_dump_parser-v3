@@ -43,6 +43,36 @@ color= ['crimson', 'blue', 'green', 'brown', 'red', 'purple', 'cyan', 'magenta',
         'rosybrown','darkgoldenrod','navajowhite','darkkhaki','darkseagreen' ,'firebrick','lightst'
         ]
 
+def plotter_scatter_rssi_rate(x_axis,y_axis,x_axis_label,y_axis_label,title,outfile_name):
+    '''
+    device id array
+    dictionary of array of (rate,rssi)
+    x label
+    y label
+    title
+    output file name
+    '''
+    legend = []
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    _subplot = fig.add_subplot(1,1,1)
+    index=0
+    for device_id in x_axis :
+        for k,v in y_axis.iteritems():
+            a = _subplot.scatter(v[0],v[1],s=50,color=color[index],label=k)
+            
+
+    _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05),scatterpoints=1)
+    _subplot.set_ylabel(y_axis_label)
+    _subplot.set_xlabel(x_axis_label)
+    _subplot.set_title(title)
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:        
+        canvas.print_figure(outfile_name, dpi = 110)
+
 def plotter_scatter(x_axis,y_axis,x_axis_label,y_axis_label,x_logscale,y_logscale,title,outfile_name):
     '''
     Input
@@ -50,6 +80,9 @@ def plotter_scatter(x_axis,y_axis,x_axis_label,y_axis_label,x_logscale,y_logscal
     y_axis : a dictionary of contention delay
     x label
     y label
+    bool for x logscale
+    bool for y logscale
+    title
     Outputs a plot
     '''
     legend = []
