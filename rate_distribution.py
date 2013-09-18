@@ -213,6 +213,8 @@ def connected_devices_rates_file_reader(t1,t2,data_fs):
             monitor_elem=defaultdict(list)
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
+            #not sure to use it yet
+            break 
             if success==1:
                 for key in frame_elem.keys():
                     tsf=key
@@ -283,9 +285,41 @@ if __name__=='__main__':
     rx_timeseries.sort(key=lambda x:x[0])
     tx_timeseries.sort(key=lambda x:x[0])
     Station_list=list(Station)
+    rate_rssi_table=defaultdict(list)
+    rates_hist_table=defaultdict(list)
     for j in range(0,len(Station_list)):
+        rate_hist=defaultdict(int)
+        rssi_list,rates_list=[],[]
         for i in range(0,len(tx_timeseries)):
-            frame = tx_timeseries[i]
-            print frame
+            break 
+            frame = tx_timeseries[i]            
             if frame[12]==Station_list[j] :
                 pass
+
+        for i in range(0,len(rx_timeseries)):
+            frame = rx_timeseries[i]
+            rates_list.append(frame[8])                
+            rssi_list.append(frame[11])
+            if frame[12]==Station_list[j] :
+                rate_hist[frame[8]] +=1 
+        s=0
+        for k,v in rate_hist.iteritems():
+            s= s+v
+
+        for k,v in rate_hist.iteritems():
+            rate_hist[k]=  v*1.0/s
+        rate_rssi_table[Station_list[j]].append(rates_list)
+        rate_rssi_table[Station_list[j]].append(rssi_list)
+        print rates_hist_table[Station_list[j]].append(rate_hist)
+        #do a scatterplot of rssi vs rates
+    
+    plotter_scatter(Station_list,
+                    rate_rssi_table,
+                    'RSSI',
+                    'Rate at which device transmitted to Access Point',
+                    'Scatterplot for retransmission vs Contention Delay in homes for 5GHz band',
+                    outfile_name)
+
+
+        # do a distribution of rates
+        #do a distribution of packets transmitted ?
