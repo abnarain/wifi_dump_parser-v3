@@ -195,3 +195,44 @@ def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_na
         canvas.print_eps(outfile_name, dpi = 110)
     if '.png' in outfile_name:
         canvas.print_figure(outfile_name, dpi = 110)
+
+def bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, y_axis_label,title_1,title_2,outfile_name):
+    legend = []
+    ind = np.arange(len(x_axis_1))  # the x locations for the groups
+    width = 0.35       # the width of the bars
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    _subplot = fig.add_subplot(2,1,1)
+    rect1=_subplot.bar(ind,y_axis_1,width,color='r')
+    #rect2=_subplot.bar(ind+width,y2_axis,color='g')
+    #_subplot.legend((rect1[0]),('bitrates'))
+    _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
+    _subplot.set_ylabel(y_axis_label)
+    _subplot.set_xlabel(x_axis_label)
+    a= [i for i in range(0,len(x_axis_1))]
+    _subplot.set_xticklabels(x_axis_1)
+    _subplot.set_xticks(a)
+    _subplot.set_title(title_1)
+    labels = _subplot.get_xticklabels()
+    for label in labels:
+        label.set_rotation(30)
+   
+    ind = np.arange(len(x_axis_2))  # the x locations for the groups
+    _subplot_2 = fig.add_subplot(2,1,2)
+    rect2=_subplot_2.bar(ind,y_axis_2,width,color='b')
+    #rect2=_subplot.bar(ind+width,y2_axis,color='g')
+    #_subplot_2.legend((rect2[0]),('bitrates'))                               
+    _subplot_2.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))   
+    _subplot_2.set_ylabel(y_axis_label)                                      
+    _subplot_2.set_xlabel(x_axis_label)                                      
+    a= [i for i in range(0,len(x_axis_2))]                                   
+    _subplot_2.set_xticklabels(x_axis_2)                                       
+    _subplot_2.set_xticks(a)                                                  
+    _subplot_2.set_title(title_2)
+    labels = _subplot_2.get_xticklabels()
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)
