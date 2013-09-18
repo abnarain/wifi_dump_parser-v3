@@ -287,31 +287,33 @@ if __name__=='__main__':
     rate_rssi_table=defaultdict(list)
     rates_hist_table=defaultdict(list)
     for j in range(0,len(Station_list)):
-        rate_hist=defaultdict(int)
+        rate_rx_hist=defaultdict(int)
+        rate_tx_hist=defaultdict(int)
         rssi_list,rates_list=[],[]
         for i in range(0,len(tx_timeseries)):
-            break 
             frame = tx_timeseries[i]            
             if frame[12]==Station_list[j] :
-                pass
+                rate_tx_hist[frame[3]] +=1 
 
         for i in range(0,len(rx_timeseries)):
             frame = rx_timeseries[i]
             if frame[12]==Station_list[j] and frame[11]>0:
                 rates_list.append(frame[8])                
                 rssi_list.append(frame[11])
-                rate_hist[frame[8]] +=1 
+                rate_rx_hist[frame[8]] +=1 
         s=0
-        for k,v in rate_hist.iteritems():
+        for k,v in rate_rx_hist.iteritems():
             s= s+v
 
-        for k,v in rate_hist.iteritems():
-            rate_hist[k]=  v*1.0/s
+        for k,v in rate_rx_hist.iteritems():
+            rate_rx_hist[k]=  v*1.0/s
+            
         rate_rssi_table[Station_list[j]].append(rates_list)
         rate_rssi_table[Station_list[j]].append(rssi_list)
-        print rates_hist_table[Station_list[j]].append(rate_hist)
-        #do a scatterplot of rssi vs rates
+        rates_hist_table[Station_list[j]].append(rate_rx_hist)
+        rates_hist_table[Station_list[j]].append(rate_tx_hist)
     from magicplott import * 
+    '''
     plotter_scatter_rssi_rate(Station_list,
                     rate_rssi_table,
                     'RSSI',
@@ -319,11 +321,21 @@ if __name__=='__main__':
                     'Scatterplot for device bitrate vs RSSI',
                     router_id+'_rssi_rate.png')
     '''
-    plotter_hist(Station_list,
-                 rates_hist_table,
-                 'Device ID'
-                 'Probability of device transmitting at certain bitrates '
-                 'Distribution of bitrates of frames received from Devices',
-                 device_rate_dist)
-                 '''
+    #bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, y_axis_label,title_1,title_2,outfile_name):
+
+
+    print rates_hist_table
+    for k,bitrates_list in rates_hist_table.iteritems():
+        from_device_bitrate_dict=bitrates_list[0]
+        to_device_bitrate_dict=bitrates_list[1]
+        x_axis_1=from_device_bitrate_dict.keys()
+        y_axis_1=from_device_bitrate_dict.values()
+        x_axis_2=to_device_bitrate_dict.keys()
+        y_axis_2=to_device_bitrate_dict.values()
+        bar_graph_plotter_distr( x_axis_1, y_axis_1, x_axis_2,y_axis_2,
+                 'Bitrates in Home ('+router_id+')',
+                 'Probability of device transmitting at certain bitrates ',
+                 'Distribution of bitrates of frames received from Device',
+                 'Distribution of bitrates of frames transmitted to Device'+k,
+                 router_id+'rate_dist.png')
    #do a distribution of packets transmitted ?
