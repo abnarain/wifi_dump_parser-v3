@@ -297,9 +297,9 @@ if __name__=='__main__':
 
         for i in range(0,len(rx_timeseries)):
             frame = rx_timeseries[i]
-            rates_list.append(frame[8])                
-            rssi_list.append(frame[11])
-            if frame[12]==Station_list[j] :
+            if frame[12]==Station_list[j] and frame[11]>0:
+                rates_list.append(frame[8])                
+                rssi_list.append(frame[11])
                 rate_hist[frame[8]] +=1 
         s=0
         for k,v in rate_hist.iteritems():
@@ -312,13 +312,12 @@ if __name__=='__main__':
         print rates_hist_table[Station_list[j]].append(rate_hist)
         #do a scatterplot of rssi vs rates
     from magicplott import * 
-    img=router_id+'_rssi_rate.png'
     plotter_scatter_rssi_rate(Station_list,
                     rate_rssi_table,
                     'RSSI',
                     'Rate at which device transmitted to Access Point',
                     'Scatterplot for device bitrate vs RSSI',
-                    img)
+                    router_id+'_rssi_rate.png')
     '''
     plotter_hist(Station_list,
                  rates_hist_table,

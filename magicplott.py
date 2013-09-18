@@ -60,9 +60,11 @@ def plotter_scatter_rssi_rate(x_axis,y_axis,x_axis_label,y_axis_label,title,outf
     index=0
     for device_id in x_axis :
         for k,v in y_axis.iteritems():
-            a = _subplot.scatter(v[0],v[1],s=50,color=color[index],label=k)
+            #rssi, rates
+            a = _subplot.scatter(v[1],v[0],color=color[index],label=k)
+            index=index+1
             
-
+    _subplot.minorticks_on()
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05),scatterpoints=1)
     _subplot.set_ylabel(y_axis_label)
     _subplot.set_xlabel(x_axis_label)
