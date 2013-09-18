@@ -2,7 +2,9 @@
 #Date : Sept 17, 2013
 #Purpose : To read the binary files with data from BISmark deployment in homes
 # Gives the rates used by all devices in the network where the Bismark Access Point is installed
-#  
+# Gives the distribution of rates of each of the device connected to Bismark Access Point and exchanging data 
+# Gives the scatterplot for the RSSI and received bitrates of the connected devices 
+
 
 import os,sys,re
 import gzip
@@ -262,20 +264,22 @@ def process_connected_devices():
     pass
 
 if __name__=='__main__':
-    if len(sys.argv) !=5 :
+    if len(sys.argv) !=6 :
 	print len(sys.argv)
-	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2>  "
+	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2> <outputfolder> "
 	sys.exit(1)
     data_f_dir=sys.argv[1]
     router_id= sys.argv[2]
     time1 =sys.argv[3]
     time2 =sys.argv[4]
+    output_folder=sys.argv[5]
     data_fs=os.listdir(data_f_dir)
     [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
     data_file_header_byte_count=0
     filename_list=[]
     damaged_frames=0
     unix_time=set()
+    os.system('mkdir -p '+output_folder+router_id )
     print "now processing the files to calculate time "
     #to process rate distribution of complete home 
     #all_devices_rates_file_reader(t1,t2,data_fs)
@@ -326,8 +330,6 @@ if __name__=='__main__':
                     'Scatterplot for device bitrate vs RSSI',
                     router_id+'_rssi_rate.png')
     '''
-    #bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, y_axis_label,title_1,title_2,outfile_name):
-
 
     print rates_hist_table
     for k,bitrates_list in rates_hist_table.iteritems():
@@ -342,5 +344,5 @@ if __name__=='__main__':
                  'Probability of bitrates ',
                  'Distribution of bitrates of frames received from Device ' +k,
                  'Distribution of bitrates of frames transmitted to Device '+k,
-                 ''.join(k.split(':'))+'_rate_dist.png')
+                 output_folder +router_id+'/'+''.join(k.split(':'))+'_rate_dist.png')
    #do a distribution of packets transmitted ?
