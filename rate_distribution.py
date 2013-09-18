@@ -260,8 +260,6 @@ def plot_all_devices(router_id):
                       'Distribution of bitrates of all devices in a Home Network(' +router_id+')',
                       output_file+router_id+'_bitrate_dist_2_4.png')
 
-def process_connected_devices():
-    pass
 
 if __name__=='__main__':
     if len(sys.argv) !=6 :
@@ -322,14 +320,14 @@ if __name__=='__main__':
         rates_hist_table[Station_list[j]].append(rate_rx_hist)
         rates_hist_table[Station_list[j]].append(rate_tx_hist)
     from magicplott import * 
-    '''
+    
     plotter_scatter_rssi_rate(Station_list,
                     rate_rssi_table,
                     'RSSI',
                     'Rate at which device transmitted to Access Point',
                     'Scatterplot for device bitrate vs RSSI',
                     router_id+'_rssi_rate.png')
-    '''
+    
 
     for k,bitrates_list in rates_hist_table.iteritems():
         from_device_bitrate_dict=bitrates_list[0]
