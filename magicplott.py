@@ -259,7 +259,7 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
         a= [j for j in range(0,len(x_axes[i]))]
         print x_axes[i]
         print a
-        _subplot_2.set_xticklabels(x_axes[i])               
+        _subplot.set_xticklabels(x_axes[i])               
         _subplot.set_xticks(a)
         _subplot.set_title(title+ '('+device_ids[i]+')')
         labels = _subplot.get_xticklabels()
