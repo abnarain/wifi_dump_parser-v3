@@ -134,11 +134,12 @@ if __name__=='__main__':
         if len(access_class.keys())>0:     
             Station_access_class_map[s].append(access_class)
     from magicplott import *
+    print Station_access_class_map
     x_axes,y_axes,device_ids=[],[],[]
     for device_id, hw_queue_map  in Station_access_class_map.iteritems():
         device_ids.append(device_id)
         x_axis,y_axis=[],[]        
-        print "hw map is ", hw_queue_map
+        print "hw map for ",device_id, "is ", hw_queue_map
         x_axis=hw_queue_map[0].keys()
         x_axis.sort()
         x_axes.append(x_axis)
@@ -148,7 +149,7 @@ if __name__=='__main__':
         bar_graph_subplots(device_ids,
                            x_axes,y_axes,
                            'Hardware Queue No/ Access Class',
-                           'Number of frames transmitted from the Queue',
+                           'Frames tx from the Queue',
                            'Distribution of wireless traffic into 802.11 Access Class',
                             router_id+'_access_class_distr.png')
     # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11

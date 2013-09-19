@@ -252,14 +252,16 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
         print x_axes[i]
         ind = np.arange(len(x_axes[i]))  # the x locations for the groups
         _subplot = fig.add_subplot(len(device_ids),1,i)
-        rect1=_subplot.bar(ind,y_axes[i][0],width,color=color[i])
+        rect1=_subplot.bar(ind,y_axes[i],width,color=color[i])
         _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
         _subplot.set_ylabel(y_axis_label)
         _subplot.set_xlabel(x_axis_label)
-        a= [i for i in range(0,len(x_axes[i]))]
-        _subplot.set_xticklabels(x_axes[i])
+        a= [j for j in range(0,len(x_axes[i]))]
+        print x_axes[i]
+        print a
+        _subplot_2.set_xticklabels(x_axes[i])               
         _subplot.set_xticks(a)
-        _subplot.set_title(title)
+        _subplot.set_title(title+ '('+device_ids[i]+')')
         labels = _subplot.get_xticklabels()
         for label in labels:
             label.set_rotation(30)  
