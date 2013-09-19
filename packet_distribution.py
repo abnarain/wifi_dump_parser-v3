@@ -98,8 +98,6 @@ def file_reader(t1,t2,data_fs):
 
         if file_count %10 == 0:
             print file_count
-        if file_count > 100 :
-            break
 
 
 if __name__=='__main__':
