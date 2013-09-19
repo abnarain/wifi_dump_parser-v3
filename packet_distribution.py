@@ -2,7 +2,7 @@
 #Date : Aug 26, 2013
 #Purpose : To read the binary files with data from BISmark deployment in homes
 # Gives the packet sizes of the frames received by the BISmark Access Point
-# Access Class of frames transmitted
+# Creates a map of the Access Class of frames transmitted for each device inside home
 
 import os,sys,re
 import gzip
@@ -98,6 +98,8 @@ def file_reader(t1,t2,data_fs):
 
         if file_count %10 == 0:
             print file_count
+        if file_count > 100 :
+            break
 
 
 if __name__=='__main__':
@@ -125,27 +127,32 @@ if __name__=='__main__':
         for frame_element in tx_timeseries: 
             if s == frame_element[12]:
                 access_class[frame_element[8]] +=1
-        Station_access_class_map[s].append(access_class)
-    for k,v in Station_access_class_map.iteritems():
-        print k
-        print v
-        print "===="
+        keys_to_delete=[]        
+        for k,v in access_class.iteritems():
+            if v <600:
+                keys_to_delete.append(k)
+        for key in keys_to_delete :
+            del access_class[key]
+        if len(access_class.keys())>0:     
+            Station_access_class_map[s].append(access_class)
     from magicplott import *
-    x_axes,y_axes,d_ids=[],[],[]
+    x_axes,y_axes,device_ids=[],[],[]
     for device_id, hw_queue_map  in Station_access_class_map.iteritems():
-        d_ids.append(device_id)
+        device_ids.append(device_id)
         x_axis,y_axis=[],[]        
-        x_axis=hw_queue_map.keys()
+        print "hw map is ", hw_queue_map
+        x_axis=hw_queue_map[0].keys()
         x_axis.sort()
         x_axes.append(x_axis)
         for i in x_axis :
-            y_axis.append(hw_queue_map[i])
+            y_axis.append(hw_queue_map[0][i])
         y_axes.append(y_axis)
-    print d_ids
-    print x_axes
-    print y_axes
-        
-        #frame_elements.sort(key=lambda x:x[0])
+        bar_graph_subplots(device_ids,
+                           x_axes,y_axes,
+                           'Hardware Queue No/ Access Class',
+                           'Number of frames transmitted from the Queue',
+                           'Distribution of wireless traffic into 802.11 Access Class',
+                            router_id+'_access_class_distr.png')
     # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
     #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[13],fragment no[14],mac-layer-flags[15], farme-prop-type[16], framesize[17],
 # 12                  ,13                  ,14

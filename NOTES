@@ -53,3 +53,8 @@ When retransmission occur, subtract the propogation time of the #retransmission 
 
 
 Debug : Have to look at frames with screwed tx descriptors with time lost
+Update on Sept 18, 2013 : Can't help such frames, discard them !
+
+
+Data location : 
+cd /data/users/sburnett/synced-from-dp4

@@ -241,7 +241,7 @@ def bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, 
 
 
 
-def bar_graph_subplots(device_ids,list_x_axes,list_y_axes,x_axis_label, y_axis_label,title,outfile_name):
+def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title,outfile_name):
     legend = []
     width = 0.35       # the width of the bars
     fig = Figure(linewidth=0.0)
@@ -249,16 +249,17 @@ def bar_graph_subplots(device_ids,list_x_axes,list_y_axes,x_axis_label, y_axis_l
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
 
     for i in range(0,len(device_ids)):
+        print x_axes[i]
         ind = np.arange(len(x_axes[i]))  # the x locations for the groups
-        _subplot = fig.add_subplot(len(devices_ids),1,i)
-        rect1=_subplot.bar(ind,y_axis_1,width,color=color[i])
+        _subplot = fig.add_subplot(len(device_ids),1,i)
+        rect1=_subplot.bar(ind,y_axes[i][0],width,color=color[i])
         _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
         _subplot.set_ylabel(y_axis_label)
         _subplot.set_xlabel(x_axis_label)
-        a= [i for i in range(0,len(x_axis_1))]
-        _subplot.set_xticklabels(x_axis_1)
+        a= [i for i in range(0,len(x_axes[i]))]
+        _subplot.set_xticklabels(x_axes[i])
         _subplot.set_xticks(a)
-        _subplot.set_title(title_1)
+        _subplot.set_title(title)
         labels = _subplot.get_xticklabels()
         for label in labels:
             label.set_rotation(30)  
