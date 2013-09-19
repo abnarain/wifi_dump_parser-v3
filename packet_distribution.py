@@ -130,8 +130,21 @@ if __name__=='__main__':
         print k
         print v
         print "===="
-
-
+    from magicplott import *
+    x_axes,y_axes,d_ids=[],[],[]
+    for device_id, hw_queue_map  in Station_access_class_map.iteritems():
+        d_ids.append(device_id)
+        x_axis,y_axis=[],[]        
+        x_axis=hw_queue_map.keys()
+        x_axis.sort()
+        x_axes.append(x_axis)
+        for i in x_axis :
+            y_axis.append(hw_queue_map[i])
+        y_axes.append(y_axis)
+    print d_ids
+    print x_axes
+    print y_axes
+        
         #frame_elements.sort(key=lambda x:x[0])
     # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
     #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[13],fragment no[14],mac-layer-flags[15], farme-prop-type[16], framesize[17],
