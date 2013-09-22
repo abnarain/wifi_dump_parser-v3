@@ -144,6 +144,11 @@ def plotter_scatter(x_axis,y_axis,x_axis_label,y_axis_label,x_logscale,y_logscal
 
 
 def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name):
+    '''
+    x-Home Router Id labels 
+    y-The percentage of RTS frames out of  RTS+CTS fraems expressed as percentage ; noise floor
+    Gives the box plot of the percentage as the input
+    '''
     legend = []
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
@@ -170,6 +175,10 @@ def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name
 
 
 def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_name):
+    '''
+    x-axis is the label for bitrates 
+    y-axis is the di
+    '''
     legend = []
     ind = np.arange(len(x_axis))  # the x locations for the groups
     width = 0.35       # the width of the bars
@@ -178,8 +187,6 @@ def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_na
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     _subplot = fig.add_subplot(1,1,1)
     rect1=_subplot.bar(ind,y_axis,color='b')
-    #rect2=_subplot.bar(ind+width,y2_axis,color='g')
-    #_subplot.legend((rect1[0]),('Device Counts'))
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
     _subplot.set_ylabel(y_axis_label)
     _subplot.set_xlabel(x_axis_label)
@@ -197,6 +204,11 @@ def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_na
         canvas.print_figure(outfile_name, dpi = 110)
 
 def bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, y_axis_label,title_1,title_2,outfile_name):
+    '''
+    Shows the distribution of bitrates uplink and downlink as a bar graph
+    x-axis is the bitrate label
+    y-axis is the frequency of each bitrate normalized by the total number of frames observed
+    '''
     legend = []
     ind = np.arange(len(x_axis_1))  # the x locations for the groups
     width = 0.35       # the width of the bars
@@ -206,8 +218,6 @@ def bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, 
     _subplot = fig.add_subplot(2,1,1)
     rect1=_subplot.bar(ind,y_axis_1,width,color='r')
     _subplot.set_ylim([0,1])
-    #rect2=_subplot.bar(ind+width,y2_axis,color='g')
-    #_subplot.legend((rect1[0]),('bitrates'))
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
     _subplot.set_ylabel(y_axis_label)
     _subplot.set_xlabel(x_axis_label)
@@ -242,6 +252,12 @@ def bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, 
 
 
 def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title,outfile_name):
+    '''
+    device ids in home
+    x axes is the traffic type
+    y axes is the frame count on of that access class type
+    Plots one graph for a home with multiple devices in each subplot with the given information
+    '''
     legend = []
     width = 0.35       # the width of the bars
     fig = Figure(linewidth=0.0)
@@ -257,6 +273,7 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
         _subplot.set_ylabel(y_axis_label)
         _subplot.set_xlabel(x_axis_label)
         _subplot.set_xlim([0,10])
+        #_subplot.set_yscale('log')
         d={0:'Video',
            1:'Voice',
            2:'Best Effort',
