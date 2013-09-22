@@ -30,10 +30,10 @@ def pickle_reader_time_map(input_folder):
         #router_id,ap_macs,device_macs,ap_map,device_map,rate_map ; maps are of times 
 	_f_content= pickle.load(open(input_folder+f_name,'rb'))
 	router_id= _f_content[0]
-        ap_mac=_f_content[3]
-        device_mac=_f_content[4]
-        home_device_table[router_id]=device_mac
-        home_ap_table[router_id]=ap_mac
+        ap_map=_f_content[3]
+        device_map=_f_content[4]
+        home_device_table[router_id]=device_map
+        home_ap_table[router_id]=ap_map
         
     return [home_ap_table,home_device_table]
 
@@ -46,15 +46,13 @@ if 0:#__name__=='__main__':
     '''
 
     if len(sys.argv) !=4:
-        print "usage : python unpickeler.py data_folder_2GHz data_folder_5GHz filename.png  "
+        print "usage : python <unpickeler.py> <data_folder_2GHz> <data_folder_5GHz> <filename(without png extention>  "
         sys.exit(0)
 
     input_folder = sys.argv[1]
     input_folder5 = sys.argv[2]
     outfile_name = sys.argv[3]
-#    if '.eps' not in outfile_name and '.png' not in outfile_name:
- #       print "Do you really want to write graph to %s?" % (outfile_name)
-  #      sys.exit(0)
+
     home_ap_2_table=defaultdict(list)
     home_ap_5_table=defaultdict(list)
     home_device_2_table=defaultdict(list)
@@ -104,8 +102,6 @@ if 0:#__name__=='__main__':
                       outfile_name+'2_4_devices.png'
                       )
 
-
-
     new_list_2.sort(key=lambda x: x[2])
     labels_2,home_device_count_2,home_ap_count_2=[],[],[]
     for i in new_list_2 :
@@ -136,12 +132,10 @@ if 0:#__name__=='__main__':
                       outfile_name+'2_4_ap.png'
                       )
 
+#Date : 15 Sept, 2012
+#Partially written; needs to be completed
 
-
-
-
-
-if __name__=='__main__':
+if 0:# __name__=='__main__':
 
     '''
     This function is for plotting the number of Devices 
