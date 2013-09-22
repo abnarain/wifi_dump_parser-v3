@@ -145,7 +145,7 @@ if 0: #__name__=='__main__':
 
 if __name__ == '__main__':                                                                                             
     '''
-    Plot the Contention time delay vs the Number of Access Points
+    Plot the Contention time delay vs the Number of Access Points scatterplot 
     '''
     if len(sys.argv) !=4:
         print "usage : python unpickeler.py <contention_data_folder_2GHz>  <ap_count_data_folder> <filename.png>  "
@@ -158,6 +158,37 @@ if __name__ == '__main__':
     home_contention_table=defaultdict(list)
     [home_ap_2_table,home_device_2_table]=device_count_pickle_reader(access_point_data_input_folder)
     home_contention_table=contention_data_pickle_reader(contention_data_input_folder)
-    
-#    simply_scatter(         )
-    #print home_ap_2_table
+    router_list=[]
+    x_axis_ap_counts=[]
+    y_axis_contention_array=[]
+
+    for router_id,ap_count in home_ap_2_table.iteritems():
+        if router_id in home_contention_table.keys():
+            if len(home_contention_table[router_id]) >1000: # more than 1000 sample points
+                router_list.append(router_id)
+                x_axis_ap_counts.append(len(ap_count))
+                y_axis_contention_array.append(home_contention_table[router_id])
+
+
+    scatter_simply(router_list,x_axis_ap_counts,y_axis_contention_array,
+                   'Access Point Count',
+                   'Contention Period (90th percentile) in microseconds',
+                   'Scatter plot for No of Access Point vs Contention Period inside homes',
+                   outfile_name+'_ap_count.png')
+
+    router_list=[]
+    x_axis_ap_counts=[]
+    y_axis_contention_array=[]
+    for router_id,ap_count in home_device_2_table.iteritems():
+        if router_id in home_contention_table.keys():
+            if len(home_contention_table[router_id]) >1000: # more than 1000 sample points
+                router_list.append(router_id)
+                x_axis_ap_counts.append(len(ap_count))
+                y_axis_contention_array.append(home_contention_table[router_id])
+
+    scatter_simply(router_list,x_axis_ap_counts,y_axis_contention_array,
+                   'Device Count',
+                   'Contention Period (90th percentile) in microseconds',
+                   'Scatter plot for No of Access Point vs Contention Period inside homes',
+                   outfile_name+'_device_count.png')
+

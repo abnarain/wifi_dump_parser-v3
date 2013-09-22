@@ -52,7 +52,6 @@ def plotter_scatter_rssi_rate(x_axis,y_axis,x_axis_label,y_axis_label,title,outf
     title
     output file name
     '''
-    legend = []
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
@@ -149,7 +148,6 @@ def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name
     y-The percentage of RTS frames out of  RTS+CTS fraems expressed as percentage ; noise floor
     Gives the box plot of the percentage as the input
     '''
-    legend = []
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
@@ -176,10 +174,9 @@ def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name
 
 def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_name):
     '''
-    x-axis is the label for bitrates 
-    y-axis is the di
+    x-axis is the label for all bitrates observed in home    
+    y-axis is the frequency of bitrate normalized by that of the highest frame bitrate observed 
     '''
-    legend = []
     ind = np.arange(len(x_axis))  # the x locations for the groups
     width = 0.35       # the width of the bars
     fig = Figure(linewidth=0.0)
@@ -209,7 +206,6 @@ def bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, 
     x-axis is the bitrate label
     y-axis is the frequency of each bitrate normalized by the total number of frames observed
     '''
-    legend = []
     ind = np.arange(len(x_axis_1))  # the x locations for the groups
     width = 0.35       # the width of the bars
     fig = Figure(linewidth=0.0)
@@ -258,7 +254,6 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
     y axes is the frame count on of that access class type
     Plots one graph for a home with multiple devices in each subplot with the given information
     '''
-    legend = []
     width = 0.35       # the width of the bars
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
@@ -289,6 +284,29 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
         labels = _subplot.get_xticklabels()
         for label in labels:
             label.set_rotation(30)  
+
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)
+
+
+def scatter_simply(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title,outfile_name):
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    _subplot = fig.add_subplot(1,1,1)
+    legend=[]
+    for i in range(0,len(router_list)):        
+        _subplot.scatter(x_axis[i], percentile(y_axis[i],90),s=100,color=color[i],label=router_list[i]) 
+    _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05),scatterpoints=1)
+    _subplot.set_ylabel(y_axis_label)
+    _subplot.set_xlabel(x_axis_label)
+    _subplot.set_title(title)
+    labels = _subplot.get_xticklabels()
+    for label in labels:
+        label.set_rotation(30)  
 
     canvas = FigureCanvasAgg(fig)
     if '.eps' in outfile_name:
