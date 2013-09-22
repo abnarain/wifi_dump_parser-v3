@@ -109,7 +109,7 @@ if __name__=='__main__':
     router_id= sys.argv[2]
     time1 =sys.argv[3]
     time2 =sys.argv[4]
-    output_file=sys.argv[5]
+    output_folder=sys.argv[5]
     data_fs=os.listdir(data_f_dir)
     [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
     data_file_header_byte_count=0
@@ -151,7 +151,7 @@ if __name__=='__main__':
                            'Hardware Queue No/ Access Class',
                            'Frames tx from the Queue',
                            'Distribution of wireless traffic into 802.11 Access Class',
-                            router_id+'_access_class_distr.png')
+                            output_folder+router_id+'_access_class_distr.png')
     # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
     #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[13],fragment no[14],mac-layer-flags[15], farme-prop-type[16], framesize[17],
 # 12                  ,13                  ,14
