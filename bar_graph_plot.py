@@ -140,7 +140,7 @@ if 0:# __name__=='__main__':
     '''
     This function is for plotting the number of Devices 
     and Access Points witnessed by BISmark Access Point 
-    and their persistence
+    persistently
     '''
 
     if len(sys.argv) !=3:
@@ -149,9 +149,7 @@ if 0:# __name__=='__main__':
 
     input_folder = sys.argv[1]
     outfile_name = sys.argv[2]
-#    if '.eps' not in outfile_name and '.png' not in outfile_name:
- #       print "Do you really want to write graph to %s?" % (outfile_name)
-  #      sys.exit(0)
+
     home_ap_2_table=defaultdict(list)
     home_device_2_table=defaultdict(list)
 

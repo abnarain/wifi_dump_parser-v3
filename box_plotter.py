@@ -1,4 +1,8 @@
 from magicplott import *
+#Date : 5 Sept
+#Author : Abhinav Narain
+# Purpose : Plot the nosie variation across homes 
+#Plot the variation in RTS frames across homes 
 
 rts_cts_by_rts_cts_ack_table={
 	'OWC43DC7A3EDEC' : [21.7721855356, 44.7886540886,5.38103836057, 8.9494472027,3.82154064508],
