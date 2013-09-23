@@ -16,6 +16,7 @@ from mac_parser import *
 from utils import *
 from rate import * 
 
+from magicplott import * 
 try:
     import cPickle as pickle
 except ImportError:
@@ -24,6 +25,9 @@ except ImportError:
 rate_distribution=defaultdict(int)
 
 def all_devices_rates_file_reader(t1,t2,data_fs):
+    '''
+    Fetches all the birates in a home in a data structure from file
+    '''
     global damaged_frames
     file_count=0
     for data_f_n in data_fs :
@@ -130,6 +134,9 @@ def all_devices_rates_file_reader(t1,t2,data_fs):
 
 tx_timeseries,rx_timeseries=[],[]
 def connected_devices_rates_file_reader(t1,t2,data_fs):
+    '''
+    Fetches the bitrate of each device from a home (uplink/downlink)
+    '''
     global damaged_frames
     file_count=0
     for data_f_n in data_fs :
@@ -215,7 +222,7 @@ def connected_devices_rates_file_reader(t1,t2,data_fs):
             monitor_elem=defaultdict(list)
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
-            #not sure to use it yet
+            #not sure to use the erroneous frames
             break 
             if success==1:
                 for key in frame_elem.keys():
@@ -223,7 +230,7 @@ def connected_devices_rates_file_reader(t1,t2,data_fs):
                 parse_err_data_frame(frame,radiotap_len,frame_elem)
                 temp=frame_elem[tsf]
                 temp.insert(0,tsf)
-                if radiotap_len == RADIOTAP_RX_LEN:                                    
+                if radiotap_len == RADIOTAP_RX_LEN:              
                     rx_timeseries.append(temp)
                 elif radiotap_len ==RADIOTAP_TX_LEN :
                     print "THIS IS err tx",frame_elem
@@ -235,24 +242,28 @@ def connected_devices_rates_file_reader(t1,t2,data_fs):
                    
             data_index= data_index+DATA_ERR_STRUCT_SIZE
             del frame_elem
-            del monitor_elem    
+            del monitor_elem
         
         if file_count %10 == 0:
             print file_count
 
 def plot_all_devices(router_id):
-    import operator
-    #print max(rate_distribution.iteritems(), key=operator.itemgetter(1))[0]
-    max_freq= rate_distribution[max(rate_distribution.iteritems(), key=operator.itemgetter(1))[0]]
+    if 0:
+        import operator    
+        max_freq= rate_distribution[max(rate_distribution.iteritems(), key=operator.itemgetter(1))[0]]
+    agg=0
     for k,v in rate_distribution.iteritems():
-        v = v*1.0/ max_freq
+        agg=agg+v
+        
+    for k,v in rate_distribution.iteritems():
+        v = v*100.0/ agg
         rate_distribution[k]=v
     x_axis=rate_distribution.keys()
     x_axis.sort()
     y_axis=[]
     for i in range(0,len(x_axis)):
         y_axis.append( rate_distribution[x_axis[i]])        
-    from magicplott import *
+
     bar_graph_plotter(x_axis,
                       y_axis,
                       '802.11 bitrates',
@@ -261,27 +272,7 @@ def plot_all_devices(router_id):
                       output_file+router_id+'_bitrate_dist_2_4.png')
 
 
-if __name__=='__main__':
-    if len(sys.argv) !=6 :
-	print len(sys.argv)
-	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2> <outputfolder> "
-	sys.exit(1)
-    data_f_dir=sys.argv[1]
-    router_id= sys.argv[2]
-    time1 =sys.argv[3]
-    time2 =sys.argv[4]
-    output_folder=sys.argv[5]
-    data_fs=os.listdir(data_f_dir)
-    [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
-    data_file_header_byte_count=0
-    filename_list=[]
-    damaged_frames=0
-    unix_time=set()
-    os.system('mkdir -p '+output_folder+router_id )
-    print "now processing the files to calculate time "
-    #to process rate distribution of complete home 
-    #all_devices_rates_file_reader(t1,t2,data_fs)
-    #plot_all_devices()
+def device_rate_histogram_scatter_plots(t1,t2,data_fs):
     connected_devices_rates_file_reader(t1,t2,data_fs)
     rx_timeseries.sort(key=lambda x:x[0])
     tx_timeseries.sort(key=lambda x:x[0])
@@ -319,7 +310,6 @@ if __name__=='__main__':
         rate_rssi_table[Station_list[j]].append(rssi_list)
         rates_hist_table[Station_list[j]].append(rate_rx_hist)
         rates_hist_table[Station_list[j]].append(rate_tx_hist)
-    from magicplott import * 
     
     plotter_scatter_rssi_rate(Station_list,
                     rate_rssi_table,
@@ -342,4 +332,59 @@ if __name__=='__main__':
                  'Distribution of bitrates of frames received from Device ' +k,
                  'Distribution of bitrates of frames transmitted to Device '+k,
                  output_folder +router_id+'/'+''.join(k.split(':'))+'_rate_dist.png')
-   #do a distribution of packets transmitted ?
+
+
+def bitrate_scatter_plot(t1,t2,data_fs):
+    '''
+    The function plots the bitrate scatter plot for upstream and downstream 
+    plots
+    '''
+    Station_series=defaultdict(list)
+    connected_devices_rates_file_reader(t1,t2,data_fs)
+    Station_list=list(Station)
+    for device_id in range(0,len(Station_list)):
+        station_serialized_frames=[]
+        for i in range(0,len(tx_timeseries)):
+            frame = tx_timeseries[i]
+            if frame[12]==Station_list[device_id] :
+                station_serialized_frames.append(frame)
+        for i in range(0,len(rx_timeseries)):
+            frame = rx_timeseries[i]
+            if frame[12]==Station_list[device_id]:
+                station_serialized_frames.append(frame)
+                
+        station_serialized_frames.sort(key=lambda x: x[0])
+        Station_series[Station_list[device_id]].append(station_serialized_frames)
+
+    for s,i in Station_series.iteritems():
+        for k in i :
+            for j in k: 
+                print k
+                #check rx
+            
+
+if __name__=='__main__':
+    if len(sys.argv) !=6 :
+	print len(sys.argv)
+	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2> <outputfolder> "
+	sys.exit(1)
+
+    data_f_dir=sys.argv[1]
+    router_id= sys.argv[2]
+    time1 =sys.argv[3]
+    time2 =sys.argv[4]
+    output_folder=sys.argv[5]
+    data_fs=os.listdir(data_f_dir)
+    [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
+    data_file_header_byte_count=0
+    filename_list=[]
+    damaged_frames=0
+    unix_time=set()
+    os.system('mkdir -p '+output_folder+router_id )
+    print "now processing the files to calculate time "
+    #For overall rate distribution of entire home 
+#    all_devices_rates_file_reader(t1,t2,data_fs)
+#    plot_all_devices(router_id)
+    #For scatterplot of RSSI vs bitrate and histogram of transmitted to received bitrates    
+#    device_rate_histogram_scatter_plots(t1,t2,data_fs)
+    bitrate_scatter_plot(t1,t2,data_fs)

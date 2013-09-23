@@ -107,9 +107,12 @@ def device_count_pickle_reader(input_folder):
     return [home_ap_table,home_device_table]
 
 
-if 0: #__name__=='__main__':    
+if 0: #__name__=='__main__':
+    '''
+    This main plots the scattterplot of contetion time with the avg retransmission count
+    '''
     if len(sys.argv) !=3:
-        print "usage : python unpickeler.py data_folder filename.png  "
+        print "usage : python unpickeler.py <data_folder> <filename.png>  "
         sys.exit(0)
     outfile_name = sys.argv[2]
     input_folder = sys.argv[1]
@@ -143,9 +146,9 @@ if 0: #__name__=='__main__':
                     outfile_name)
 
 
-if __name__ == '__main__':                                                                                             
+if  __name__ == '__main__': 
     '''
-    Plot the Contention time delay vs the Number of Access Points scatterplot 
+    Plot the Scatterplot of Contention time delay vs the Number of Access Points scatterplot 
     '''
     if len(sys.argv) !=4:
         print "usage : python unpickeler.py <contention_data_folder_2GHz>  <ap_count_data_folder> <filename.png>  "
@@ -169,7 +172,6 @@ if __name__ == '__main__':
                 x_axis_ap_counts.append(len(ap_count))
                 y_axis_contention_array.append(home_contention_table[router_id])
 
-
     scatter_simply(router_list,x_axis_ap_counts,y_axis_contention_array,
                    'Access Point Count',
                    'Contention Period (90th percentile) in microseconds',
@@ -191,4 +193,12 @@ if __name__ == '__main__':
                    'Contention Period (90th percentile) in microseconds',
                    'Scatter plot for No of Access Point vs Contention Period inside homes',
                    outfile_name+'_device_count.png')
+
+
+
+
+
+
+
+
 
