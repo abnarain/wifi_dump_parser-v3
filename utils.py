@@ -1,3 +1,8 @@
+#Data : April 23, 2013
+#Author : Abhinav Narain 
+#Purpose : General Statistics and TimeZone manipulation functions
+# File belongs to part of Data Parsing Library
+
 from collections import defaultdict
 #from collections import Counter
 import numpy as np

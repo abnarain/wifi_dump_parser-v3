@@ -1,3 +1,6 @@
+#Data : Sept 10, 2013
+#Purpose : Plotting functions for Wireless Data Capture Analysis
+# File belongs to part of Data Parsing Library
 import sys, os, numpy, math, time
 import matplotlib.font_manager
 import numpy as np

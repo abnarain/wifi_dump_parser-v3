@@ -1,7 +1,7 @@
 #Author : Abhinav Narain 
-#Date : 14 Jan 
+#Date : 14 Jan,2013 
 #Purpose : header file defining all the constants used c structs used 
-
+# File belongs to part of Data Parsing Library
 
 IEEE80211_TX_RC_USE_SHORT_PREAMBLE  = 1<< 2
 IEEE80211_TX_RC_40_MHZ_WIDTH        = 1<< 5

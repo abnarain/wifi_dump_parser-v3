@@ -1,7 +1,7 @@
-
 # Author : Abhinav Narain
 # Date : 23 April 2013 
 #purpose : part of library regarding the rate information
+# File belongs to part of Data Parsing Library
 #static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, int pktlen,
 def ath_pkt_duration(rix, pktlen, width, half_gi,shortPreamble):
     def HT_RC_2_STREAMS(_rc):
