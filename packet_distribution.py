@@ -269,16 +269,17 @@ if __name__=='__main__':
     ampdu_dynamics_timestamp=ampdu_dynamics.keys()
     mpdu_dynamics_timestamp.sort()
     ampdu_dynamics_timestamp.sort()
-    for timestamp, list_mpdu_lens in mpdu_dynamics.iteritems():
-         timeseries_mpdu.append(timestamp), mpdu_list.append(max(list_mpdu_lens))
+    for timestamp in mpdu_dynamics_timestamp:
+         timeseries_mpdu.append(timestamp), mpdu_list.append(max(mpdu_dynamics[timestamp]))
 
-    for timestamp, list_ampdu_lens in mpdu_dynamics.iteritems():
-         timeseries_ampdu.append(timestamp), ampdu_list.append(max(list_ampdu_lens))
+    for timestamp in ampdu_dynamics_timestamp:
+         timeseries_ampdu.append(timestamp), ampdu_list.append(max(ampdu_dynamics[timestamp]))
+
     from magicplott import *
     plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list,
                     'time',
-                    'maximum length of the MPDU queue in a minute',
-                    'maximum length of the AMPDU queue in a minute',
+                    'max MPDU queue per minute',
+                    'max AMPDU queue per minute',
                     'Variation of Queue length with time',
                     output_folder+router_id+'_Qlen_.png', router_id)
     print "damage frame count " , damaged_frames
