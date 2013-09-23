@@ -93,20 +93,20 @@ def timeStamp_Conversion(start_time,end_time,router_id):
         'OWC43DC7A3EE3A' :"US/Pacific",
         'OWA021B7A9BF83' :"US/Pacific",
         'OW204E7F91A331' :"US/Pacific",
-	'OW2CB05DA0D183' :"US/Eastern",
+	    'OW2CB05DA0D183' :"US/Eastern",
         'OWA021B7A9BDA6' :"US/Eastern",
         'OWC43DC7B0CAB6' :"US/Eastern",
         'OW2CB05DA0C23E' :"US/Eastern",
         'OWA021B7A9BEF0' :"US/Eastern",
-	'OW4C60DED0F74B' :"US/Eastern",
-	'OW4C60DEE6B01C' :"US/Eastern",
+    	'OW4C60DED0F74B' :"US/Eastern",
+	    'OW4C60DEE6B01C' :"US/Eastern",
         'OW100D7F64CA77' :"US/Pacific",
-	'OW4C60DEE6B037' :"US/Pacific",
+    	'OW4C60DEE6B037' :"US/Pacific",
         'OW4C60DEE6C9AB' :"US/Central",
-	'OWC43DC7A3F0D4' :"US/Pacific",
-	'OW2CB05DA0D4DA' :"US/Eastern",
-    'OWC43DC7A376D3':"US/Eastern",
-    'OWC43DC7A3EE2E':"US/Eastern", # for lab
+    	'OWC43DC7A3F0D4' :"US/Pacific",
+    	'OW2CB05DA0D4DA' :"US/Eastern",
+        'OWC43DC7A376D3':"US/Eastern",
+        'OWC43DC7A3EE2E':"US/Eastern", # lab testing router 
         }
     # re-interpret 
     originalTimeZone = table[router_id]
