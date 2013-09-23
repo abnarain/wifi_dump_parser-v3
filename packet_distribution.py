@@ -265,11 +265,20 @@ if __name__=='__main__':
     print "now processing the files to calculate time "
     Queue_file_reader(t1,t2,data_fs)
     timeseries_mpdu,timeseries_ampdu,mpdu_list,ampdu_list=[],[],[],[]
+    mpdu_dynamics_timestamp=mpdu_dynamics.keys()
+    ampdu_dynamics_timestamp=ampdu_dynamics.keys()
+    mpdu_dynamics_timestamp.sort()
+    ampdu_dynamics_timestamp.sort()
     for timestamp, list_mpdu_lens in mpdu_dynamics.iteritems():
          timeseries_mpdu.append(timestamp), mpdu_list.append(max(list_mpdu_lens))
 
     for timestamp, list_ampdu_lens in mpdu_dynamics.iteritems():
          timeseries_ampdu.append(timestamp), ampdu_list.append(max(list_ampdu_lens))
-    
+    from magicplott import *
+    plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list,
+                    'time',
+                    'maximum length of the MPDU queue in a minute',
+                    'maximum length of the AMPDU queue in a minute',
+                    'Variation of Queue length with time',
+                    output_folder+router_id+'_Qlen_.png', router_id)
     print "damage frame count " , damaged_frames
-

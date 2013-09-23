@@ -254,7 +254,7 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
     y axes is the frame count on of that access class type
     Plots one graph for a home with multiple devices in each subplot with the given information
     '''
-    width = 0.35       # the width of the bars
+    width = 1      # the width of the bars
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
@@ -308,6 +308,44 @@ def scatter_simply(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title,o
     for label in labels:
         label.set_rotation(30)  
 
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)
+
+
+def plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list, x_axis_label,y_axis_label,y2_axis_label,title,outfile_name, router_id):
+    '''
+    timestamps of every minute
+    max mpdu size of observed in the minute (for ampdu and mpdu length)
+    '''
+    print "in plot timeseries"
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    _subplot = fig.add_subplot(2,1,1)
+    _subplot.plot(timeseries_mpdu,mpdu_list,color=color[0],label=router_id) 
+    _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
+    _subplot.set_ylabel(y_axis_label)
+    _subplot.set_xlabel(x_axis_label)
+    _subplot.set_title(title)
+
+    labels = _subplot.get_xticklabels()
+    for label in labels:
+        label.set_rotation(30)  
+    _subplot_2 = fig.add_subplot(2,1,2)
+    legend=[]
+    _subplot_2.plot(timeseries_ampdu,ampdu_list,color=color[0],label=router_id) 
+    _subplot_2.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
+    _subplot_2.set_ylabel(y2_axis_label)
+    _subplot_2.set_xlabel(x_axis_label)
+    _subplot_2.set_title(title)
+
+    labels = _subplot_2.get_xticklabels()
+    for label in labels:
+        label.set_rotation(30)
+    print timeseries_ampdu
     canvas = FigureCanvasAgg(fig)
     if '.eps' in outfile_name:
         canvas.print_eps(outfile_name, dpi = 110)
