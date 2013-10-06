@@ -188,10 +188,10 @@ def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_na
     _subplot = fig.add_subplot(1,1,1)
     rect1=_subplot.bar(ind,y_axis,color='b')
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
-    _subplot.set_ylabel(y_axis_label)
-    _subplot.set_xlabel(x_axis_label)
+    _subplot.set_ylabel(y_axis_label,fontsize=17)
+    _subplot.set_xlabel(x_axis_label,fontsize=17)
     a= [i for i in range(0,len(x_axis))]
-    _subplot.set_xticklabels(x_axis)
+    _subplot.set_xticklabels(x_axis, fontsize=17)
     _subplot.set_xticks(a)
     _subplot.set_title(title)
     labels = _subplot.get_xticklabels()
@@ -270,7 +270,7 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
         _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
         _subplot.set_ylabel(y_axis_label)
         _subplot.set_xlabel(x_axis_label)
-        _subplot.set_xlim([0,10])
+        #_subplot.set_xlim([0,10])
         #_subplot.set_yscale('log')
         d={0:'Video',
            1:'Voice',
