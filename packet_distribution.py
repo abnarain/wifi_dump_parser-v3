@@ -164,6 +164,9 @@ if 0:#__name__=='__main__':
 
 ampdu_dynamics,mpdu_dynamics=defaultdict(list), defaultdict(list)
 def Queue_file_reader(t1,t2,data_fs):
+    '''
+    Stores the size of ampdu and mpdu queues in a dictionary
+    '''
     global damaged_frames
     file_count=0
     for data_f_n in data_fs :

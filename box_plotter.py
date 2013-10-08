@@ -58,7 +58,6 @@ rts_by_rts_cts_table={
 	'OWC43DC7B0AE69' : [1165795 *100.0 / (1165795 +3009114) ,1177221 *100.0 / (1177221 +1805217)]
 }
 
-
 if 0: #__name__=='__ma
    '''
    This main works to plot the RTS+CTS percentage for each home to the 
@@ -132,6 +131,6 @@ if __name__=='__main__':
     plotter_boxplot(home_labels,
                     home_vals,
                     'RouterIds',
-                    'RTS*100 / (RTS+CTS)',
-                    '% of RTS frames in homes',
+                    'Percentage',
+                    'Percentage of RTS Frames out of RTS and CTS frame',
                     image_file)
