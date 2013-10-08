@@ -38,7 +38,7 @@ def pickle_reader_time_map(input_folder):
     return [home_ap_table,home_device_table]
 
 
-if 0:#__name__=='__main__':    
+if __name__=='__main__':    
     '''
     This main function is for plotting the number 
     of distinct devices and Access Points seen by 
@@ -46,7 +46,7 @@ if 0:#__name__=='__main__':
     '''
 
     if len(sys.argv) !=4:
-        print "usage : python <unpickeler.py> <data_folder_2GHz> <data_folder_5GHz> <filename(without png extention>  "
+        print "usage : python unpickeler.py <data_folder_2GHz> <data_folder_5GHz> <filename(without png extention)>  "
         sys.exit(0)
 
     input_folder = sys.argv[1]
@@ -140,7 +140,7 @@ if 0:# __name__=='__main__':
     '''
     This function is for plotting the number of Devices 
     and Access Points witnessed by BISmark Access Point 
-    persistently
+    *persistently*
     '''
 
     if len(sys.argv) !=3:

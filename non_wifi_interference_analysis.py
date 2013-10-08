@@ -3,8 +3,6 @@
 #          and plot the entropy of the counters
 # Also calculates the FFT and Autocorrelation of an input series
 #
-
-
 import matplotlib.font_manager
 import numpy as np
 from matplotlib.figure import Figure
@@ -15,7 +13,6 @@ from collections import defaultdict
 from pylab import plot, show, title, xlabel, ylabel, subplot,savefig
 from scipy import fft, arange
 import pickle
-
 
 fig_width = 12
 fig_length = 12.25
@@ -49,7 +46,7 @@ def auto_correlation(y):
     ax2.acorr(y, usevlines=True, normed=True, maxlags=30, lw=2)    
     ax2.grid(True)
     ax2.axhline(0, color='black', lw=2)
-    ax2.set_title('hello')
+    ax2.set_title('AutoCorrelation')
     plt.show() 
 
 
@@ -103,7 +100,7 @@ def entropy(labels):
     return ent
 
 
-def plotSpectrum(y,Fs):
+def plotSpectrum(y,Fs,image_name):
     """
     Plots a Single-Sided Amplitude Spectrum of y(t)
     """
@@ -125,9 +122,8 @@ def plotSpectrum(y,Fs):
     plot(frq,abs(Y),'r') # plotting the spectrum
     xlabel('Freq (Hz)')
     ylabel('|Y(freq)|')
-
     #show()
-    savefig('ofdm_with_microwave.png',dpi=110)
+    savefig(image_name,dpi=110)
 
 def print_image(x,y,x2,y2,outfile_name):
     fig = Figure(linewidth=0.0)
@@ -186,7 +182,7 @@ if __name__ =='__main__':
         else: 
             orig_ofdm_counts.append(y[i][1])
             orig_ofdm_time.append(y[i][0])
-            if y[i][0]-time1 <8000:
+            if y[i][0]-time1 <8334:
                 temp_accumulator=temp_accumulator+y[i][1]
             else :
                 err_samples.append(temp_accumulator)
@@ -196,9 +192,11 @@ if __name__ =='__main__':
     print er*100.0/(er+sa)
     e=[]
     t=[]
+    print "before spectrum plotting " 
+    plotSpectrum(err_samples,1000000/8334.0,'fft.png')
+    print "done with printing spectrum "
     for i in range(0,len(err_samples),250):    
         #auto_correlation(err_samples[i:i+250])
-        #lotSpectrum(err_samples,1/8000.0)
         e.append(entropy(err_samples[i:i+250]))
         t.append(i)
 

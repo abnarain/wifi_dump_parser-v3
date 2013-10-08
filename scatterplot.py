@@ -175,8 +175,9 @@ if  __name__ == '__main__':
     scatter_simply(router_list,x_axis_ap_counts,y_axis_contention_array,
                    'Access Point Count',
                    'Contention Period (90th percentile) in microseconds',
-                   'Variation of Contention Period with #Access Points in vicinity',
-                   outfile_name+'_ap_count.png')
+                   'Variation of Contention Period with #Access Points in vicinity (2.4 GHz)',
+                   outfile_name+'_ap_count.png',[0,70],[0,16000])
+    
 
     router_list=[]
     x_axis_ap_counts=[]
@@ -191,8 +192,8 @@ if  __name__ == '__main__':
     scatter_simply(router_list,x_axis_ap_counts,y_axis_contention_array,
                    'Number of devices inside homes ',
                    'Contention Period (90th percentile) in microseconds',
-                   'Variation of Contention Period with #Devices in vicinity',
-                   outfile_name+'_device_count.png')
+                   'Variation of Contention Period with #Devices in vicinity (2.4 GHz)',
+                   outfile_name+'_device_count.png',[0,400],[0,16000])
 
 
 

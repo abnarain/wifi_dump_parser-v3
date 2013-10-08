@@ -81,15 +81,16 @@ def plotter_scatter_rssi_rate(x_axis,y_axis,x_axis_label,y_axis_label,title,outf
 
 def plotter_scatter(x_axis,y_axis,x_axis_label,y_axis_label,x_logscale,y_logscale,title,outfile_name):
     '''
-    Input
-    x_axis : a dictionary of list of lists {a:[[rate,retx],[]]}
-    y_axis : a dictionary of contention delay
+    Input:
+    x_axis: a dictionary of list of lists {a:[[rate,retx],[]]}
+    y_axis: a dictionary of contention delay
     x label
     y label
     bool for x logscale
     bool for y logscale
     title
-    Outputs a plot
+    Output:
+    file name
     '''
     legend = []
     fig = Figure(linewidth=0.0)
@@ -205,6 +206,8 @@ def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_na
 
 def bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, y_axis_label,title_1,title_2,outfile_name):
     '''
+    Depricated as Snoeren mentioned a scatterplot with specs to be plotted
+
     Shows the distribution of bitrates uplink and downlink as a bar graph
     x-axis is the bitrate label
     y-axis is the frequency of each bitrate normalized by the total number of frames observed
@@ -295,7 +298,7 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
         canvas.print_figure(outfile_name, dpi = 110)
 
 
-def scatter_simply(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title,outfile_name):
+def scatter_simply(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title,outfile_name,xlim,ylim):
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
@@ -307,6 +310,8 @@ def scatter_simply(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title,o
     _subplot.set_ylabel(y_axis_label)
     _subplot.set_xlabel(x_axis_label)
     _subplot.set_title(title)
+    _subplot.set_xlim(xlim)
+    _subplot.set_ylim(ylim)
     labels = _subplot.get_xticklabels()
     for label in labels:
         label.set_rotation(30)  
