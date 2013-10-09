@@ -146,21 +146,7 @@ if 0: #__name__=='__main__':
                     outfile_name)
 
 
-if  __name__ == '__main__': 
-    '''
-    Plot the Scatterplot of Contention time delay vs the Number of Access Points scatterplot 
-    '''
-    if len(sys.argv) !=4:
-        print "usage : python unpickeler.py <contention_data_folder_2GHz>  <ap_device_count_data_folder> <filename.png>  "
-        sys.exit(0)
-    contention_data_input_folder = sys.argv[1]
-    access_point_data_input_folder = sys.argv[2]
-    outfile_name = sys.argv[3]
-    home_ap_2_table=defaultdict(list)
-    home_device_2_table=defaultdict(list)
-    home_contention_table=defaultdict(list)
-    [home_ap_2_table,home_device_2_table]=device_count_pickle_reader(access_point_data_input_folder)
-    home_contention_table=contention_data_pickle_reader(contention_data_input_folder)
+def contention_general(home_contention_table,home_ap_2_table,home_device_2_table,outfile_name):
     router_list=[]
     x_axis_ap_counts=[]
     y_axis_contention_array=[]
@@ -194,6 +180,58 @@ if  __name__ == '__main__':
                    'Contention Period (90th percentile) in microseconds',
                    'Variation of Contention Period with #Devices in vicinity (2.4 GHz)',
                    outfile_name+'_device_count.png',[0,400],[0,16000])
+
+
+
+if  __name__ == '__main__': 
+    '''
+    Plot the Scatterplot of Contention time delay vs the Number of Access Points scatterplot 
+    '''
+    if len(sys.argv) !=4:
+        print "usage : python unpickeler.py <contention_data_folder_2GHz>  <ap_device_count_data_folder> <filename.png>  "
+        sys.exit(0)
+    contention_data_input_folder = sys.argv[1]
+    access_point_data_input_folder = sys.argv[2]
+    outfile_name = sys.argv[3]
+    home_ap_2_table=defaultdict(list)
+    home_device_2_table=defaultdict(list)
+    home_contention_table=defaultdict(list)
+    [home_ap_2_table,home_device_2_table]=device_count_pickle_reader(access_point_data_input_folder)
+    home_contention_table=contention_data_pickle_reader(contention_data_input_folder)
+    contention_general(home_contention_table,home_ap_2_table,home_device_2_table,outfile_name)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
