@@ -537,5 +537,3 @@ if __name__=='__main__':
     #For scatterplot of RSSI vs bitrate and histogram of transmitted to received bitrates    
     #device_rate_vs_rssi_plots(t1,t2,data_fs,router_id)
     per_station_packet_dumper(t1,t2,data_fs,_folder,router_id)
-
-
