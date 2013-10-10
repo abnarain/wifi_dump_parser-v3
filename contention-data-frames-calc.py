@@ -3,7 +3,7 @@
 #Purpose : To read the binary files with data from BISmark deployment in homes
 #          Gives the frames: transmitted and received by the Access point in human readable form 
 #          To test the output of the files with the dumps on clients; and understanding the trace 
-# Gives an array of Contention delay at Access Point 
+# Gives a dictionary of Contention delay per Access Class at Access Point (not classified Contention delays also) 
 # Gives the router ID with the rates and the number 
 # of frames which were transmitted and retransmitted 
 # at that rate
@@ -25,7 +25,10 @@ except ImportError:
     import pickle
 
 tx_time_data_series=[]
-
+retransmission_count_table= {65.0 :0, 58.5:0} #defaultdict(list)
+frame_count_table={65.0 :0, 58.5:0} #defaultdict(list)
+contention_time=[]
+contention_time_per_access_class=defaultdict(list)
 def file_reader(t1,t2,data_fs):
     global damaged_frames
     file_count=0
@@ -67,10 +70,12 @@ def file_reader(t1,t2,data_fs):
         err_data_frames_missed=data_contents[3]
 
     #done with reading the binary blobs from file ; now check for timestamps are correct
+        '''
         if  (data_file_current_timestamp < t1-1):
             continue 
         if (data_file_current_timestamp >t2+1):
             break 
+        '''
         correct_data_frames=header_and_correct_data_frames[data_file_header_byte_count+1:]
         data_index=0
         for idx in xrange(0,len(correct_data_frames)-DATA_STRUCT_SIZE ,DATA_STRUCT_SIZE ):	
@@ -100,33 +105,15 @@ def file_reader(t1,t2,data_fs):
 
         if file_count %10 == 0:
             print file_count
+        if file_count >320:
+            break
 
-retransmission_count_table= {65.0 :0, 58.5:0} #defaultdict(list)
-frame_count_table={65.0 :0, 58.5:0} #defaultdict(list)
-contention_time=[]
-if __name__=='__main__':
-    if len(sys.argv) !=6 :
-	print len(sys.argv)
-	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2> <outputfile> "
-	sys.exit(1)
-    data_f_dir=sys.argv[1]
-    router_id= sys.argv[2]
-    time1 =sys.argv[3]
-    time2 =sys.argv[4]
-    output_file=sys.argv[5]
-    data_fs=os.listdir(data_f_dir)
-    [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
-    data_file_header_byte_count=0
-    filename_list=[]
-    damaged_frames=0
-    unix_time=set()
-    print "now processing the files to calculate time "
-    file_reader(t1,t2,data_fs)
+
+def contention_delay():
     tx_time_data_series.sort(key=lambda x:x[0])    
     Station_list=list(Station)
     Station_tx_retx_count = defaultdict(list)
     frame_count=0
-    print len(tx_time_data_series)
     for i in range(0,len(tx_time_data_series)):
         frame = tx_time_data_series[i]
         mpdu_q_size=frame[5]
@@ -134,7 +121,7 @@ if __name__=='__main__':
         retx=frame[2]
         tsf=frame[0]
         total_time=-1
-	rate=frame[3]
+        rate=frame[3]
         if retx >=0:
             total_time=frame[4]
             frame_count +=1
@@ -155,18 +142,15 @@ if __name__=='__main__':
         if mpdu_q_size ==0 and retx==0 :
             if total_time==-1:
                 print "error: ",total_time
-            contention_time.append(total_time)
+            contention_time.append([total_time])
     # 0      ,1          ,2     ,3              ,4            ,5        ,6          ,7       ,8          ,9                ,10        ,11
     #time [0],txflags[1],retx[2],success_rate[3],total_time[4],Q len [5],A-Q len [6], Q-no[7],phy_type[8],retx_rate_list[9],seq no[13],fragment no[14],mac-layer-flags[15], farme-prop-type[16], framesize[17],
 # 12                  ,13                  ,14
 
-    print "data: " 
-#    print "dictionary is ",dic
     print "frame_count", frame_count 
     print "damaged_frames",damaged_frames
-    print "retx table " , retransmission_count_table
-    print "frame count", frame_count_table
-#    print "retx", sum(dic['data_retx_count']), len(dic['data_retx_count'])    
+    print "retx table " , len(retransmission_count_table)
+    print "frame count", len(frame_count_table)
     pickle_object= []
     pickle_object.append(router_id)
     pickle_object.append(retransmission_count_table)
@@ -176,3 +160,54 @@ if __name__=='__main__':
     output_device = open(f_d, 'wb')
     pickle.dump(pickle_object,output_device)
     output_device.close()
+
+def contention_delay_per_access_class():
+    tx_time_data_series.sort(key=lambda x:x[0])    
+    Station_list=list(Station)
+    Station_tx_retx_count = defaultdict(list)
+    for i in range(0,len(tx_time_data_series)):
+        frame = tx_time_data_series[i]
+        mpdu_q_size=frame[5]
+        ampdu_q_size=frame[5]
+        q_number=frame[8]
+        retx=frame[2]
+        tsf=frame[0]
+        total_time=-1
+        rate=frame[3]
+        if retx >=0:
+            total_time=frame[4]
+        if mpdu_q_size ==0 and retx==0 :
+            if total_time==-1:
+                print "error: ",total_time
+            contention_time_per_access_class[q_number].append([total_time])
+
+    print "damaged_frames",damaged_frames
+    pickle_object= []
+    pickle_object.append(router_id)
+    pickle_object.append(contention_time_per_access_class)
+    f_d= output_file+'.pickle'
+    output_device = open(f_d, 'wb')
+    pickle.dump(pickle_object,output_device)
+    output_device.close()
+
+if __name__=='__main__':
+    if len(sys.argv) !=6 :
+	print len(sys.argv)
+	print "Usage : python contention-data-frames.py data/<data.gz> <router_id> <t1> <t2> <outputfile> "
+	sys.exit(1)
+    data_f_dir=sys.argv[1]
+    router_id= sys.argv[2]
+    time1 =sys.argv[3]
+    time2 =sys.argv[4]
+    output_file=sys.argv[5]
+    data_fs=os.listdir(data_f_dir)
+    [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
+    data_file_header_byte_count=0
+    filename_list=[]
+    damaged_frames=0
+    unix_time=set()
+    print "now processing the files to calculate time "
+    file_reader(t1,t2,data_fs)
+    #contention_delay()
+    contention_delay_per_access_class()
+
