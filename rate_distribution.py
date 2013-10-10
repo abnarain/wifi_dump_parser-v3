@@ -513,35 +513,6 @@ def per_station_packet_dumper(t1,t2,data_fs,outfolder_name,router_id):
     pickle.dump(pickle_object,output_device)
     output_device.close()
 
-def per_station_data_pickle_reader(home_packet_dump_input_folder,router_id):
-    '''
-    reads the packet trace into a dictionary for all stations for a home    
-    '''
-    data_fs=os.listdir(home_packet_dump_input_folder)
-    home_packet_dump_table=defaultdict(list)
-    for f_name in data_fs :
-    #router_id,ap_macs,device_macs,ap_map,device_map,rate_map ; maps are of times 
-        print f_name
-        if f_name.split('.')[0]==router_id :
-           _f_content= pickle.load(open(home_packet_dump_input_folder+f_name,'rb'))
-           if not (router_id==_f_content[0]):
-               print "there is a problem in router id... exit" 
-               sys.exit(1)
-           home_packet_dump_map=_f_content[1]
-           return home_packet_dump_map
-
-    print "The routerId is not in folder" 
-
-def bitrate_scatter_plot():
-    '''
-    The function plots the bitrate scatter plot for upstream and downstream 
-    plots
-    '''
-#TODO : This function is incomplete and needs to be coded !!!
-    #Alex asked to :remove cases with retransmission
-#    if len(packet_array[i][1])== 4 : # received frame  8 is the bitrate
-#    elif len(packet_array[i][0])== 5 : #transmitted frame 3 is bitrate
-
 if __name__=='__main__':
     if len(sys.argv) !=6 :
 	print len(sys.argv)
@@ -565,6 +536,6 @@ if __name__=='__main__':
     #plot_all_devices_bitrate_distribution(router_id,t1,t2,data_fs)
     #For scatterplot of RSSI vs bitrate and histogram of transmitted to received bitrates    
     #device_rate_vs_rssi_plots(t1,t2,data_fs,router_id)
-    #per_station_packet_dumper(t1,t2,data_fs,_folder,router_id)
-    bitrate_scatter_plot(t1,t2,data_fs)
-    home_packet_dump_map=per_station_data_pickle_reader(_folder,router_id)
+    per_station_packet_dumper(t1,t2,data_fs,_folder,router_id)
+
+
