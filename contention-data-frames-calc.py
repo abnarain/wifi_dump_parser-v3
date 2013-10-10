@@ -105,8 +105,6 @@ def file_reader(t1,t2,data_fs):
 
         if file_count %10 == 0:
             print file_count
-        if file_count >320:
-            break
 
 
 def contention_delay():

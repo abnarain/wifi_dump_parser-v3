@@ -3,7 +3,7 @@
 #Purpose : To read the binary files with data from BISmark deployment in homes
 # Gives the packet sizes of the frames received by the BISmark Access Point
 # Creates a map of the Access Class of frames transmitted for each device inside home (into AC_VI,AC_VO, AC_BE, AC_BG, AC_MU
-# Plots distribution of qeueue length with time
+# Plots distribution of qeueue length (in number of packets (not bytes) with time
 
 import os,sys,re
 import gzip

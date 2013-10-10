@@ -333,7 +333,8 @@ def plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list, x_a
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     _subplot = fig.add_subplot(2,1,1)
-    _subplot.plot(timeseries_mpdu,mpdu_list,'o',color=color[0],label=router_id) 
+    dates=[dt.datetime.fromtimestamp(ts) for ts in timeseries_mpdu]
+    _subplot.plot(dates,mpdu_list,'o',color=color[0],label=router_id) 
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
     _subplot.set_ylabel(y_axis_label)
     _subplot.set_xlabel(x_axis_label)
@@ -344,7 +345,8 @@ def plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list, x_a
         label.set_rotation(30)  
     _subplot_2 = fig.add_subplot(2,1,2)
     legend=[]
-    _subplot_2.plot(timeseries_ampdu,ampdu_list,'o',color=color[1],label=router_id) 
+    dates_2=[dt.datetime.fromtimestamp(ts) for ts in timeseries_ampdu]
+    _subplot_2.plot(dates_2,ampdu_list,'o',color=color[1],label=router_id) 
     _subplot_2.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
     _subplot_2.set_ylabel(y2_axis_label)
     _subplot_2.set_xlabel(x_axis_label)
@@ -353,7 +355,6 @@ def plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list, x_a
     labels = _subplot_2.get_xticklabels()
     for label in labels:
         label.set_rotation(30)
-    print timeseries_ampdu
     canvas = FigureCanvasAgg(fig)
     if '.eps' in outfile_name:
         canvas.print_eps(outfile_name, dpi = 110)
