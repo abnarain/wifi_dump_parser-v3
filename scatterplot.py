@@ -74,7 +74,7 @@ def pickle_reader(input_folder,threshold):
 def contention_data_pickle_reader(contention_data_input_folder):
     '''
     reads the pickle file by contention-data-frame-calc to fetch
-    only the contention period of devices
+    only the contention period observed at AP
     '''
     data_fs=os.listdir(contention_data_input_folder)
     home_contention_table=defaultdict(list)
@@ -87,6 +87,22 @@ def contention_data_pickle_reader(contention_data_input_folder):
         contention_time=_f_content[3]
         home_contention_table[router_id]=contention_time
     return home_contention_table
+
+def contention_per_access_class_data_pickle_reader(contention_data_input_folder):
+    '''
+    reads the pickle file by contention-data-frame-calc to fetch
+    contention period dictionary per access class  observed at AP
+    '''
+    data_fs=os.listdir(contention_data_input_folder)
+    home_contention_table=defaultdict(list)
+    for f_name in data_fs :
+        #router_id,ap_macs,device_macs,ap_map,device_map,rate_map ; maps are of times 
+	_f_content= pickle.load(open(contention_data_input_folder+f_name,'rb'))
+	router_id= _f_content[0]
+    contention_time_per_access_class=_f_content[1]
+    home_contention_table[router_id]=contention_time_per_access_class
+    return home_contention_table
+
 
 def device_count_pickle_reader(input_folder):
     '''
@@ -106,6 +122,24 @@ def device_count_pickle_reader(input_folder):
         
     return [home_ap_table,home_device_table]
 
+def per_station_data_pickle_reader(home_packet_dump_input_folder,router_id):
+    '''
+    reads the packet trace into a dictionary for all stations for a home    
+    '''
+    data_fs=os.listdir(home_packet_dump_input_folder)
+    home_packet_dump_table=defaultdict(list)
+    for f_name in data_fs :
+    #router_id,ap_macs,device_macs,ap_map,device_map,rate_map ; maps are of times 
+        print f_name
+        if f_name.split('.')[0]==router_id :
+           _f_content= pickle.load(open(home_packet_dump_input_folder+f_name,'rb'))
+           if not (router_id==_f_content[0]):
+               print "there is a problem in router id... exit" 
+               sys.exit(1)
+           home_packet_dump_map=_f_content[1]
+           return home_packet_dump_map
+
+    print "The routerId is not in folder" 
 
 if 0: #__name__=='__main__':
     '''
@@ -147,6 +181,10 @@ if 0: #__name__=='__main__':
 
 
 def contention_general(home_contention_table,home_ap_2_table,home_device_2_table,outfile_name):
+    '''
+    Plots the distribution of contention in every home. It does not take into account every
+    access class (and the variation due AIFS)
+    '''
     router_list=[]
     x_axis_ap_counts=[]
     y_axis_contention_array=[]
@@ -182,6 +220,59 @@ def contention_general(home_contention_table,home_ap_2_table,home_device_2_table
                    outfile_name+'_device_count.png',[0,400],[0,16000])
 
 
+def contention_per_access_class(contention_per_access_class_table,home_ap_2_table,home_device_2_table,outfile_name):
+    '''
+    Plots the distribution of contention in every home for every access class (VO/VI/BE/BK)
+    '''
+    for i,j in  contention_per_access_class_table.iteritems():
+        for t,n in j.iteritems():
+            print t,len(n)
+    '''
+    router_list=[]
+    x_axis_ap_counts=[]
+    y_axis_contention_array=[]
+
+    for router_id,ap_count in home_ap_2_table.iteritems():
+        if router_id in home_contention_table.keys():
+            if len(home_contention_table[router_id]) >1000: # more than 1000 sample points
+                router_list.append(router_id)
+                x_axis_ap_counts.append(len(ap_count))
+                y_axis_contention_array.append(home_contention_table[router_id])
+
+    scatter_simply(router_list,x_axis_ap_counts,y_axis_contention_array,
+                   'Access Point Count',
+                   'Contention Period (90th percentile) in microseconds',
+                   'Variation of Contention Period with #Access Points in vicinity (2.4 GHz)',
+                   outfile_name+'_ap_count.png',[0,70],[0,16000])
+    
+
+    router_list=[]
+    x_axis_ap_counts=[]
+    y_axis_contention_array=[]
+    for router_id,ap_count in home_device_2_table.iteritems():
+        if router_id in home_contention_table.keys():
+            if len(home_contention_table[router_id]) >1000: # more than 1000 sample points
+                router_list.append(router_id)
+                x_axis_ap_counts.append(len(ap_count))
+                y_axis_contention_array.append(home_contention_table[router_id])
+
+    scatter_simply(router_list,x_axis_ap_counts,y_axis_contention_array,
+                   'Number of devices inside homes ',
+                   'Contention Period (90th percentile) in microseconds',
+                   'Variation of Contention Period with #Devices in vicinity (2.4 GHz)',
+                   outfile_name+'_device_count.png',[0,400],[0,16000])
+    '''
+
+def bitrate_scatter_plot():
+    '''
+    The function plots the bitrate scatter plot for upstream and downstream 
+    plots
+    '''
+#TODO : This function is incomplete and needs to be coded !!!
+    #Alex asked to :remove cases with retransmission
+#    if len(packet_array[i][1])== 4 : # received frame  8 is the bitrate
+#    elif len(packet_array[i][0])== 5 : #transmitted frame 3 is bitrate
+
 
 if  __name__ == '__main__': 
     '''
@@ -195,49 +286,16 @@ if  __name__ == '__main__':
     outfile_name = sys.argv[3]
     home_ap_2_table=defaultdict(list)
     home_device_2_table=defaultdict(list)
-    home_contention_table=defaultdict(list)
+    contention_per_access_class_table=defaultdict(list)
     [home_ap_2_table,home_device_2_table]=device_count_pickle_reader(access_point_data_input_folder)
-    home_contention_table=contention_data_pickle_reader(contention_data_input_folder)
-    contention_general(home_contention_table,home_ap_2_table,home_device_2_table,outfile_name)
+    if 0:
+        home_contention_table=defaultdict(list)
+        home_contention_table=contention_data_pickle_reader(contention_data_input_folder)
+        contention_general(home_contention_table,home_ap_2_table,home_device_2_table,outfile_name)
+    print "reading table of contention"
+    contention_per_access_class_table=contention_per_access_class_data_pickle_reader(contention_data_input_folder)
+    print "going to plot " 
+    contention_per_access_class(contention_per_access_class_table,home_ap_2_table,home_device_2_table,outfile_name)
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    #bitrate_scatter_plot(t1,t2,data_fs)
+    #home_packet_dump_map=per_station_data_pickle_reader(_folder,router_id)
