@@ -1,6 +1,9 @@
 #Author : Abhinav Narain
 #Date : Sept 8, 2013
 #Purpose : To read the binary files with data from BISmark deployment in homes
+#Creates a map of mac addresses and bitrates seen every minute
+#Does not differentiate between all the multicast mac address
+#Does not differentiate the bitrates being of multicast/broadcast trasnmissions 
 import os,sys,re
 import gzip
 import struct 
