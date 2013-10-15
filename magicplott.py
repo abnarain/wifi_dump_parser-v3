@@ -431,7 +431,7 @@ def scatter_contention_per_class(router_list,x_axis,y_axis,x_axis_label, y_axis_
     if '.png' in outfile_name:
         canvas.print_figure(outfile_name, dpi = 110)
 
-def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title_1,title_2,outfile_name):
+def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title,outfile_name):
     '''
     Plots the distribution of bitrates uplink and downlink
     '''
@@ -439,18 +439,28 @@ def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title_1,t
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     i=0
+    max_x=0
+    max_y=0
     for device_id, rate_tuples in rate_map.iteritems(): 
-        _subplot = fig.add_subplot(len(rate_map),1,i)
+        _subplot = fig.add_subplot(len(rate_map)/2,2,i)
         for rate_tuple in rate_tuples:
-            _subplot.scatter(rate_tuple[0],rate_tuple[1],color=color[i],label=device_id)
+            _subplot.scatter(rate_tuple[0],rate_tuple[1],color=color[i])
+            if rate_tuple[0]>max_x:
+                max_x=rate_tuple[0]
+            if rate_tuple[1]>max_y:
+                max_y=rate_tuple[1] 
         _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
         _subplot.set_ylabel(y_axis_label)
-        _subplot.set_xlabel(x_axis_label)
-        _subplot.set_title(title)
+        _subplot.set_xlabel(x_axis_label+'( '+device_id+' )')
+        _subplot.set_xlim([0,max_x+20])
+        _subplot.set_ylim([0,max_y+20])
         labels = _subplot.get_xticklabels()
         for label in labels:
             label.set_rotation(30)
         i=i+1
+
+    fig.suptitle(title+'('+router_id+')',fontsize=20)
+    #fig.tight_layout()
     canvas = FigureCanvasAgg(fig)
     if '.eps' in outfile_name:
         canvas.print_eps(outfile_name, dpi = 110)

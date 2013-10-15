@@ -369,18 +369,17 @@ def bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name):
 
     #now use the rates to be plotted in scatter plot
     rate_map=defaultdict(list)
-    for device_id,rate_pairs in rate_pairs_per_device.iteritems():
-        print device_id,len(rate_pairs[0])
+    for device_id,l_rate_pairs in rate_pairs_per_device.iteritems():
         actual_rate_pairs=[]
-        for i in rate_pairs[0] :
+        for i in rate_pairs :
             actual_rate_pairs.append([i[0],i[1]])
         rate_map[device_id]=actual_rate_pairs
         del actual_rate_pairs
         
     bitrate_up_down_link(router_id,
                          rate_map,
-                         "Bitrate Device transmitted", 
-                         "Bitrate Access Point transmitted",
+                         "Device tx bitrate", 
+                         "AP tx bitrate",
                          "Scatterplot of bitrates received and transmitted by AP",
                          outfile_name)
     
