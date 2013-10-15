@@ -161,7 +161,7 @@ if 0: #__name__=='__main__':
     print "========="
     print retx_rate_table
     
-    plotter_scatter(retx_rate_table,
+    scatter_retx_contention(retx_rate_table,
                     contention_table,
                     'retransmits(no. of frames retransmitted /no. of successful transmissions)',
                     'Contention Delay(microsecond) 90th percentile',
