@@ -12,7 +12,7 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-LEGEND_PROP = matplotlib.font_manager.FontProperties(size=6)
+LEGEND_PROP = matplotlib.font_manager.FontProperties(size=10)
 # Figure dimensions                                                                                                   
 fig_width = 12
 fig_length = 12.25
@@ -279,7 +279,7 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
            1:'Voice',
            2:'Best Effort',
            3:'Background',
-           8:'Multicast',
+           8:'Multicast/Content After Beacon',
            }
         a=[]
         for j in range(0,len(x_axes[i])):
@@ -298,7 +298,10 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
         canvas.print_figure(outfile_name, dpi = 110)
 
 
-def scatter_simply(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title,outfile_name,xlim,ylim):
+def scatter_contention(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title,outfile_name,xlim,ylim):
+    '''
+    Plots the contention period(9th percentile) of different homes 
+    '''
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
@@ -355,6 +358,76 @@ def plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list, x_a
     labels = _subplot_2.get_xticklabels()
     for label in labels:
         label.set_rotation(30)
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)
+
+def scatter_contention_per_class(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title,outfile_name,xlim,ylim):
+    '''
+    Plots the contention period(9th percentile) of different homes 
+    Input : router list
+    Number of Devices/AP
+    Dictionary of contention delay per access class
+    title
+    file output name
+    {x,y}lim
+    '''
+    ACCESS_CLASS_MARKERS={
+        0:'+',
+        1:'o',
+        2:'*',
+        3:'x',
+        8:'H'}
+    N_ACCESS_CLASS_MARKERS={
+        'Voice':'+',
+        'Video':'o',
+        'Best Effort':'*',
+        'Background':'x',
+        'CAB':'H'}
+        
+    ac_encountered=[]
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    _subplot = fig.add_subplot(1,1,1)
+    legend=[]
+    sp=[]
+    nsp=[]    
+    for i in range(0,len(router_list)): 
+        ac_map=y_axis[i]
+        at=1
+        for ac_class,ac_contention_array in ac_map.iteritems():
+        #print  "contention", ac_contention_array[0]
+            if ac_class in ac_encountered:
+                pass
+            else:
+                tsp=_subplot.scatter(x_axis[i], percentile(ac_contention_array[0],90),s=100,color='b',marker=ACCESS_CLASS_MARKERS[ac_class]) 
+                ac_encountered.append(ac_class)
+                sp.append(tsp)
+            if at==1:
+                _subplot.scatter(x_axis[i], percentile(ac_contention_array[0],90),s=100,color=color[i],marker=ACCESS_CLASS_MARKERS[ac_class],label=router_list[i]) 
+                at=0
+            else :
+                _subplot.scatter(x_axis[i], percentile(ac_contention_array[0],90),s=100,color=color[i],marker=ACCESS_CLASS_MARKERS[ac_class]) 
+
+
+    legend2=_subplot.legend(sp,N_ACCESS_CLASS_MARKERS,bbox_to_anchor=(0.9,-0.05), prop=LEGEND_PROP,loc=2)
+    _subplot.add_artist(legend2)
+    _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05),scatterpoints=1)
+    #legend3=_subplot.legend(nsp,prop=LEGEND_PROP,bbox_to_anchor=(0.1,0.05))
+    #_subplot.add_artist(legend3)
+    #_subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05),scatterpoints=1)
+    _subplot.set_ylabel(y_axis_label)
+    _subplot.set_xlabel(x_axis_label)
+    _subplot.set_title(title)
+#    _subplot.set_xlim(xlim)
+#    _subplot.set_ylim(ylim)
+    labels = _subplot.get_xticklabels()
+    for label in labels:
+        label.set_rotation(30)  
+
     canvas = FigureCanvasAgg(fig)
     if '.eps' in outfile_name:
         canvas.print_eps(outfile_name, dpi = 110)
