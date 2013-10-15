@@ -14,8 +14,8 @@ except ImportError:
     import pickle
 LEGEND_PROP = matplotlib.font_manager.FontProperties(size=7)
 # Figure dimensions                                                                                                   
-fig_width = 12
-fig_length = 13.25
+fig_width = 14
+fig_length = 14.25
 # Can be used to adjust the border and spacing of the figure    
 fig_left = 0.12
 fig_right = 0.94
@@ -425,6 +425,32 @@ def scatter_contention_per_class(router_list,x_axis,y_axis,x_axis_label, y_axis_
     for label in labels:
         label.set_rotation(30)  
 
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)
+
+def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title_1,title_2,outfile_name):
+    '''
+    Plots the distribution of bitrates uplink and downlink
+    '''
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    i=0
+    for device_id, rate_tuples in rate_map.iteritems(): 
+        _subplot = fig.add_subplot(len(rate_map),1,i)
+        for rate_tuple in rate_tuples:
+            _subplot.scatter(rate_tuple[0],rate_tuple[1],color=color[i],label=device_id)
+        _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
+        _subplot.set_ylabel(y_axis_label)
+        _subplot.set_xlabel(x_axis_label)
+        _subplot.set_title(title)
+        labels = _subplot.get_xticklabels()
+        for label in labels:
+            label.set_rotation(30)
+        i=i+1
     canvas = FigureCanvasAgg(fig)
     if '.eps' in outfile_name:
         canvas.print_eps(outfile_name, dpi = 110)

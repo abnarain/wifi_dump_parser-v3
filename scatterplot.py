@@ -261,7 +261,7 @@ def contention_per_access_class(contention_per_access_class_table,home_ap_2_tabl
             y_axis_contention_array.append(temp_hash)
             del temp_hash
 
-    scatter_contention_per_class(router_list,x_axis_ap_counts,y_axis_contention_array,
+    scatter_contention_per_class(router_list,x_axis_device_counts,y_axis_contention_array,
                    'Number of Devices in homes',
                    'Contention Period (90th percentile) in microseconds',
                    'Variation of Contention Period with #Access Points per 802.11 Access Class in vicinity (2.4 GHz)',
@@ -269,7 +269,7 @@ def contention_per_access_class(contention_per_access_class_table,home_ap_2_tabl
 
 
 
-def bitrate_scatter_plot(home_stations_packet_dump):
+def bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name):
     '''
     The function plots upstream vs downstream bitrates
     Input : Packet capture of station vs AP
@@ -368,12 +368,19 @@ def bitrate_scatter_plot(home_stations_packet_dump):
         rate_pairs_per_device[device_id]=rate_pairs
 
     #now use the rates to be plotted in scatter plot
-    for device_id,rate_pairs in rate_pairs_per_device.itertems():
+    rate_map=defaultdict(list)
+    for device_id,rate_pairs in rate_pairs_per_device.iteritems():
         print device_id,len(rate_pairs[0])
         for i in rate_pairs[0] :
             actual_rate_pairs.append([i[0],i[1]])
         rate_map[device_id]=actual_rate_pairs
-        print rate_map
+
+    bitrate_up_down_link(router_id,
+                         rate_map,
+                         "Bitrate Device transmitted", 
+                         "Bitrate Access Point transmitted",
+                         "Scatterplot of bitrates received and transmitted by AP",
+                         outfile_name):
     
 
 if  __name__ == '__main__': 
@@ -383,7 +390,7 @@ if  __name__ == '__main__':
     if len(sys.argv) !=5:
         print "usage : python unpickeler.py <contention_data_folder_2GHz/packet_trace>  <ap_device_count_data_folder> <routerid> <filename.png>  "
         sys.exit(0)
-    _folder_1 = sys.argv[1] #contention data folder
+    _folder_1 = sys.argv[1] #contention data folder or packet trace
     _folder_2 = sys.argv[2] #device_count data folder 
     router_id = sys.argv[3]
     outfile_name = sys.argv[4]
@@ -392,6 +399,7 @@ if  __name__ == '__main__':
     home_contention_table=defaultdict(list)
     home_contention_table=contention_data_pickle_reader(_folder_1)
     contention_general(home_contention_table,home_ap_2_table,home_device_2_table,outfile_name)
+    '''
     '''
     home_ap_2_table=defaultdict(list)
     home_device_2_table=defaultdict(list)
@@ -403,8 +411,8 @@ if  __name__ == '__main__':
     print "going to plot " 
     contention_per_access_class(contention_per_access_class_table,home_ap_2_table,home_device_2_table,outfile_name)
     '''
+
     #code for analysis of packet traces
     home_stations_packet_dump=defaultdict(list)
     home_stations_packet_dump=per_station_data_pickle_reader(_folder_1,router_id)
-    bitrate_scatter_plot(home_stations_packet_dump)
-    '''
+    bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name)
