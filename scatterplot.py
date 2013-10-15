@@ -161,7 +161,7 @@ if 0: #__name__=='__main__':
     print "========="
     print retx_rate_table
     
-    scatter_retx_contention(retx_rate_table,
+    plotter_scatter(retx_rate_table,
                     contention_table,
                     'retransmits(no. of frames retransmitted /no. of successful transmissions)',
                     'Contention Delay(microsecond) 90th percentile',
@@ -190,7 +190,7 @@ def contention_general(home_contention_table,home_ap_2_table,home_device_2_table
     scatter_contention(router_list,x_axis_ap_counts,y_axis_contention_array,
                    'Access Point Count',
                    'Contention Period (90th percentile) in microseconds',
-                   'Variation of Contention Period with #Access Points per 802.11 Access Class in vicinity (2.4 GHz)',
+                   'Variation of Contention Period with #Access Points in vicinity (2.4 GHz)',
                    outfile_name+'_ap_count.png',[0,70],[0,16000])
     
 
@@ -207,7 +207,7 @@ def contention_general(home_contention_table,home_ap_2_table,home_device_2_table
     scatter_contention(router_list,x_axis_ap_counts,y_axis_contention_array,
                    'Number of devices inside homes ',
                    'Contention Period (90th percentile) in microseconds',
-                   'Variation of Contention Period with #Devices per 802.11 Access Class in vicinity (2.4 GHz)',
+                   'Variation of Contention Period with #Devices in vicinity (2.4 GHz)',
                    outfile_name+'_device_count.png',[0,400],[0,16000])
 
 
@@ -239,26 +239,35 @@ def contention_per_access_class(contention_per_access_class_table,home_ap_2_tabl
     scatter_contention_per_class(router_list,x_axis_ap_counts,y_axis_contention_array,
                    'Access Point Count',
                    'Contention Period (90th percentile) in microseconds',
-                   'Variation of Contention Period with #Access Points in vicinity (2.4 GHz)',
+                   'Variation of Contention Period with #Access Points per 802.11 Access Class in vicinity (2.4 GHz)',
                    outfile_name+'_ap_count.png',[0,70],[0,16000])
     
-    '''
     router_list=[]
-    x_axis_ap_counts=[]
+    x_axis_device_counts=[]
     y_axis_contention_array=[]
-    for router_id,ap_count in home_device_2_table.iteritems():
-        if router_id in home_contention_table.keys():
-            if len(home_contention_table[router_id]) >1000: # more than 1000 sample points
-                router_list.append(router_id)
-                x_axis_ap_counts.append(len(ap_count))
-                y_axis_contention_array.append(home_contention_table[router_id])
+
+    for router_id,device_count in home_device_2_table.iteritems():
+        if router_id in contention_per_access_class_table.keys():
+            temp_hash=defaultdict(list)
+            for ac_class,ac_contention_array in contention_per_access_class_table[router_id].iteritems():
+                if len(ac_contention_array) >1000: # more than 1000 sample points
+                    if not( router_id in router_list):
+                        router_list.append(router_id)
+                    x_axis_device_counts.append(len(device_count))
+                    new_contention_array=[]
+                    for ent in ac_contention_array :
+                        new_contention_array.append(ent[0])
+                    temp_hash[ac_class].append(new_contention_array)
+            y_axis_contention_array.append(temp_hash)
+            del temp_hash
 
     scatter_contention_per_class(router_list,x_axis_ap_counts,y_axis_contention_array,
-                   'Number of devices inside homes ',
+                   'Number of Devices in homes',
                    'Contention Period (90th percentile) in microseconds',
-                   'Variation of Contention Period with #Devices in vicinity (2.4 GHz)',
+                   'Variation of Contention Period with #Access Points per 802.11 Access Class in vicinity (2.4 GHz)',
                    outfile_name+'_device_count.png',[0,400],[0,16000])
-    '''
+
+
 
 def bitrate_scatter_plot(home_stations_packet_dump):
     '''
