@@ -246,6 +246,32 @@ def Queue_file_reader(t1,t2,data_fs):
             print file_count
 
 
+def Queue_dynamics_plotter(router_id,output_folder):
+    '''
+    Plots the maximum size of the queue with time for a whole day.
+    '''
+#TODO: Fix it to plot queue dynamics per queue type ! Totally forgot to
+#disect the graphs this way ! meh
+    timeseries_mpdu,timeseries_ampdu,mpdu_list,ampdu_list=[],[],[],[]
+    mpdu_dynamics_timestamp=mpdu_dynamics.keys()
+    ampdu_dynamics_timestamp=ampdu_dynamics.keys()
+    mpdu_dynamics_timestamp.sort()
+    ampdu_dynamics_timestamp.sort()
+    for timestamp in mpdu_dynamics_timestamp:
+         timeseries_mpdu.append(timestamp), mpdu_list.append(max(mpdu_dynamics[timestamp]))
+
+    for timestamp in ampdu_dynamics_timestamp:
+         timeseries_ampdu.append(timestamp), ampdu_list.append(max(ampdu_dynamics[timestamp]))
+
+    from magicplott import *
+    plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list,
+                    'time',
+                    'max MPDU queue per minute',
+                    'max AMPDU queue per minute',
+                    'Variation of Queue length with time',
+                    output_folder+router_id+'_Qlen_.png', router_id)
+    print "damage frame count " , damaged_frames
+
 
 if __name__=='__main__':
     '''
@@ -268,22 +294,5 @@ if __name__=='__main__':
     unix_time=set()
     print "now processing the files to calculate time "
     Queue_file_reader(t1,t2,data_fs)
-    timeseries_mpdu,timeseries_ampdu,mpdu_list,ampdu_list=[],[],[],[]
-    mpdu_dynamics_timestamp=mpdu_dynamics.keys()
-    ampdu_dynamics_timestamp=ampdu_dynamics.keys()
-    mpdu_dynamics_timestamp.sort()
-    ampdu_dynamics_timestamp.sort()
-    for timestamp in mpdu_dynamics_timestamp:
-         timeseries_mpdu.append(timestamp), mpdu_list.append(max(mpdu_dynamics[timestamp]))
+    Queue_dynamics_plotter(router_id,output_folder)
 
-    for timestamp in ampdu_dynamics_timestamp:
-         timeseries_ampdu.append(timestamp), ampdu_list.append(max(ampdu_dynamics[timestamp]))
-
-    from magicplott import *
-    plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list,
-                    'time',
-                    'max MPDU queue per minute',
-                    'max AMPDU queue per minute',
-                    'Variation of Queue length with time',
-                    output_folder+router_id+'_Qlen_.png', router_id)
-    print "damage frame count " , damaged_frames
