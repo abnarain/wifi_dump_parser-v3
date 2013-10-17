@@ -442,7 +442,10 @@ def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title,out
     max_x=0
     max_y=0
     for device_id, rate_tuples in rate_map.iteritems(): 
-        _subplot = fig.add_subplot(len(rate_map)/2,2,i)
+        if len(rate_map) >=2:
+            _subplot = fig.add_subplot(len(rate_map)/2,2,i)
+        else :
+            _subplot = fig.add_subplot(1,2,i)
         for rate_tuple in rate_tuples:
             _subplot.scatter(rate_tuple[0],rate_tuple[1],color=color[i])
             if rate_tuple[0]>max_x:

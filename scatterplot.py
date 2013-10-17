@@ -308,13 +308,15 @@ def bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name):
                     #print frame
                     #print "1:",rate_pairs[-10:-1]
                     if prev_rx_frame[14]==frame[14] and prev_frame_type==18:
-                        rate_pairs.pop()
+                        if len(rate_pairs)>0:
+                            rate_pairs.pop()
                         #print "2:",rate_pairs[-10:-1]
                 if len(frame)==18:
                         prev_frame_type=18
-                        pairs =rate_pairs[-1]
-                        if pairs[1]==frame[13] or pairs[3]==frame[13]:
-                            rate_pairs.pop()
+                        if len(rate_pairs)>0:
+                            pairs =rate_pairs[-1]
+                            if pairs[1]==frame[13] or pairs[3]==frame[13]:
+                                rate_pairs.pop()
                         #print "3:",rate_pairs [-10:-1]
                 i=i+1
                 continue
@@ -323,16 +325,18 @@ def bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name):
                     i=i+1
                     next_frame=packet_array[0][i]
                     #print "in middle earth"
-                    while (next_frame[14]-frame[14] <0) :
-                        i=i+1
-                        next_frame=packet_array[0][i]
-                        flag=1
-                        #print frame
-                        #print next_frame
-                        #print "in mordor"
-                        if not(len(next_frame)==len(frame)):
-                            break
-
+                    try :
+                        while (next_frame[14]-frame[14] <0) :
+                            i=i+1
+                            next_frame=packet_array[0][i]
+                            flag=1
+                            #print frame
+                            #print next_frame
+                            #print "in mordor"
+                            if not(len(next_frame)==len(frame)):
+                                break
+                    except:
+                        break
                 else :
                     prev_rx_frame=frame
                     i=i+1
@@ -371,8 +375,8 @@ def bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name):
     rate_map=defaultdict(list)
     for device_id,l_rate_pairs in rate_pairs_per_device.iteritems():
         actual_rate_pairs=[]
-        for i in rate_pairs :
-            actual_rate_pairs.append([i[0],i[1]])
+        for i in l_rate_pairs :
+            actual_rate_pairs.append([i[0],i[2]])
         rate_map[device_id]=actual_rate_pairs
         del actual_rate_pairs
         
