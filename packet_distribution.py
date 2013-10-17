@@ -14,6 +14,7 @@ from  header import *
 from mac_parser import * 
 from utils import *
 from rate import * 
+from magicplott import *
 
 try:
     import cPickle as pickle
@@ -100,26 +101,13 @@ def file_reader(t1,t2,data_fs):
         if file_count %10 == 0:
             print file_count
 
-if 0:#__name__=='__main__':
+def per_queue_classification(t1,t2,data_fs)
     '''
     This main plots the distribution of packets on each of the access class transmit queues in 
     hardware in the ath9k driver 
     '''
-    if len(sys.argv) !=6 :
-	print len(sys.argv)
-	print "Usage : python station-process.py data/<data.gz> <router_id> <t1> <t2> <outputfile> "
-	sys.exit(1)
-    data_f_dir=sys.argv[1]
-    router_id= sys.argv[2]
-    time1 =sys.argv[3]
-    time2 =sys.argv[4]
-    output_folder=sys.argv[5]
-    data_fs=os.listdir(data_f_dir)
-    [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
     data_file_header_byte_count=0
     filename_list=[]
-    damaged_frames=0
-    unix_time=set()
     print "now processing the files to calculate time "
     file_reader(t1,t2,data_fs)
     Station_list=list(Station)
@@ -137,7 +125,6 @@ if 0:#__name__=='__main__':
             del access_class[key]
         if len(access_class.keys())>0:     
             Station_access_class_map[s].append(access_class)
-    from magicplott import *
     print Station_access_class_map
     x_axes,y_axes,device_ids=[],[],[]
     for device_id, hw_queue_map  in Station_access_class_map.iteritems():
@@ -263,7 +250,6 @@ def Queue_dynamics_plotter(router_id,output_folder):
     for timestamp in ampdu_dynamics_timestamp:
          timeseries_ampdu.append(timestamp), ampdu_list.append(max(ampdu_dynamics[timestamp]))
 
-    from magicplott import *
     plot_timeseries(timeseries_ampdu,ampdu_list, timeseries_mpdu, mpdu_list,
                     'time',
                     'max MPDU queue per minute',
@@ -272,6 +258,8 @@ def Queue_dynamics_plotter(router_id,output_folder):
                     output_folder+router_id+'_Qlen_.png', router_id)
     print "damage frame count " , damaged_frames
 
+
+def throughput_plotter():
 
 if __name__=='__main__':
     '''
@@ -293,6 +281,8 @@ if __name__=='__main__':
     damaged_frames=0
     unix_time=set()
     print "now processing the files to calculate time "
-    Queue_file_reader(t1,t2,data_fs)
-    Queue_dynamics_plotter(router_id,output_folder)
-
+    #for plotting traffic transmitted from each queue
+    #per_queue_classification(t1,t2,data_fs)
+    #for plotting queue sizes with time    
+    #Queue_file_reader(t1,t2,data_fs)
+    #Queue_dynamics_plotter(router_id,output_folder)
