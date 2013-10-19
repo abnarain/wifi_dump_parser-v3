@@ -581,7 +581,8 @@ def parse_mgmt_fc(frame_control):
                 return 11
 	elif FC_SUBTYPE(frame_control) == ST_ACTION :
                 return 12
-
+        else :
+                return -2
 
 
 def parse_data_fc(fc,radiotap_len,frame_elem):
@@ -656,7 +657,6 @@ def parse_ctrl_fc(frame_control):
 	elif FC_SUBTYPE(frame_control) == CTRL_END_ACK :
                 return 8
 	else :
-		print "no subtype found ", FC_SUBTYPE(frame_control) 
 		return -1 
 
 def parse_frame_control(frame_control,radiotap_len,frame_elem) :	
