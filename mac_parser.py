@@ -603,7 +603,7 @@ def parse_data_fc(fc,radiotap_len,frame_elem):
                 #		ADDR3,2
                 # This is only for the transmitted frames
                 if radiotap_len ==RADIOTAP_TX_LEN :
-                        # 9th is the dest mac address ; i.e the client connected
+                        # 11th is the dest mac address ; i.e the client connected
                         a=frame_elem[tsf][11].split(':')                   
                         if  not (a[0] =='ff' and a[1] =='ff' and a[2] =='ff' ) :
                                 if not (a[0] =='33' and a[1] =='33'  ) :                                 
