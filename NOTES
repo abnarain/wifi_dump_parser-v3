@@ -1,5 +1,5 @@
 DATA FRAME frame format for each of the paths, the frames are collected frm :
-TX PATH :
+Transmitted frames from the Access Point :
 time :
 [txflags:],ampdu bit, fail, rts, cts, txagg
 retry count ,
@@ -18,9 +18,8 @@ fragment number
 [mac layer flags]wep, retry, order, power_mgmt, more_flag, more_data
 [frame-type]to-from fields
 frame size 
-propogation time
 
-RX PATH :
+Received frames at the Access Point :
 time :
 [flags],short_pre,wep,badfcs,frag
 freq ,
@@ -41,20 +40,16 @@ fragment number
 [mac layer flags]wep, retry, order, power_mgmt, more_flag, more_data
 [frame-type]to-from fields
 frame size 
-propogation time
-
-
 
 The tx descriptor has the timestamp of the starting of the last retransmission of the frame
 =>If there are no retransmission, its exactly the time spent in queue and the contention of channel
 =>If the queue is empty and there are no retransmissions : then it is contention time of the channel
 
-When retransmission occur, subtract the propogation time of the #retransmission count from the total time 
-
+When retransmission occur, subtract the propogation time of the number of retransmission count from 
+the total time. This will not give the time the channel was busy when there were exponential backoffs.
 
 Debug : Have to look at frames with screwed tx descriptors with time lost
 Update on Sept 18, 2013 : Can't help such frames, discard them !
 
-
 Data location : 
-cd /data/users/sburnett/synced-from-dp4
+/data/users/sburnett/synced-from-dp4
