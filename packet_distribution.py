@@ -284,10 +284,8 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          err_data_frames = data_contents[1]
          correct_data_frames_missed=data_contents[2]
          err_data_frames_missed=data_contents[3]
-         correct_data_frames_missed=list(struct.unpack('I',data_contents[2]))[0]
-         err_data_frames_missed =list(struct.unpack('I',data_contents[3]))[0]
-
-         print "data frame missed",correct_data_frames_missed,err_data_frames_missed
+         correct_data_frames_missed=list(struct.unpack('<I',data_contents[2]))[0]
+         err_data_frames_missed =list(struct.unpack('<I',data_contents[3]))[0]
 
          ctrl_f_name = data_f_name
          ctrl_f_name =re.sub("-d-","-c-",ctrl_f_name)
@@ -341,7 +339,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          beacon_mgmt_frames_missed=list(struct.unpack('<I',mgmt_contents[3]))[0]
          common_mgmt_frames_missed=list(struct.unpack('<I',mgmt_contents[4]))[0]         
          err_mgmt_frames_missed =list(struct.unpack('<I',mgmt_contents[5]))[0]
-         print "beacon,common,err ", beacon_mgmt_frames_missed, common_mgmt_frames_missed, err_mgmt_frames_missed
+
          for i in xrange(len(ctrl_file_content )):
              if ctrl_file_content[i]=='\n':
                  bismark_ctrl_file_header = str(ctrl_file_content[0:i])
@@ -360,7 +358,6 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
 
          correct_ctrl_frames_missed =list(struct.unpack('<I',ctrl_contents[2]))[0]
          err_ctrl_frames_missed =list(struct.unpack('<I',ctrl_contents[3]))[0]
-         print "ctrl frame count ", err_ctrl_frames_missed,correct_ctrl_frames_missed
 
         #done with reading the binary blobs from file ; now check for timestamps are correct
          if (not (ctrl_file_current_timestamp == mgmt_file_current_timestamp == data_file_current_timestamp )) :
@@ -394,13 +391,13 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          err_data_rx_bytes, data_tx_bytes, data_rx_bytes=0,0,0
 
          mgmt_tx_airtime, err_mgmt_rx_airtime, mgmt_rx_airtime=0,0,0
-         err_mgmt_rx_bytes, mgmt_tx_bytes,mgmt_rx_bytes =0,0,0
+         err_mgmt_rx_bytes, mgmt_tx_bytes,mgmt_common_rx_bytes =0,0,0
 
          mgmt_beacon_rx_bytes=0
 
          ctrl_tx_airtime,err_ctrl_rx_airtime, ctrl_rx_airtime =0,0,0
          err_ctrl_rx_bytes, ctrl_tx_bytes, ctrl_rx_bytes=0,0,0
-         #calculating approximate airtime calculation
+         #for calculating approximate airtime calculation
          local_ctrl_rates,local_data_rates,local_mgmt_rates,local_common_mgmt_rates,local_beacon_mgmt_rates=[],[],[],[],[]
          local_err_ctrl_rates,local_err_data_rates,local_err_mgmt_rates=[],[],[]
 
@@ -586,7 +583,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                                 mgmt_tx_airtime +=(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
                  elif radiotap_len ==RADIOTAP_RX_LEN :
                      #mgmt kind,rx,corrupted,src,bitrate,pktsize
-                         mgmt_rx_bytes=mgmt_rx_bytes+temp[10]
+                         mgmt_common_rx_bytes=mgmt_common_rx_bytes+temp[10]
                          mgmt_rx_pkt_size[temp[10]] +=1
                          mgmt_rx_airtime=mgmt_rx_airtime+(temp[10]*1.0/temp[8])
                          local_common_mgmt_rates.append(temp[8])
@@ -670,7 +667,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  elif radiotap_len==RADIOTAP_RX_LEN :
                      ctrl_rx_bytes +=temp[10]
                      ctrl_rx_pkt_size[temp[10]] +=1
-                     ctrl_rx_airtime=mgmt_rx_airtime+(temp[10]*1.0/temp[8])
+                     ctrl_rx_airtime +=(temp[10]*1.0/temp[8])
                      local_ctrl_rates.append(temp[8])
                      ctrl_pkt_count +=1
              else :
@@ -715,28 +712,37 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          #do some calculations about missing frames in each category before logging it 
          #print "mode is " , correct_data_frames_missed, "marg"
          #print "start",data_rx_bytes, " shag"
-         print data_pkt_count
-         print data_rx_bytes
-         data_rx_airtime += correct_data_frames_missed*data_rx_bytes*1.0/ data_pkt_count * mode(local_data_rates)
 
-         err_data_rx_airtime +=err_data_frames_missed*data_rx_bytes*1.0/ err_data_pkt_count * mode(local_err_data_rates)
-         
-         ctrl_rx_airtime +=correct_ctrl_frames_missed*ctrl_rx_bytes*1.0 / ctrl_pkt_count*mode(local_ctrl_rates)
-         err_ctrl_rx_airtime +=err_ctrl_frames_missed*err_ctrl_rx_bytes*1.0/ err_ctrl_pkt_count*mode(local_err_ctrl_rates)
-         
-         mgmt_rx_airtime +=beacon_mgmt_frames_missed*mgmt_beacon_pkt_count*1.0/ mgmt_beacon_pkt_count *mode(local_beacon_mgmt_rates)
-         mgmt_rx_airtime +=common_mgmt_frames_missed*mgmt_common_pkt_count*1.0 / mgmt_common_pkt_count *mode(local_common_mgmt_rates)
-         err_mgmt_rx_airtime +=err_mgmt_frames_missed*err_mgmt_rx_bytes*1.0 / err_mgmt_pkt_count*mode(local_err_mgmt_rates)
-         
-         data_rx_bytes/data_pkt_count
-         
-         ctrl_rx_bytes/ctrl_pkt_count
-     
-         err_ctrl_rx_bytes
+         if data_pkt_count and correct_data_frames_missed> 0:
+             data_rx_airtime += (correct_data_frames_missed*data_rx_bytes*1.0/ data_pkt_count * mode(local_data_rates))
+             data_rx_bytes += (correct_data_frames_missed *data_rx_bytes*1.0/data_pkt_count)
+             
+         if err_data_pkt_count and err_data_frames_missed >0:
+             err_data_rx_airtime +=(err_data_frames_missed*err_data_rx_bytes*1.0/ err_data_pkt_count * mode(local_err_data_rates))
+             err_data_rx_bytes += (err_data_frames_missed*err_data_rx_bytes*1.0/err_data_pkt_count)
+             
+         if ctrl_pkt_count > 0 and correct_ctrl_frames_missed >0:
+             ctrl_rx_airtime +=(correct_ctrl_frames_missed*ctrl_rx_bytes*1.0 / ctrl_pkt_count*mode(local_ctrl_rates))
+             ctrl_rx_bytes += (correct_ctrl_frames_missed*ctrl_rx_bytes*1.0 / ctrl_pkt_count)
+
+         if err_ctrl_pkt_count and err_ctrl_frames_missed>0:
+             err_ctrl_rx_airtime +=(err_ctrl_frames_missed*err_ctrl_rx_bytes*1.0/ err_ctrl_pkt_count*mode(local_err_ctrl_rates))
+             err_ctrl_rx_bytes +=(err_ctrl_frames_missed*err_ctrl_rx_bytes*1.0/ err_ctrl_pkt_count)
+         if mgmt_beacon_pkt_count >0 and beacon_mgmt_frames_missed >0:
+             mgmt_rx_airtime +=(beacon_mgmt_frames_missed* mgmt_beacon_rx_bytes *1.0/ mgmt_beacon_pkt_count *mode(local_beacon_mgmt_rates))
+             mgmt_beacon_rx_bytes +=(beacon_mgmt_frames_missed* mgmt_beacon_rx_bytes *1.0/ mgmt_beacon_pkt_count )
+
+         if mgmt_common_pkt_count >0 and common_mgmt_frames_missed >0 :
+             mgmt_rx_airtime +=(common_mgmt_frames_missed* mgmt_common_rx_bytes *1.0 / mgmt_common_pkt_count *mode(local_common_mgmt_rates))
+             mgmt_common_rx_bytes +=(common_mgmt_frames_missed* mgmt_common_rx_bytes *1.0 / mgmt_common_pkt_count)
+
+         if err_mgmt_pkt_count>0 and err_mgmt_frames_missed>0:
+             err_mgmt_rx_airtime += (err_mgmt_frames_missed*err_mgmt_rx_bytes*1.0 / err_mgmt_pkt_count*mode(local_err_mgmt_rates))
+             err_mgmt_rx_bytes +=  (err_mgmt_frames_missed*err_mgmt_rx_bytes*1.0 / err_mgmt_pkt_count)
          
          timeseries_bytes[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_airtime,data_tx_airtime, err_data_rx_airtime, mgmt_rx_airtime, mgmt_tx_airtime, err_mgmt_rx_airtime,ctrl_rx_airtime, ctrl_tx_airtime, err_ctrl_rx_airtime]
 
-         timeseries_airtime[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_bytes, data_tx_bytes, err_data_rx_bytes, mgmt_rx_bytes, mgmt_tx_bytes, err_mgmt_rx_bytes, ctrl_rx_bytes, ctrl_tx_bytes, err_ctrl_rx_bytes]
+         timeseries_airtime[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_bytes, data_tx_bytes, err_data_rx_bytes, mgmt_common_rx_bytes, mgmt_beacon_rx_bytes, mgmt_tx_bytes, err_mgmt_rx_bytes, ctrl_rx_bytes, ctrl_tx_bytes, err_ctrl_rx_bytes]
      
          if file_count %10 == 0:
              print file_count
