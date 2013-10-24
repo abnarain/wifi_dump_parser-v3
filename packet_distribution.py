@@ -54,9 +54,7 @@ def file_reader(t1,t2,data_fs):
 
         data_contents=data_file_content.split('\n----\n')
         header_and_correct_data_frames = data_contents[0]
-        err_data_frames = data_contents[1]
-        correct_data_frames_missed=data_contents[2]
-        err_data_frames_missed=data_contents[3]
+        err_data_frames =data_contents[1]
 
     #done with reading the binary blobs from file ; now check for timestamps are correct
         '''
@@ -183,8 +181,6 @@ def queue_file_reader(t1,t2,data_fs):
         data_contents=data_file_content.split('\n----\n')
         header_and_correct_data_frames = data_contents[0]
         err_data_frames = data_contents[1]
-        correct_data_frames_missed=data_contents[2]
-        err_data_frames_missed=data_contents[3]
 
     #done with reading the binary blobs from file ; now check for timestamps are correct
         '''
@@ -231,6 +227,7 @@ err_data_rx_pkt_size=defaultdict(int)
 
 mgmt_tx_pkt_size=defaultdict(int)
 mgmt_rx_pkt_size=defaultdict(int)
+mgmt_beacon_pkt_size=defaultdict(int)
 err_mgmt_rx_pkt_size=defaultdict(int)
 
 ctrl_tx_pkt_size=defaultdict(int)
@@ -239,7 +236,8 @@ err_ctrl_rx_pkt_size=defaultdict(int)
 
 timeseries_bytes=defaultdict(list)
 timeseries_airtime=defaultdict(list)
-
+g_access_point_count=set()
+g_device_count=set()
 def total_file_content_reader(t1,t2,data_fs,data_f_dir):
      ctrl_dir_components= data_f_dir.split('/')
      ctrl_dir_components[-2]=re.sub('data','ctrl',ctrl_dir_components[-2]) 
@@ -285,13 +283,17 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          header_and_correct_data_frames = data_contents[0]
          err_data_frames = data_contents[1]
          correct_data_frames_missed=data_contents[2]
-         err_data_frames_missed=data_contents[3]   
+         err_data_frames_missed=data_contents[3]
+         correct_data_frames_missed=list(struct.unpack('I',data_contents[2]))[0]
+         err_data_frames_missed =list(struct.unpack('I',data_contents[3]))[0]
+
+         print "data frame missed",correct_data_frames_missed,err_data_frames_missed
 
          ctrl_f_name = data_f_name
          ctrl_f_name =re.sub("-d-","-c-",ctrl_f_name)
 
          try :
-             ctrl_f= gzip.open(ctrl_f_dir+ctrl_f_name,'rb')	
+             ctrl_f= gzip.open(ctrl_f_dir+ctrl_f_name,'rb')
              ctrl_file_content=ctrl_f.read()
          except :
              print  "CTRL file not present ", ctrl_f_name 
@@ -336,10 +338,10 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          header_and_beacon_mgmt_frames = mgmt_contents[0] 
          common_mgmt_frames = mgmt_contents[1]
          err_mgmt_frames=mgmt_contents[2]
-         beacon_mgmt_frames_missed=mgmt_contents[3]
-         common_mgmt_frames_missed=mgmt_contents[4]
-         err_mgmt_frames_missed=mgmt_contents[5]
-
+         beacon_mgmt_frames_missed=list(struct.unpack('<I',mgmt_contents[3]))[0]
+         common_mgmt_frames_missed=list(struct.unpack('<I',mgmt_contents[4]))[0]         
+         err_mgmt_frames_missed =list(struct.unpack('<I',mgmt_contents[5]))[0]
+         print "beacon,common,err ", beacon_mgmt_frames_missed, common_mgmt_frames_missed, err_mgmt_frames_missed
          for i in xrange(len(ctrl_file_content )):
              if ctrl_file_content[i]=='\n':
                  bismark_ctrl_file_header = str(ctrl_file_content[0:i])
@@ -355,6 +357,11 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          err_ctrl_frames = ctrl_contents[1]
          correct_ctrl_frames_missed=ctrl_contents[2]
          err_ctrl_frames_missed=ctrl_contents[3]
+
+         correct_ctrl_frames_missed =list(struct.unpack('<I',ctrl_contents[2]))[0]
+         err_ctrl_frames_missed =list(struct.unpack('<I',ctrl_contents[3]))[0]
+         print "ctrl frame count ", err_ctrl_frames_missed,correct_ctrl_frames_missed
+
         #done with reading the binary blobs from file ; now check for timestamps are correct
          if (not (ctrl_file_current_timestamp == mgmt_file_current_timestamp == data_file_current_timestamp )) :
              print "timestamps don't match ", data_f_name
@@ -377,20 +384,28 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          if (data_file_current_timestamp >t2+1):
              break
          '''
- 
+        
          correct_data_frames=header_and_correct_data_frames[data_file_header_byte_count+1:]
          data_index=0
-
-         #for counting bits
+         devices_count=set()
+         access_points_count=set()
+         #for counting airtime
          data_tx_airtime,err_data_rx_airtime, data_rx_airtime=0,0,0
          err_data_rx_bytes, data_tx_bytes, data_rx_bytes=0,0,0
 
          mgmt_tx_airtime, err_mgmt_rx_airtime, mgmt_rx_airtime=0,0,0
          err_mgmt_rx_bytes, mgmt_tx_bytes,mgmt_rx_bytes =0,0,0
 
+         mgmt_beacon_rx_bytes=0
+
          ctrl_tx_airtime,err_ctrl_rx_airtime, ctrl_rx_airtime =0,0,0
          err_ctrl_rx_bytes, ctrl_tx_bytes, ctrl_rx_bytes=0,0,0
+         #calculating approximate airtime calculation
+         local_ctrl_rates,local_data_rates,local_mgmt_rates,local_common_mgmt_rates,local_beacon_mgmt_rates=[],[],[],[],[]
+         local_err_ctrl_rates,local_err_data_rates,local_err_mgmt_rates=[],[],[]
 
+         err_ctrl_pkt_count,ctrl_pkt_count,err_data_pkt_count,data_pkt_count=0,0,0,0
+         err_mgmt_pkt_count,mgmt_beacon_pkt_count, mgmt_common_pkt_count=0,0,0
          for idx in xrange(0,len(correct_data_frames)-DATA_STRUCT_SIZE ,DATA_STRUCT_SIZE ):
              frame=correct_data_frames[data_index:data_index+DATA_STRUCT_SIZE]
              offset,success,tsf= 8,-1,0
@@ -406,7 +421,11 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp=frame_elem[tsf]
                  temp.insert(0,tsf)
                  if radiotap_len ==RADIOTAP_TX_LEN :
+                     a= temp[12].split(':')
+                     if not( int(a[0],16)& 0x1):
+                         devices_count.add(temp[12])
                      #datakind,tx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
+                     #TODO Check the descriptor for -1 to find out if the retx count makes sense
                      if len(temp[9])==0: #condition when there was a retransmission
                          data_tx_bytes=data_tx_bytes+temp[-1]
                          data_tx_pkt_size[temp[-1]] +=1
@@ -424,14 +443,24 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                          for rt_retx_pair in temp[9]:
                             data_tx_bytes +=rt_retx_pair[1]*temp[-1]
                             data_tx_pkt_size[temp[-1]] +=1
-                            if rt_retx_pair[0]>65.0:
+                            if rt_retx_pair[0]<65.0:
                                 data_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/rt_retx_pair[0])
+                                data_pkt_count += rt_retx_pair[1]
                             else:
                                 data_tx_airtime=data_tx_airtime+(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
+                                data_pkt_count += rt_retx_pair[1]
+
                  elif radiotap_len==RADIOTAP_RX_LEN :
                      #datakind,rx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
+                     local_data_rates.append(temp[8])
+                     a= temp[12].split(':')
+                     if not( int(a[0],16)& 0x1):
+                         devices_count.add(temp[12])
+                     a= temp[13].split(':')
+                     if not( int(a[0],16)& 0x1):
+                         devices_count.add(temp[13])
                      data_rx_pkt_size[temp[10]] +=1
-                     data_rx_bytes=data_rx_bytes+temp[10]
+                     data_rx_bytes +=temp[10]
                      if temp[8]>65.0:
                          data_rx_airtime=data_rx_airtime+(temp[10]*1.0/temp[8])
                      else:
@@ -467,9 +496,11 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      sys.exit(1)
                  elif radiotap_len == RADIOTAP_RX_LEN:
                      #datakind,tx,non-corrupted,packetsize,bitrate
+                     local_err_data_rates.append(temp[8])
                      err_data_rx_bytes +=temp[10]
                      err_data_rx_pkt_size[temp[-1]] +=1
-                     if temp[8]>65.0:
+                     err_data_pkt_count += 1
+                     if temp[8]<65.0:
                          err_data_rx_airtime +=(temp[10]*1.0/temp[8])
                      else:
                          err_data_rx_airtime +=(temp[10]*0.5/temp[8])
@@ -506,9 +537,14 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      sys.exit(1)
                  elif radiotap_len ==RADIOTAP_RX_LEN :
                      #mgmtkind, rx,non-corrupted,src_mac,bitrate,packet_size
-                     mgmt_rx_bytes +=temp[-1]
-                     mgmt_rx_pkt_size[temp[-1]] +=1
+                     a= temp[12].split(':')
+                     if not( int(a[0],16)& 0x1):
+                         access_points_count.add(temp[12])   
+                     mgmt_beacon_rx_bytes +=temp[-1]
+                     mgmt_beacon_pkt_size[temp[-1]] +=1
                      mgmt_rx_airtime +=(temp[10]*1.0/temp[8])
+                     local_beacon_mgmt_rates.append(temp[8])
+                     mgmt_beacon_pkt_count +=1
                  else :
                     print "impossible radiotap len detected ; Report CERN"
              else :
@@ -538,7 +574,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      mgmt_tx_bytes +=mgmt_tx_bytes+temp[-1]
                      mgmt_tx_pkt_size[temp[-1]] +=1
                      mgmt_tx_airtime=mgmt_tx_airtime+(temp[-1]*1.0/temp[3])
-                     if len(temp[9]) >0:
+                     if len(temp[9])>0:
                          for rt_retx_pair in temp[9]:
                             mgmt_tx_bytes=mgmt_tx_bytes+rt_retx_pair[1]*temp[-1]
                             mgmt_tx_pkt_size[temp[-1]] +=1
@@ -551,6 +587,8 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                          mgmt_rx_bytes=mgmt_rx_bytes+temp[10]
                          mgmt_rx_pkt_size[temp[10]] +=1
                          mgmt_rx_airtime=mgmt_rx_airtime+(temp[10]*1.0/temp[8])
+                         local_common_mgmt_rates.append(temp[8])
+                         mgmt_common_pkt_count += 1
                  else :
                      print "impossible radiotap detected"
              else :
@@ -584,6 +622,8 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      err_mgmt_rx_bytes +=temp[10]
                      err_mgmt_rx_pkt_size[temp[10]] +=1
                      err_mgmt_rx_airtime +=(temp[10]*1.0/temp[8])
+                     local_err_mgmt_rates.append(temp[8])
+                     err_mgmt_pkt_count += rt_retx_pair[1]
                  else :
                      print "impossible radiotap detected"
              else:
@@ -619,13 +659,18 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                             ctrl_tx_bytes=ctrl_tx_bytes+rt_retx_pair[1]*temp[-1]
                             ctrl_tx_pkt_size[temp[-1]] +=1
                             if rt_retx_pair[0]>65.0:
-                                ctrl_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/rt_retx_pair[0])
+                                ctrl_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
+                                ctrl_pkt_count += rt_retx_pair[1]
                             else:
-                                ctrl_tx_airtime +=(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
+                                ctrl_tx_airtime +=(temp[-1]*rt_retx_pair[1]/rt_retx_pair[0])
+                                ctrl_pkt_count +=rt_retx_pair[1]
+
                  elif radiotap_len==RADIOTAP_RX_LEN :
                      ctrl_rx_bytes +=temp[10]
                      ctrl_rx_pkt_size[temp[10]] +=1
                      ctrl_rx_airtime=mgmt_rx_airtime+(temp[10]*1.0/temp[8])
+                     local_ctrl_rates.append(temp[8])
+                     ctrl_pkt_count +=1
              else :
                  print "success denied"
              ctrl_index=ctrl_index+CTRL_STRUCT_SIZE
@@ -657,15 +702,31 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      err_ctrl_rx_bytes +=temp[10]
                      err_ctrl_rx_pkt_size[temp[10]] +=1
                      err_ctrl_rx_airtime +=(temp[10]*1.0/temp[8])
+                     local_err_ctrl_rates.append(temp[8])
+                     err_ctrl_pkt_count +=1
              else :
                  print "success denied"
              ctrl_index= ctrl_index+CTRL_ERR_STRUCT_SIZE
              del frame_elem
              del monitor_elem
          #data (tx, rx),err_data, mgmt (tx,rx), err_mgmt, ctrl (tx,rx), err_ctrl
-         timeseries_bytes[file_timestamp]=[data_rx_airtime,data_tx_airtime, err_data_rx_airtime, mgmt_rx_airtime, mgmt_tx_airtime, err_mgmt_rx_airtime,ctrl_rx_airtime, ctrl_tx_airtime, err_ctrl_rx_airtime]
+         #do some calculations about missing frames in each category before logging it 
+         #print "mode is " , correct_data_frames_missed, "marg"
+         #print "start",data_rx_bytes, " shag"
+         '''
+         data_rx_airtime += correct_data_frames_missed*data_rx_bytes*1.0/ mode(local_data_rates)
+         err_data_rx_airtime +=err_data_frames_missed*data_rx_bytes*1.0/ mode(local_err_data_rates)
+        
+         ctrl_rx_airtime +=correct_ctrl_frames_missed*ctrl_tx_bytes*1.0 / ctrl_pkt_count*mode(local_ctrl_rates)
+         err_ctrl_rx_airtime +=err_ctrl_frames_missed*err_ctrl_rx_bytes*1.0/ err_ctrl_pkt_count*mode(local_err_ctrl_rates)
 
-         timeseries_airtime[file_timestamp]=[data_rx_bytes, data_tx_bytes, err_data_rx_bytes, mgmt_rx_bytes, mgmt_tx_bytes, err_mgmt_rx_bytes, ctrl_rx_bytes, ctrl_tx_bytes, err_ctrl_rx_bytes]
+         mgmt_rx_airtime +=beacon_mgmt_frames_missed*mgmt_beacon_pkt_count*1.0/ mode(local_beacon_mgmt_rate)
+         mgmt_rx_airtime +=common_mgmt_frames_missed*mgmt_common_pkt_count*1.0 / mode(local_common_mgmt_rate)
+         err_mgmt_rx_airtim +=err_mgmt_frames_missed*err_mgmt_tx_bytes*1.0 /mode(local_err_mgmt_rate)
+         '''
+         timeseries_bytes[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_airtime,data_tx_airtime, err_data_rx_airtime, mgmt_rx_airtime, mgmt_tx_airtime, err_mgmt_rx_airtime,ctrl_rx_airtime, ctrl_tx_airtime, err_ctrl_rx_airtime]
+
+         timeseries_airtime[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_bytes, data_tx_bytes, err_data_rx_bytes, mgmt_rx_bytes, mgmt_tx_bytes, err_mgmt_rx_bytes, ctrl_rx_bytes, ctrl_tx_bytes, err_ctrl_rx_bytes]
      
          if file_count %10 == 0:
              print file_count
