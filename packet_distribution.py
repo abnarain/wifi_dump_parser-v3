@@ -381,14 +381,13 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          data_index=0
 
          #for counting bits
-         data_tx_airtime,err_data_rx_airtime, data_rx_airtime, data_tx_bytes=0,0,0,0
-         err_data_rx_bytes,data_rx_bytes,data_rx_retx_bytes=0,0,0
+         data_tx_airtime,err_data_rx_airtime, data_rx_airtime=0,0,0
+         err_data_rx_bytes, data_tx_bytes, data_rx_bytes=0,0,0
 
-         mgmt_rx_bytes,mgmt_rx_retx_bytes=0,0
-         mgmt_tx_airtime, mgmt_tx_bytes,err_mgmt_rx_bytes=0,0,0
-         mgmt_rx_airtime,err_mgmt_rx_airtime=0,0
+         mgmt_tx_airtime, err_mgmt_rx_airtime, mgmt_rx_airtime=0,0,0
+         err_mgmt_rx_bytes, mgmt_tx_bytes,mgmt_rx_bytes =0,0,0
 
-         ctrl_tx_airtime,err_ctrl_rx_airtime=0,0
+         ctrl_tx_airtime,err_ctrl_rx_airtime, ctrl_rx_airtime =0,0
          err_ctrl_rx_bytes, ctrl_tx_bytes, ctrl_rx_bytes=0,0,0
 
          for idx in xrange(0,len(correct_data_frames)-DATA_STRUCT_SIZE ,DATA_STRUCT_SIZE ):
@@ -407,7 +406,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp.insert(0,tsf)
                  if radiotap_len ==RADIOTAP_TX_LEN :
                      #datakind,tx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
-                     if len(temp[9])==0: #condition when there was a retransmission 
+                     if len(temp[9])==0: #condition when there was a retransmission
                          data_tx_bytes=data_tx_bytes+temp[-1]
                          data_tx_pkt_size[temp[-1]] +=1
                          if temp[3]>65.0 :
@@ -622,7 +621,6 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                                 ctrl_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/rt_retx_pair[0])
                             else:
                                 ctrl_tx_airtime +=(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
-
                  elif radiotap_len==RADIOTAP_RX_LEN :
                      ctrl_rx_bytes +=temp[10]
                      ctrl_rx_pkt_size[temp[10]] +=1
@@ -664,9 +662,10 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
              del frame_elem
              del monitor_elem
          #data (tx, rx),err_data, mgmt (tx,rx), err_mgmt, ctrl (tx,rx), err_ctrl
-         timeseries_bytes[file_timestamp]=[[]]
-         timeseries_airtime[file_timestamp]=[[]]
-         
+         timeseries_bytes[file_timestamp]=[data_rx_airtime,data_tx_airtime, err_data_rx_airtime, mgmt_rx_airtime, mgmt_tx_airtime, err_mgmt_rx_airtime,ctrl_rx_airtime, ctrl_tx_airtime, err_ctrl_rx_airtime]
+
+         timeseries_airtime[file_timestamp]=[data_rx_bytes, data_tx_bytes, err_data_rx_bytes, mgmt_rx_bytes, mgmt_tx_bytes, err_mgmt_rx_bytes, ctrl_rx_bytes, ctrl_tx_bytes, err_ctrl_rx_bytes]
+     
          if file_count %10 == 0:
              print file_count
 
