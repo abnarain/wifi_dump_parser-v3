@@ -237,8 +237,9 @@ ctrl_tx_pkt_size=defaultdict(int)
 ctrl_rx_pkt_size=defaultdict(int)
 err_ctrl_rx_pkt_size=defaultdict(int)
 
-timeseries_throughput=defaultdict(list)
-timeseries_network_throughput=defaultdict(list)
+timeseries_bytes=defaultdict(list)
+timeseries_airtime=defaultdict(list)
+
 def total_file_content_reader(t1,t2,data_fs,data_f_dir):
      ctrl_dir_components= data_f_dir.split('/')
      ctrl_dir_components[-2]=re.sub('data','ctrl',ctrl_dir_components[-2]) 
@@ -387,7 +388,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          mgmt_tx_airtime, err_mgmt_rx_airtime, mgmt_rx_airtime=0,0,0
          err_mgmt_rx_bytes, mgmt_tx_bytes,mgmt_rx_bytes =0,0,0
 
-         ctrl_tx_airtime,err_ctrl_rx_airtime, ctrl_rx_airtime =0,0
+         ctrl_tx_airtime,err_ctrl_rx_airtime, ctrl_rx_airtime =0,0,0
          err_ctrl_rx_bytes, ctrl_tx_bytes, ctrl_rx_bytes=0,0,0
 
          for idx in xrange(0,len(correct_data_frames)-DATA_STRUCT_SIZE ,DATA_STRUCT_SIZE ):
