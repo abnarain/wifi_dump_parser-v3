@@ -422,11 +422,12 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp.insert(0,tsf)
                  if radiotap_len ==RADIOTAP_TX_LEN :
                      a= temp[12].split(':')
+                     data_pkt_count += 1
                      if not( int(a[0],16)& 0x1):
                          devices_count.add(temp[12])
                      #datakind,tx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
                      #TODO Check the descriptor for -1 to find out if the retx count makes sense
-                     if len(temp[9])==0: #condition when there was a retransmission
+                     if len(temp[9])==0: #there was a retransmission
                          data_tx_bytes=data_tx_bytes+temp[-1]
                          data_tx_pkt_size[temp[-1]] +=1
                          if temp[3]>65.0 :
@@ -435,24 +436,25 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                              data_tx_airtime=data_tx_airtime+(temp[-1]*1.0/(2.0*temp[3])) # there is 2X2 MIMO
                      else:
                          data_tx_bytes=data_tx_bytes+temp[-1]
-                         data_tx_pkt_size[temp[-1]] +=1
+                         data_tx_pkt_size[temp[-1]] +=1                         
                          if temp[3]>65.0:
                              data_tx_airtime +=(temp[-1]*1.0/temp[3])
                          else:
                              data_tx_airtime +=(temp[-1]*1.0/(2.0*temp[3]))
-                         for rt_retx_pair in temp[9]:
-                            data_tx_bytes +=rt_retx_pair[1]*temp[-1]
-                            data_tx_pkt_size[temp[-1]] +=1
-                            if rt_retx_pair[0]<65.0:
-                                data_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/rt_retx_pair[0])
-                                data_pkt_count += rt_retx_pair[1]
-                            else:
-                                data_tx_airtime=data_tx_airtime+(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
-                                data_pkt_count += rt_retx_pair[1]
+                         for rt_retx_pair in temp[9]:                             
+                             data_tx_bytes +=rt_retx_pair[1]*temp[-1]
+                             data_tx_pkt_size[temp[-1]] +=1
+                             if rt_retx_pair[0]<65.0:
+                                 data_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/rt_retx_pair[0])
+                                 data_pkt_count += rt_retx_pair[1]
+                             else:
+                                 data_tx_airtime=data_tx_airtime+(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
+                                 data_pkt_count += rt_retx_pair[1]
 
                  elif radiotap_len==RADIOTAP_RX_LEN :
                      #datakind,rx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
                      local_data_rates.append(temp[8])
+                     data_pkt_count += 1
                      a= temp[12].split(':')
                      if not( int(a[0],16)& 0x1):
                          devices_count.add(temp[12])
@@ -713,17 +715,25 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          #do some calculations about missing frames in each category before logging it 
          #print "mode is " , correct_data_frames_missed, "marg"
          #print "start",data_rx_bytes, " shag"
-         '''
-         data_rx_airtime += correct_data_frames_missed*data_rx_bytes*1.0/ mode(local_data_rates)
-         err_data_rx_airtime +=err_data_frames_missed*data_rx_bytes*1.0/ mode(local_err_data_rates)
-        
-         ctrl_rx_airtime +=correct_ctrl_frames_missed*ctrl_tx_bytes*1.0 / ctrl_pkt_count*mode(local_ctrl_rates)
-         err_ctrl_rx_airtime +=err_ctrl_frames_missed*err_ctrl_rx_bytes*1.0/ err_ctrl_pkt_count*mode(local_err_ctrl_rates)
+         print data_pkt_count
+         print data_rx_bytes
+         data_rx_airtime += correct_data_frames_missed*data_rx_bytes*1.0/ data_pkt_count * mode(local_data_rates)
 
-         mgmt_rx_airtime +=beacon_mgmt_frames_missed*mgmt_beacon_pkt_count*1.0/ mode(local_beacon_mgmt_rate)
-         mgmt_rx_airtime +=common_mgmt_frames_missed*mgmt_common_pkt_count*1.0 / mode(local_common_mgmt_rate)
-         err_mgmt_rx_airtim +=err_mgmt_frames_missed*err_mgmt_tx_bytes*1.0 /mode(local_err_mgmt_rate)
-         '''
+         err_data_rx_airtime +=err_data_frames_missed*data_rx_bytes*1.0/ err_data_pkt_count * mode(local_err_data_rates)
+         
+         ctrl_rx_airtime +=correct_ctrl_frames_missed*ctrl_rx_bytes*1.0 / ctrl_pkt_count*mode(local_ctrl_rates)
+         err_ctrl_rx_airtime +=err_ctrl_frames_missed*err_ctrl_rx_bytes*1.0/ err_ctrl_pkt_count*mode(local_err_ctrl_rates)
+         
+         mgmt_rx_airtime +=beacon_mgmt_frames_missed*mgmt_beacon_pkt_count*1.0/ mgmt_beacon_pkt_count *mode(local_beacon_mgmt_rates)
+         mgmt_rx_airtime +=common_mgmt_frames_missed*mgmt_common_pkt_count*1.0 / mgmt_common_pkt_count *mode(local_common_mgmt_rates)
+         err_mgmt_rx_airtime +=err_mgmt_frames_missed*err_mgmt_rx_bytes*1.0 / err_mgmt_pkt_count*mode(local_err_mgmt_rates)
+         
+         data_rx_bytes/data_pkt_count
+         
+         ctrl_rx_bytes/ctrl_pkt_count
+     
+         err_ctrl_rx_bytes
+         
          timeseries_bytes[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_airtime,data_tx_airtime, err_data_rx_airtime, mgmt_rx_airtime, mgmt_tx_airtime, err_mgmt_rx_airtime,ctrl_rx_airtime, ctrl_tx_airtime, err_ctrl_rx_airtime]
 
          timeseries_airtime[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_bytes, data_tx_bytes, err_data_rx_bytes, mgmt_rx_bytes, mgmt_tx_bytes, err_mgmt_rx_bytes, ctrl_rx_bytes, ctrl_tx_bytes, err_ctrl_rx_bytes]
