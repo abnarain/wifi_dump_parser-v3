@@ -852,8 +852,8 @@ def parse_mgmt_common_frame(frame,radiotap_len,frame_elem):
 	offset +=2 
 	frame_elem[tsf].append(frame_sequence_number)
 	frame_elem[tsf].append(frame_fragment_number)
-	frame_elem[tsf].append(pkt_len)
 	parse_frame_control(frame_control,radiotap_len,frame_elem)
+	frame_elem[tsf].append(pkt_len)
 
 
 def parse_mgmt_err_frame(frame,radiotap_len,frame_elem):

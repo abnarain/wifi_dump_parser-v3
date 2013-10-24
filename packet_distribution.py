@@ -385,10 +385,11 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp.insert(0,tsf)
                  if radiotap_len ==RADIOTAP_TX_LEN :
                      #datakind,tx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
-                     if 1: #write this condition 
+                     if 1: #condition when there was a retransmission and when there was not  
                          data_packet_sizes_per_min.append([1,1,0,temp[11],temp[12],temp[-1], temp[3],0])
                      else:
                          data_packet_sizes_per_min.append([1,1,0,temp[11],temp[12],temp[-1], temp[3],-1])
+                         
                  elif radiotap_len==RADIOTAP_RX_LEN :
                      #datakind,rx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
                      data_packet_sizes_per_min.append([1,0,0,temp[12],temp[13],temp[10], temp[8],-2])
@@ -452,8 +453,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp=frame_elem[tsf]
                  temp.insert(0,tsf)
                  if radiotap_len == RADIOTAP_TX_LEN:
-                     print "beacon transmitted by AP !" 
-                     print temp
+                     print "beacon transmitted by AP !" #beacon is on a separate hardware queue, hence this won't come true 
                      sys.exit(1)
                  elif radiotap_len ==RADIOTAP_RX_LEN :
                      #mgmtkind, rx,non-corrupted,src_mac,bitrate,packet_size
@@ -484,7 +484,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp.insert(0,tsf)
                  parse_mgmt_common_frame(frame,radiotap_len,frame_elem)
                  if radiotap_len == RADIOTAP_TX_LEN:
-                     mgmt_packet_sizes_per_min.append([2,0,0,temp[12],temp[8],temp[10]]) #mgmt probe responses
+                     mgmt_packet_sizes_per_min.append([2,1,0,temp[12],temp[8],temp[10]]) #mgmt probe responses
                  elif radiotap_len ==RADIOTAP_RX_LEN :
                      #mgmt kind,rx,corrupted,src,bitrate,pktsize
                      mgmt_packet_sizes_per_min.append([2,0,0,temp[12],temp[8],temp[10]])
@@ -548,12 +548,12 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp.insert(0,tsf)
                  if radiotap_len ==RADIOTAP_TX_LEN : 
                      #print temp
-                     #print "CTRL frame in TX ; call CERN? "
-                     pass
+                     print "CTRL frame in TX ; call CERN? "
+                     ctrl_packet_sizes_per_min.append([3,1,0,temp[],temp[],temp[],temp[]])
                  elif radiotap_len==RADIOTAP_RX_LEN :
                      #ctrlkind,rx,src mac,dest mac,packetsize,bitrate,retranmission
-                     print temp
-                     ctrl_packet_sizes_per_min.append([3,0,0,temp[-2],temp[8],temp[10],temp[12][1]])
+                     #print temp
+                     ctrl_packet_sizes_per_min.append([3,0,0,temp[12],temp[8],temp[10],temp[12][1]])
              else :
                  print "success denied"
              ctrl_index=ctrl_index+CTRL_STRUCT_SIZE
