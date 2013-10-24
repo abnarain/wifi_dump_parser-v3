@@ -50,9 +50,14 @@ def percentile (sequence, percentile):
         return value
 
 def mode(ls):
-    a= list(map((lambda x: x * -1), ls))
-    counts=np.bincount(a)
-    return  -1* np.argmax(counts)
+    if ls[0]<0:
+        a= list(map((lambda x: x * -1), ls))
+        counts=np.bincount(a)
+        return  -1* np.argmax(counts)
+    else:
+        a=ls
+        counts=np.bincount(a)
+        return  np.argmax(counts)
     '''
     b = Counter(ls)
     return b.most_common(1)
