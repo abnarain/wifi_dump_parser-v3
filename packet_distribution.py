@@ -225,8 +225,20 @@ def queue_file_reader(t1,t2,data_fs):
         if file_count %10 == 0:
             print file_count
 
+data_tx_pkt_size=defaultdict(int)
+data_rx_pkt_size=defaultdict(int)
+err_data_rx_pkt_size=defaultdict(int)
 
-timeseries_pkt_size_rate=defaultdict(list)
+mgmt_tx_pkt_size=defaultdict(int)
+mgmt_rx_pkt_size=defaultdict(int)
+err_mgmt_rx_pkt_size=defaultdict(int)
+
+ctrl_tx_pkt_size=defaultdict(int)
+ctrl_rx_pkt_size=defaultdict(int)
+err_ctrl_rx_pkt_size=defaultdict(int)
+
+timeseries_throughput=defaultdict(list)
+timeseries_network_throughput=defaultdict(list)
 def total_file_content_reader(t1,t2,data_fs,data_f_dir):
      ctrl_dir_components= data_f_dir.split('/')
      ctrl_dir_components[-2]=re.sub('data','ctrl',ctrl_dir_components[-2]) 
@@ -364,11 +376,21 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
          if (data_file_current_timestamp >t2+1):
              break
          '''
-         data_packet_sizes_per_min, mgmt_packet_sizes_per_min, ctrl_packet_sizes_per_min=[],[],[]
-         err_data_packet_sizes_per_min, err_mgmt_packet_sizes_per_min, err_ctrl_packet_sizes_per_min=[],[],[]
  
          correct_data_frames=header_and_correct_data_frames[data_file_header_byte_count+1:]
          data_index=0
+
+         #for counting bits
+         data_tx_airtime,err_data_rx_airtime, data_rx_airtime, data_tx_bytes=0,0,0,0
+         err_data_rx_bytes,data_rx_bytes,data_rx_retx_bytes=0,0,0
+
+         mgmt_rx_bytes,mgmt_rx_retx_bytes=0,0
+         mgmt_tx_airtime, mgmt_tx_bytes,err_mgmt_rx_bytes=0,0,0
+         mgmt_rx_airtime,err_mgmt_rx_airtime=0,0
+
+         ctrl_tx_airtime,err_ctrl_rx_airtime=0,0
+         err_ctrl_rx_bytes, ctrl_tx_bytes, ctrl_rx_bytes=0,0,0
+
          for idx in xrange(0,len(correct_data_frames)-DATA_STRUCT_SIZE ,DATA_STRUCT_SIZE ):
              frame=correct_data_frames[data_index:data_index+DATA_STRUCT_SIZE]
              offset,success,tsf= 8,-1,0
@@ -385,14 +407,35 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp.insert(0,tsf)
                  if radiotap_len ==RADIOTAP_TX_LEN :
                      #datakind,tx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
-                     if 1: #condition when there was a retransmission and when there was not  
-                         data_packet_sizes_per_min.append([1,1,0,temp[11],temp[12],temp[-1], temp[3],0])
+                     if len(temp[9])==0: #condition when there was a retransmission 
+                         data_tx_bytes=data_tx_bytes+temp[-1]
+                         data_tx_pkt_size[temp[-1]] +=1
+                         if temp[3]>65.0 :
+                             data_tx_airtime=data_tx_airtime+(temp[-1]*1.0/temp[3])
+                         else:
+                             data_tx_airtime=data_tx_airtime+(temp[-1]*1.0/(2.0*temp[3])) # there is 2X2 MIMO
                      else:
-                         data_packet_sizes_per_min.append([1,1,0,temp[11],temp[12],temp[-1], temp[3],-1])
-                         
+                         data_tx_bytes=data_tx_bytes+temp[-1]
+                         data_tx_pkt_size[temp[-1]] +=1
+                         if temp[3]>65.0:
+                             data_tx_airtime +=(temp[-1]*1.0/temp[3])
+                         else:
+                             data_tx_airtime +=(temp[-1]*1.0/(2.0*temp[3]))
+                         for rt_retx_pair in temp[9]:
+                            data_tx_bytes +=rt_retx_pair[1]*temp[-1]
+                            data_tx_pkt_size[temp[-1]] +=1
+                            if rt_retx_pair[0]>65.0:
+                                data_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/rt_retx_pair[0])
+                            else:
+                                data_tx_airtime=data_tx_airtime+(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
                  elif radiotap_len==RADIOTAP_RX_LEN :
                      #datakind,rx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
-                     data_packet_sizes_per_min.append([1,0,0,temp[12],temp[13],temp[10], temp[8],-2])
+                     data_rx_pkt_size[temp[10]] +=1
+                     data_rx_bytes=data_rx_bytes+temp[10]
+                     if temp[8]>65.0:
+                         data_rx_airtime=data_rx_airtime+(temp[10]*1.0/temp[8])
+                     else:
+                         data_rx_airtime=data_rx_airtime+(temp[10]*0.5/temp[8])
                  else:
                      print "impossible ratdiotap detected ; Report CERN"
                      damaged_frame +=1 
@@ -419,11 +462,17 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  parse_err_data_frame(frame,radiotap_len,frame_elem)
                  temp=frame_elem[tsf]
                  temp.insert(0,tsf)
-                 if radiotap_len == RADIOTAP_RX_LEN:
+                 if radiotap_len ==RADIOTAP_TX_LEN :
+                     print "DATA TX BADFCS ERR !CALL CERN!"
+                     sys.exit(1)
+                 elif radiotap_len == RADIOTAP_RX_LEN:
                      #datakind,tx,non-corrupted,packetsize,bitrate
-                     err_data_packet_sizes_per_min.append([1,1,1,temp[10], temp[8]])
-                 elif radiotap_len ==RADIOTAP_TX_LEN :
-                     print "MGMT TX ERR !CALL CERN!"
+                     err_data_rx_bytes +=temp[10]
+                     err_data_rx_pkt_size[temp[-1]] +=1
+                     if temp[8]>65.0:
+                         err_data_rx_airtime +=(temp[10]*1.0/temp[8])
+                     else:
+                         err_data_rx_airtime +=(temp[10]*0.5/temp[8])
                  else :
                     print "impossible radiotap len detected ; Report CERN"
                     damaged_frame +=1 
@@ -442,7 +491,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
              header = frame[:offset]
              frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
              (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-             if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
+             if not( radiotap_len == RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
                  print "the radiotap header is not correct "
                  sys.exit(1)
              (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
@@ -457,7 +506,9 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      sys.exit(1)
                  elif radiotap_len ==RADIOTAP_RX_LEN :
                      #mgmtkind, rx,non-corrupted,src_mac,bitrate,packet_size
-                     mgmt_packet_sizes_per_min.append([2,0,0,temp[12],temp[8],temp[10]])
+                     mgmt_rx_bytes +=temp[-1]
+                     mgmt_rx_pkt_size[temp[-1]] +=1
+                     mgmt_rx_airtime +=(temp[10]*1.0/temp[8])
                  else :
                     print "impossible radiotap len detected ; Report CERN"
              else :
@@ -484,10 +535,22 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp.insert(0,tsf)
                  parse_mgmt_common_frame(frame,radiotap_len,frame_elem)
                  if radiotap_len == RADIOTAP_TX_LEN:
-                     mgmt_packet_sizes_per_min.append([2,1,0,temp[12],temp[8],temp[10]]) #mgmt probe responses
+                     mgmt_tx_bytes +=mgmt_tx_bytes+temp[-1]
+                     mgmt_tx_pkt_size[temp[-1]] +=1
+                     mgmt_tx_airtime=mgmt_tx_airtime+(temp[-1]*1.0/temp[3])
+                     if len(temp[9]) >0:
+                         for rt_retx_pair in temp[9]:
+                            mgmt_tx_bytes=mgmt_tx_bytes+rt_retx_pair[1]*temp[-1]
+                            mgmt_tx_pkt_size[temp[-1]] +=1
+                            if rt_retx_pair[0]>65.0:
+                                mgmt_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/rt_retx_pair[0])
+                            else:
+                                mgmt_tx_airtime +=(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
                  elif radiotap_len ==RADIOTAP_RX_LEN :
                      #mgmt kind,rx,corrupted,src,bitrate,pktsize
-                     mgmt_packet_sizes_per_min.append([2,0,0,temp[12],temp[8],temp[10]])
+                         mgmt_rx_bytes=mgmt_rx_bytes+temp[10]
+                         mgmt_rx_pkt_size[temp[10]] +=1
+                         mgmt_rx_airtime=mgmt_rx_airtime+(temp[10]*1.0/temp[8])
                  else :
                      print "impossible radiotap detected"
              else :
@@ -514,10 +577,13 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp=frame_elem[tsf]
                  temp.insert(0,tsf)
                  if radiotap_len == RADIOTAP_TX_LEN:
-                     print "MGMT TX ERR !CALL CERN!"
+                     print "MGMT TX BADFCS ERR !CALL CERN!"
+                     sys.exit(1)
                  elif radiotap_len ==RADIOTAP_RX_LEN :
                      #mgmt kind,rx,corrupted,src,bitrate,pktsize
-                     err_mgmt_packet_sizes_per_min.append([2,0,1,temp[8],temp[10]])
+                     err_mgmt_rx_bytes +=temp[10]
+                     err_mgmt_rx_pkt_size[temp[10]] +=1
+                     err_mgmt_rx_airtime +=(temp[10]*1.0/temp[8])
                  else :
                      print "impossible radiotap detected"
              else:
@@ -525,9 +591,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
              mgmt_index= mgmt_index+MGMT_ERR_STRUCT_SIZE
              del frame_elem
              del monitor_elem
-
         #print "----------done with missed .. now with actual ctrl data "
-
          correct_ctrl_frames=header_and_correct_ctrl_frames[ctrl_file_header_byte_count+1:]
          ctrl_index=0
          for idx in xrange(0,len(correct_ctrl_frames)-CTRL_STRUCT_SIZE ,CTRL_STRUCT_SIZE ):
@@ -547,13 +611,22 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp=frame_elem[tsf]
                  temp.insert(0,tsf)
                  if radiotap_len ==RADIOTAP_TX_LEN : 
-                     #print temp
-                     print "CTRL frame in TX ; call CERN? "
-                     ctrl_packet_sizes_per_min.append([3,1,0,temp[],temp[],temp[],temp[]])
+                     ctrl_tx_bytes=ctrl_tx_bytes+temp[-1]
+                     ctrl_tx_pkt_size[temp[-1]] +=1
+                     ctrl_tx_airtime=ctrl_tx_airtime+(temp[-1]*1.0/temp[3])
+                     if len(temp[9]) >0:
+                         for rt_retx_pair in temp[9]:
+                            ctrl_tx_bytes=ctrl_tx_bytes+rt_retx_pair[1]*temp[-1]
+                            ctrl_tx_pkt_size[temp[-1]] +=1
+                            if rt_retx_pair[0]>65.0:
+                                ctrl_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/rt_retx_pair[0])
+                            else:
+                                ctrl_tx_airtime +=(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
+
                  elif radiotap_len==RADIOTAP_RX_LEN :
-                     #ctrlkind,rx,src mac,dest mac,packetsize,bitrate,retranmission
-                     #print temp
-                     ctrl_packet_sizes_per_min.append([3,0,0,temp[12],temp[8],temp[10],temp[12][1]])
+                     ctrl_rx_bytes +=temp[10]
+                     ctrl_rx_pkt_size[temp[10]] +=1
+                     ctrl_rx_airtime=mgmt_rx_airtime+(temp[10]*1.0/temp[8])
              else :
                  print "success denied"
              ctrl_index=ctrl_index+CTRL_STRUCT_SIZE
@@ -579,16 +652,21 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                  temp.insert(0,tsf)
                  if radiotap_len ==RADIOTAP_TX_LEN :
                     print "ctrl frame transmitted; call CERN!" 
-                    err_ctrl_packet_sizes_per_min.append([rate,size])
+                    sys.exit(1)
                  elif radiotap_len==RADIOTAP_RX_LEN :
                     #ctrlkind,rx,err,mac-add,bitrate, packet_size
-                    err_ctrl_packet_sizes_per_min.append([3,0,1,temp[8],temp[10]])
+                     err_ctrl_rx_bytes +=temp[10]
+                     err_ctrl_rx_pkt_size[temp[10]] +=1
+                     err_ctrl_rx_airtime +=(temp[10]*1.0/temp[8])
              else :
                  print "success denied"
              ctrl_index= ctrl_index+CTRL_ERR_STRUCT_SIZE
              del frame_elem
              del monitor_elem
-                      
+         #data (tx, rx),err_data, mgmt (tx,rx), err_mgmt, ctrl (tx,rx), err_ctrl
+         timeseries_bytes[file_timestamp]=[[]]
+         timeseries_airtime[file_timestamp]=[[]]
+         
          if file_count %10 == 0:
              print file_count
 
