@@ -416,16 +416,22 @@ def bytes_airtime_pickle_reader(dump_input_folder,router_id):
             return [_f_content[1],_f_content[2]] 
 
 def utilization_throughput_plot(airtime_data_set,bytes_data_set,outfile_name):
-
+    scatter_thruput_util=[]
+    scatter_thruput_dev=defaultdict(list)
+    scatter_util_dev=defaultdict(list)
     for time, bytes in bytes_data_set.iteritems():
         [no_dev,no_ap, d_r,d_t,e_d, m_c_r,m_b_r,m_t,e_m, c_r,c_t,e_c ]=bytes
         total_bytes=d_r+d_t+e_d+ m_c_r+m_b_r+m_t+e_m+c_r+c_t+e_c
-        print time,total_bytes
+        if time  in airtime_data_set.keys():
+            [no_dev, no_ap, d_r, d_t,e_d, m_r, m_t,e_m, c_r,c_t,e_c]=airtimes
+            total_airtime = no_dev+no_ap+d_r+d_t+e_d+m_r +m_t+e_m+c_r+c_t+e_c
+            network_utilization=total_airtime*100.0/60.0*pow(10,12)
+            network_throughput=total_bytes*1.0/60
+            scatter_thruput_util.append([network_utilization,network_throughput])
+            scatter_thruput_dev[no_dev].append(network_throughput)
+            scatter_util_dev[no_dev].append(network_throughput)
 
-    for time, airtimes in airtime_data_set.iteritems():
-        [no_dev, no_ap, d_r, d_t,e_d, m_r, m_t,e_m, c_r,c_t,e_c]=airtimes
-        total_airtime = no_dev+no_ap+d_r+d_t+e_d+m_r +m_t+e_m+c_r+c_t+e_c
-        print time, total_airtime
+
 
 
 if  __name__ == '__main__': 

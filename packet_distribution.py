@@ -800,7 +800,7 @@ def airtime_bytes_data_dumper(outfolder_name,router_id,t1,t2,data_fs,data_f_dir)
     pickle_object.append(ctrl_rx_pkt_size)
     pickle_object.append(err_ctrl_rx_pkt_size)
 
-    f_d= outfolder_name+router_id+'bytes_airtime.pickle'
+    f_d= outfolder_name+router_id+'.pickle'
     output_device = open(f_d, 'wb')
     pickle.dump(pickle_object,output_device)
     output_device.close()
