@@ -388,6 +388,46 @@ def bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name):
                          outfile_name)
     
 
+
+def bytes_airtime_pickle_reader(dump_input_folder,router_id):
+    '''
+    Reads the pickle to get an array of following elements
+    router_id
+    timeseries_bytes   -dictionary
+    timeseries_airtime
+    data_tx_pkt_size
+    data_rx_pkt_size
+    err_data_rx_pkt_size
+
+    mgmt_tx_pkt_size
+    mgmt_rx_pkt_size
+
+    mgmt_beacon_pkt_size
+    err_mgmt_rx_pkt_size
+
+    ctrl_tx_pkt_size
+    ctrl_rx_pkt_size
+    err_ctrl_rx_pkt_size
+    '''
+    data_fs=os.listdir(dump_input_folder)
+    for f_name in data_fs :
+        if f_name.split('.')[0]==router_id :
+            _f_content= pickle.load(open(dump_input_folder+f_name,'rb'))
+            return [_f_content[1],_f_content[2]] 
+
+def utilization_throughput_plot(airtime_data_set,bytes_data_set,outfile_name):
+
+    for time, bytes in bytes_data_set.iteritems():
+        [no_dev,no_ap, d_r,d_t,e_d, m_c_r,m_b_r,m_t,e_m, c_r,c_t,e_c ]=bytes
+        total_bytes=d_r+d_t+e_d+ m_c_r+m_b_r+m_t+e_m+c_r+c_t+e_c
+        print time,total_bytes
+
+    for time, airtimes in airtime_data_set.iteritems():
+        [no_dev, no_ap, d_r, d_t,e_d, m_r, m_t,e_m, c_r,c_t,e_c]=airtimes
+        total_airtime = no_dev+no_ap+d_r+d_t+e_d+m_r +m_t+e_m+c_r+c_t+e_c
+        print time, total_airtime
+
+
 if  __name__ == '__main__': 
     '''
     Plot the Scatterplot of Contention time delay vs the Number of Access Points scatterplot 
@@ -395,7 +435,7 @@ if  __name__ == '__main__':
     if len(sys.argv) !=5:
         print "usage : python unpickeler.py <contention_data_folder_2GHz/packet_trace>  <ap_device_count_data_folder> <routerid> <filename.png>  "
         sys.exit(0)
-    _folder_1 = sys.argv[1] #contention data folder or packet trace
+    _folder_1 = sys.argv[1] #contention data folder or packet trace/ bytes_airtime folder
     _folder_2 = sys.argv[2] #device_count data folder 
     router_id = sys.argv[3]
     outfile_name = sys.argv[4]
@@ -416,8 +456,14 @@ if  __name__ == '__main__':
     print "going to plot " 
     contention_per_access_class(contention_per_access_class_table,home_ap_2_table,home_device_2_table,outfile_name)
     '''
-
     #code for analysis of packet traces
+    '''
     home_stations_packet_dump=defaultdict(list)
     home_stations_packet_dump=per_station_data_pickle_reader(_folder_1,router_id)
     bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name)
+    '''
+
+    airtime_data_set=defaultdict(list)
+    bytes_data_set=defaultdict(list)
+    [airtime_data_set,bytes_data_set]=bytes_airtime_pickle_reader(_folder_1,router_id)
+    utilization_throughput_plot(airtime_data_set,bytes_data_set,outfile_name)
