@@ -489,6 +489,7 @@ def per_station_packet_dumper(t1,t2,data_fs,outfolder_name,router_id):
     '''
     Dumps the packet captured to and from the AP to each of the stations
     connected to it in a dictionary
+    scatterplot.py plots the data collected by this method 
     '''
     Station_series=defaultdict(list)
     connected_devices_updown_rates_file_reader(t1,t2,data_fs)

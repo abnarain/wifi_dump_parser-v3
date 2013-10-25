@@ -238,7 +238,7 @@ timeseries_bytes=defaultdict(list)
 timeseries_airtime=defaultdict(list)
 g_access_point_count=set()
 g_device_count=set()
-def total_file_content_reader(t1,t2,data_fs,data_f_dir):
+def airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
      ctrl_dir_components= data_f_dir.split('/')
      ctrl_dir_components[-2]=re.sub('data','ctrl',ctrl_dir_components[-2]) 
      ctrl_f_dir="/".join(ctrl_dir_components)
@@ -369,7 +369,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
              print "sequence number don't match "
              sys.exit(1)
  
-         if (len(ctrl_contents) != 4 or  len(data_contents) != 4 or len(mgmt_contents) !=6) :
+         if (len(ctrl_contents) != 4 or  len(data_contents) != 4 or len(mgmt_contents) !=6):
              print "for ctrl " ,len (ctrl_contents) ,"for data", len(data_contents), "for mgmt", len(mgmt_contents)
              print "file is malformed or the order of input folders is wrong "
              continue
@@ -592,6 +592,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      print "impossible radiotap detected"
              else :
                  print "common mgmt success denied"
+                 damaged_frames +=1
              mgmt_index= mgmt_index+MGMT_COMMON_STRUCT_SIZE
              del frame_elem
              del monitor_elem
@@ -627,6 +628,7 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      print "impossible radiotap detected"
              else:
                  print "success denied"
+                 damaged_frames +=1
              mgmt_index= mgmt_index+MGMT_ERR_STRUCT_SIZE
              del frame_elem
              del monitor_elem
@@ -671,7 +673,8 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      local_ctrl_rates.append(temp[8])
                      ctrl_pkt_count +=1
              else :
-                 print "success denied"
+                 print "ctrl success denied"
+                 damaged_frames +=1
              ctrl_index=ctrl_index+CTRL_STRUCT_SIZE
              del frame_elem
              del monitor_elem
@@ -704,7 +707,8 @@ def total_file_content_reader(t1,t2,data_fs,data_f_dir):
                      local_err_ctrl_rates.append(temp[8])
                      err_ctrl_pkt_count +=1
              else :
-                 print "success denied"
+                 print " err control success denied"
+                 damaged_frames +=1
              ctrl_index= ctrl_index+CTRL_ERR_STRUCT_SIZE
              del frame_elem
              del monitor_elem
@@ -772,6 +776,34 @@ def queue_dynamics_plotter(router_id,output_folder):
                     output_folder+router_id+'_Qlen_.png', router_id)
     print "damage frame count " , damaged_frames
 
+def airtime_bytes_data_dumper(outfolder_name,router_id,t1,t2,data_fs,data_f_dir):
+    '''
+    Dumps the per minute bytes and airtime statistics of the whole
+    network in dictionary format
+    '''
+    airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir)
+    pickle_object= []
+    pickle_object.append(router_id)
+    pickle_object.append(timeseries_bytes)
+    pickle_object.append(timeseries_airtime)
+    pickle_object.append(data_tx_pkt_size)
+    pickle_object.append(data_rx_pkt_size)
+    pickle_object.append(err_data_rx_pkt_size)
+
+    pickle_object.append(mgmt_tx_pkt_size)
+    pickle_object.append(mgmt_rx_pkt_size)
+
+    pickle_object.append(mgmt_beacon_pkt_size)
+    pickle_object.append(err_mgmt_rx_pkt_size)
+
+    pickle_object.append(ctrl_tx_pkt_size)
+    pickle_object.append(ctrl_rx_pkt_size)
+    pickle_object.append(err_ctrl_rx_pkt_size)
+
+    f_d= outfolder_name+router_id+'bytes_airtime.pickle'
+    output_device = open(f_d, 'wb')
+    pickle.dump(pickle_object,output_device)
+    output_device.close()
 
 if __name__=='__main__':
     '''
@@ -791,10 +823,10 @@ if __name__=='__main__':
     data_file_header_byte_count=0
     filename_list=[]
     damaged_frames=0
-    print "now processing the files to calculate time "
+    print "now processing the files to calculate time"
     #for plotting traffic transmitted from each queue
     #per_queue_classification(t1,t2,data_fs)
     #for plotting queue sizes with time
     #queue_file_reader(t1,t2,data_fs)
     #queue_dynamics_plotter(router_id,output_folder)
-    total_file_content_reader(t1,t2,data_fs,data_f_dir)
+    airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)    
