@@ -415,24 +415,81 @@ def bytes_airtime_pickle_reader(dump_input_folder,router_id):
             _f_content= pickle.load(open(dump_input_folder+f_name,'rb'))
             return [_f_content[1],_f_content[2]] 
 
-def utilization_throughput_plot(airtime_data_set,bytes_data_set,outfile_name):
-    scatter_thruput_util=[]
-    scatter_thruput_dev=defaultdict(list)
-    scatter_util_dev=defaultdict(list)
+def utilization_throughput_plot(airtime_data_set,bytes_data_set,outfolder_name):
+    util=[]
+    throughput=[]
+    scatter_dev_thruput=defaultdict(list)
+    scatter_dev_util=defaultdict(list)
+    time_list=bytes_data_set.keys()
+    time_list.sort()
+    print len(time_list)
+
+    for i in range(0, len(time_list)):
+        if i == 0:
+            [no_dev,no_ap, d_r,d_t,e_d, m_c_r,m_b_r,m_t,e_m, c_r,c_t,e_c ]=bytes_data_set[time_list[i]]
+            total_bytes=d_r+d_t+m_c_r+m_b_r+m_t+c_r+c_t  #e_c+e_m+e_d
+            airtimes=airtime_data_set[time_list[i]]
+            [no_dev, no_ap, d_r, d_t,e_d, m_r, m_t,e_m, c_r,c_t,e_c]=airtimes
+            total_airtime = d_r+d_t+m_r +m_t+c_r+c_t #+e_c+e_m+e_d
+            network_utilization=total_airtime*8*100.0/(60.0*pow(10,6))
+            network_throughput=total_bytes*8.0/(60.0*pow(10,6))
+        else:
+            [no_dev,no_ap, d_r,d_t,e_d, m_c_r,m_b_r,m_t,e_m, c_r,c_t,e_c ]=bytes_data_set[time_list[i]]
+            total_bytes=d_r+d_t+m_c_r+m_b_r+m_t+c_r+c_t #e_c+e_m +e_d
+            airtimes=airtime_data_set[time_list[i]]
+            [no_dev, no_ap, d_r, d_t,e_d, m_r, m_t,e_m, c_r,c_t,e_c]=airtimes
+            total_airtime = d_r+d_t+m_r +m_t+c_r+c_t #e_c+e_m+e_d
+            network_utilization=total_airtime*8*100.0/((time_list[i]-time_list[i-1])*pow(10,6))
+            network_throughput=total_bytes*8.0/((time_list[i]-time_list[i-1])*pow(10,6))
+        print network_utilization, time_list[i]-time_list[i-1]
+        print network_throughput ,"<==throughput"
+
+        util.append(network_utilization)
+        throughput.append(network_throughput)
+        scatter_dev_thruput[no_dev].append(network_throughput)
+        scatter_dev_util[no_dev].append(network_utilization)
+
     for time, bytes in bytes_data_set.iteritems():
         [no_dev,no_ap, d_r,d_t,e_d, m_c_r,m_b_r,m_t,e_m, c_r,c_t,e_c ]=bytes
         total_bytes=d_r+d_t+e_d+ m_c_r+m_b_r+m_t+e_m+c_r+c_t+e_c
         if time  in airtime_data_set.keys():
+            airtimes=airtime_data_set[time]
             [no_dev, no_ap, d_r, d_t,e_d, m_r, m_t,e_m, c_r,c_t,e_c]=airtimes
             total_airtime = no_dev+no_ap+d_r+d_t+e_d+m_r +m_t+e_m+c_r+c_t+e_c
-            network_utilization=total_airtime*100.0/60.0*pow(10,12)
-            network_throughput=total_bytes*1.0/60
-            scatter_thruput_util.append([network_utilization,network_throughput])
-            scatter_thruput_dev[no_dev].append(network_throughput)
-            scatter_util_dev[no_dev].append(network_throughput)
-
-
-
+            network_utilization=total_airtime*100.0/(60.0*pow(10,6))
+            #print network_utilization
+            network_throughput=total_bytes*8.0/(60*pow(10,6))
+            #print network_throughput
+            util.append(network_utilization)
+            throughput.append(network_throughput)
+            scatter_dev_thruput[no_dev].append(network_throughput)
+            scatter_dev_util[no_dev].append(network_utilization)
+    
+    scatter_utilization_throughput(util,
+                                   throughput,
+                                   "Scatterplot for "+router_id,
+                                   "Network Utilization",
+                                   "Throughput(L2)",
+                                   outfile_name+router_id+'_u_t.png')
+    devices_u_counts,devices_t_counts,thruputs_array,utils_array=[],[],[],[]
+    for i,j in scatter_dev_util.iteritems():
+        devices_u_counts.append(i)
+        utils_array.append(j)
+    plotter_boxplot(devices_u_counts,
+                                  utils_array,
+                                  "Variation of Utilization (L2) with no. of devices", 
+                                  "Count of devices", "Network Utilization",
+                                  outfile_name+router_id+'_u_d.png')
+    for i,j in scatter_dev_thruput.iteritems():
+        devices_t_counts.append(i)
+        thruputs_array.append(j)
+    plotter_boxplot(devices_t_counts,
+                                 thruputs_array,
+                                 "Variation of Throughput(L2) with no. of devices",
+                                 "Count of devices",
+                                 "Network Throughput", 
+                                 outfolder_name+router_id+'_t_d.png')
+    
 
 if  __name__ == '__main__': 
     '''
