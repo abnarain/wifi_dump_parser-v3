@@ -2,7 +2,7 @@
 #Purpose : To calculate the entropy of the physical layer error counters 
 #          and plot the entropy of the counters
 # Also calculates the FFT and Autocorrelation of an input series
-#
+# Runs on local machine so that $DISPLAY is accessible
 import matplotlib.font_manager
 import numpy as np
 from matplotlib.figure import Figure
@@ -99,6 +99,38 @@ def entropy(labels):
         ent -= i * mylog(i, base=n_classes)
     return ent
 
+def save_plotSpectrum(y,Fs,image_name):
+    """
+    Plots a Single-Sided Amplitude Spectrum of y(t)
+    """
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    n = len(y) # length of the signal
+
+    _subplot = fig.add_subplot(2,1,1)        
+    print "Fi"
+    _subplot.plot(arange(0,n),y)
+    xlabel('Time')
+    ylabel('Amplitude')
+    _subploti_2=fig.add_subplot(2,1,2)
+    k = arange(n)
+    T = n/Fs
+    frq = k/T # two sides frequency range
+    frq = frq[range(n/2)] # one side frequency range
+
+    Y = fft(y)/n # fft computing and normalization
+    Y = Y[range(n/2)]
+
+    _subplot_2.plot(frq,abs(Y),'r') # plotting the spectrum
+    xlabel('Freq (Hz)')
+    ylabel('|Y(freq)|')
+    print "here"
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)
 
 def plotSpectrum(y,Fs,image_name):
     """
@@ -122,6 +154,7 @@ def plotSpectrum(y,Fs,image_name):
     plot(frq,abs(Y),'r') # plotting the spectrum
     xlabel('Freq (Hz)')
     ylabel('|Y(freq)|')
+    print "here"
     #show()
     savefig(image_name,dpi=110)
 
@@ -146,7 +179,11 @@ def print_image(x,y,x2,y2,outfile_name):
     if '.png' in outfile_name:
         canvas.print_figure(outfile_name, dpi = 110)
 
-if __name__ =='__main__':    
+if 0:# __name__ =='__main__':
+    '''
+    Does processing of the physical layer errors
+    in the each frame pickled by phy_err_stats.py
+    '''
     if len(sys.argv)!=2:
         print "Usage: python file.py <folder with data>"
         sys.exit(1)
@@ -205,3 +242,61 @@ if __name__ =='__main__':
 #            print "ofdm",entropy(phy_ofdm[0:2000])
 #            print "phy", entropy(phy_[0:2000])
 #            print "cck",entropy(phy_cck[0:2000])
+
+
+if __name__ =='__main__':
+    '''
+    Does processing of the timestamps of bad fcs frames
+    collected by data
+    ''' 
+    if len(sys.argv)!=2:
+        print "Usage: python file.py <folder with data>"
+        sys.exit(1)
+    input_f=sys.argv[1]
+    Physical_errors_table=pickle_reader(input_f)
+    global_data=[]
+    for k,v in Physical_errors_table.iteritems() : # key is the router id        
+        file_timestamps=sorted(v,key=v.get)
+        for tstamp in file_timestamps :            
+            d=v[tstamp]
+            phy_=d[0]
+            global_data.append(phy_)
+
+    y=[]
+    st=0
+    for i in global_data: 
+        for t in i : 
+            y.append(t)
+    err_samples=[]
+    temp_accumulator=0
+    orig_ofdm_counts=[]
+    orig_ofdm_time=[]
+    sa=0
+    er=0
+    time1= y[0][0]
+    for i in range(1,len(y)) :
+        sa=sa+1
+        if y[i-1][0]>y[i][0] :
+            er=er+1
+        else: 
+            orig_ofdm_counts.append(y[i][1])
+            orig_ofdm_time.append(y[i][0])
+            if y[i][0]-time1 <8334:
+                temp_accumulator=temp_accumulator+y[i][1]
+            else :
+                err_samples.append(temp_accumulator)
+                temp_accumulator=0
+                time1=y[i][0]
+
+    print "% error=",er*100.0/(er+sa)
+    e=[]
+    t=[]
+    print "before spectrum plotting " 
+    save_plotSpectrum(err_samples,1000000/8334.0,'fft.png')
+    print "done with printing spectrum "
+    for i in range(0,len(err_samples),250):    
+        #auto_correlation(err_samples[i:i+250])
+        e.append(entropy(err_samples[i:i+250]))
+        t.append(i)
+
+    print_image(orig_ofdm_time,orig_ofdm_counts,t,e,'non_scaled_entropy_without_ofdm.png') 
