@@ -237,10 +237,10 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                 radiotap_n_flags_for_airtime_calc=-1
                 radiotap_n_flags=[]
 
-		tsf=0
+                tsf=0
 
                 radiotap_data_retries=-1
-		radiotap_rate =0
+                radiotap_rate =0
                 bandwidth= -1
                 gi_length=-1
                 mcs=-1
@@ -292,7 +292,7 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                         if (rad_txflags_elem[0] ==0 and  rad_txflags_elem[-1] ==1) or (rad_txflags_elem[0] ==0 and rad_txflags_elem[-1] ==0 and  rad_txflags_elem[-1] ==0) :
                                 radiotap_data_retries=list(struct.unpack('B',frame[offset]))[0]
                         #print "Data retries count =",radiotap_data_retries 
-			offset +=1
+                        offset +=1
                         frame_elem[tsf].append(radiotap_data_retries)
 		if present_flag & 1<<ieee80211.IEEE80211_RADIOTAP_MCS :
 			mcs_known=list(struct.unpack('B',frame[offset]))[0]
@@ -367,7 +367,17 @@ def parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_ele
                         #print "no of data retries ",radiotap_data_retries 
 			rates_tried =frame[offset:offset+15]
                         radiotap_rate_retries=[]
-                        if not ((actual_rate == 5.5) or (actual_rate == 11.0) or (actual_rate == 18.0) or (actual_rate == 36.0) or (actual_rate == 48.0) or (actual_rate == 54.0) or (actual_rate == 24.0) or (actual_rate == 1.0) or actual_rate == 52.0 or actual_rate ==13.0 or actual_rate ==26.0 or actual_rate ==39.0 or actual_rate ==19.5 or actual_rate ==6.5 or actual_rate ==130.0 or actual_rate ==117.0 or actual_rate ==58.5 or actual_rate==78.0 or actual_rate==65.0 or actual_rate ==104.0 or actual_rate==12.0 or actual_rate==9.0 or actual_rate==2.0 or actual_rate==6.0 or actual_rate==135.0 or actual_rate ==270.0 or actual_rate==150.0 or actual_rate==300.0 or actual_rate==81.0 or actual_rate==162.0 or actual_rate==90.0 or actual_rate==180.0 or actual_rate==60.0 or actual_rate==108.0 or actual_rate==120.0 or actual_rate ==13.5 or actual_rate==15.0 or actual_rate==30.0 or actual_rate==40.5 or actual_rate==45.0 or actual_rate== 216 or actual_rate==240.0 or actual_rate==121.5 or actual_rate==243.0 or actual_rate==27.0) :
+                        if not ((actual_rate == 5.5) or (actual_rate == 11.0) or (actual_rate == 18.0) or (actual_rate == 36.0) \
+                                        or (actual_rate == 48.0) or (actual_rate == 54.0) or (actual_rate == 24.0) or (actual_rate == 1.0) \
+                                        or actual_rate == 52.0 or actual_rate ==13.0 or actual_rate ==26.0 or actual_rate ==39.0 \
+                                        or actual_rate ==19.5 or actual_rate ==6.5 or actual_rate ==130.0 or actual_rate ==117.0 \
+                                        or actual_rate ==58.5 or actual_rate==78.0 or actual_rate==65.0 or actual_rate ==104.0 \
+                                        or actual_rate==12.0 or actual_rate==9.0 or actual_rate==2.0 or actual_rate==6.0 \
+                                        or actual_rate==135.0 or actual_rate ==270.0 or actual_rate==150.0 or actual_rate==300.0 \
+                                        or actual_rate==81.0 or actual_rate==162.0 or actual_rate==90.0 or actual_rate==180.0 \
+                                        or actual_rate==60.0 or actual_rate==108.0 or actual_rate==120.0 or actual_rate ==13.5 \
+                                        or actual_rate==15.0 or actual_rate==30.0 or actual_rate==40.5 or actual_rate==45.0 \
+                                        or actual_rate== 216 or actual_rate==240.0 or actual_rate==121.5 or actual_rate==243.0 or actual_rate==27.0) :
                                 print "the rate index is not yet identified and hence reading the transmitted rates indices ",actual_rate 
                                 for j in range(0,15):
                                         print ord(rates_tried[j]),  

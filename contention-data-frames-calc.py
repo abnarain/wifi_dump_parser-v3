@@ -34,7 +34,6 @@ def file_reader(t1,t2,data_fs):
     file_count=0
     for data_f_n in data_fs :
         filename_list.append(data_f_n.split('-'))
-        unix_time.add(int(data_f_n.split('-')[1]))
         if not (data_f_n.split('-')[2]=='d'):
             print "its not a data file ; skip "
             continue 
@@ -203,7 +202,6 @@ if __name__=='__main__':
     data_file_header_byte_count=0
     filename_list=[]
     damaged_frames=0
-    unix_time=set()
     print "now processing the files to calculate time "
     file_reader(t1,t2,data_fs)
     #contention_delay()
