@@ -1031,8 +1031,8 @@ def router_airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
              del frame_elem
              del monitor_elem
 
-         router_timeseries_bytes[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_airtime,data_tx_airtime]
-         router_timeseries_airtime[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_bytes, data_tx_bytes]
+         router_timeseries_bytes[file_timestamp]=[len(devices_count),len(access_points_count),len(access_points_count |devices_count),data_rx_airtime,data_tx_airtime]
+         router_timeseries_airtime[file_timestamp]=[len(devices_count),len(access_points_count),len(access_points_count |devices_count),data_rx_bytes, data_tx_bytes]
          del access_points_count
          del devices_count
          if file_count %10 == 0:

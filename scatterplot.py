@@ -501,19 +501,20 @@ def router_utilization_throughput_plot(airtime_data_set,bytes_data_set,outfolder
     print len(time_list)
 
     for i in range(0, len(time_list)):
+        no_dev,no_ap, total_dev,rx_data,tx_data =0,0,0,0,0        
         if i == 0:
-            [no_dev,no_ap, rx_data,tx_data ]=bytes_data_set[time_list[i]]
+            [no_dev,no_ap, total_dev, rx_data,tx_data ]=bytes_data_set[time_list[i]]
             total_bytes= tx_data #+rx_data
             airtimes=airtime_data_set[time_list[i]]
-            [no_dev, no_ap, rx_airtime, tx_airtime]=airtimes
+            [no_dev, no_ap, total_dev, rx_airtime, tx_airtime]=airtimes
             total_airtime= tx_airtime #+rx_airtime
             network_utilization=total_airtime*8*100.0/(60.0*pow(10,6))
             network_throughput=total_bytes*8.0/(60.0*pow(10,6))
         else:
-            [no_dev,no_ap, rx_data,tx_data ]=bytes_data_set[time_list[i]]
+            [no_dev,no_ap, total_dev, rx_data,tx_data ]=bytes_data_set[time_list[i]]
             total_bytes= tx_data #+rx_data
             airtimes=airtime_data_set[time_list[i]]
-            [no_dev, no_ap, rx_airtime, tx_airtime]=airtimes
+            [no_dev, no_ap, total_dev, rx_airtime, tx_airtime]=airtimes
             total_airtime= tx_airtime #+rx_airtime
             network_utilization=total_airtime*8*100.0/((time_list[i]-time_list[i-1])*pow(10,6))
             network_throughput=total_bytes*8.0/((time_list[i]-time_list[i-1])*pow(10,6))
@@ -522,8 +523,8 @@ def router_utilization_throughput_plot(airtime_data_set,bytes_data_set,outfolder
         #print network_utilization, "<--utilization"
         util.append(network_utilization)
         throughput.append(network_throughput)
-        scatter_dev_thruput[no_dev].append(network_throughput)
-        scatter_dev_util[no_dev].append(network_utilization)
+        scatter_dev_thruput[total_dev].append(network_throughput)
+        scatter_dev_util[total_dev].append(network_utilization)
 
     print "router id is ", router_id  , "outfile name " ,outfile_name
     scatter_utilization_throughput(util,
