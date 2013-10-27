@@ -175,6 +175,36 @@ def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name
         canvas.print_figure(outfile_name, dpi = 110)
 
 
+def plotter_utilization_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name):
+    '''
+    plots utilization of channel
+    '''
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    _subplot = fig.add_subplot(1,1,1)
+    _subplot.boxplot(y_axis,notch=0, sym='+', vert=1, whis=1.5)
+    _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
+    _subplot.set_ylabel(y_axis_label)
+    _subplot.set_xlabel(x_axis_label)
+    a= [i for i in range(0,len(x_axis))]
+    _subplot.set_xticklabels(x_axis)
+    _subplot.set_xticks(a)
+    _subplot.set_ylim([0,100])
+    _subplot.set_title(title)
+    labels = _subplot.get_xticklabels()
+    for label in labels:
+        label.set_rotation(30)    
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)
+
+
+
+
+
 
 def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_name):
     '''
@@ -470,21 +500,27 @@ def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title,out
     if '.png' in outfile_name:
         canvas.print_figure(outfile_name, dpi = 110)
 
-
-def scatter_utilization_throughput(x_axis,y_axis,title, x_axis_label, y_axis_label,outfile_name):
+def scatter_utilization_throughput(x_axis,y_axis, x_axis_label, y_axis_label, title, outfile_name):
+    '''
+    Plots utilization vs throughput of Bismark AP in home
+    '''
 
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     _subplot = fig.add_subplot(1,1,1)
     legend=[]
-
+    max_xlim=0
     for i in range(0,len(x_axis)):
-        _subplot.scatter(x_axis[i], y_axis[i],s=50,color=color[i])
+        _subplot.scatter(x_axis[i], y_axis[i],s=25)
+        if x_axis[i]>max_xlim:
+            max_xlim=x_axis[i]
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05),scatterpoints=1)
     _subplot.set_ylabel(y_axis_label)
     _subplot.set_xlabel(x_axis_label)
     _subplot.set_title(title)
+    _subplot.set_ylim([0,100])
+    _subplot.set_xlim([0,max_xlim])
     labels = _subplot.get_xticklabels()
     for label in labels:
         label.set_rotation(30)

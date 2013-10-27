@@ -239,6 +239,10 @@ timeseries_airtime=defaultdict(list)
 g_access_point_count=set()
 g_device_count=set()
 def airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
+
+     #Calculates the airtime and bytes of all the frames heard by the
+     #Bismark Access Point 
+ 
      ctrl_dir_components= data_f_dir.split('/')
      ctrl_dir_components[-2]=re.sub('data','ctrl',ctrl_dir_components[-2]) 
      ctrl_f_dir="/".join(ctrl_dir_components)
@@ -375,13 +379,10 @@ def airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
              continue
 
      #done with reading the binary blobs from file ; now check for timestamps are correct
-         '''
-         if  (data_file_current_timestamp < t1-1):
-             continue
-         if (data_file_current_timestamp >t2+1):
-             break
-         '''
-        
+         #if  (data_file_current_timestamp < t1-1):
+         #    continue
+         #if (data_file_current_timestamp >t2+1):
+         #    break
          correct_data_frames=header_and_correct_data_frames[data_file_header_byte_count+1:]
          data_index=0
          devices_count=set()
@@ -744,12 +745,15 @@ def airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
              err_mgmt_rx_airtime += (err_mgmt_frames_missed*err_mgmt_rx_bytes*1.0 / err_mgmt_pkt_count*mode(local_err_mgmt_rates))
              err_mgmt_rx_bytes +=  (err_mgmt_frames_missed*err_mgmt_rx_bytes*1.0 / err_mgmt_pkt_count)
          
-         timeseries_bytes[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_airtime,data_tx_airtime, err_data_rx_airtime, mgmt_rx_airtime, mgmt_tx_airtime, err_mgmt_rx_airtime,ctrl_rx_airtime, ctrl_tx_airtime, err_ctrl_rx_airtime]
+         timeseries_bytes[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_airtime,data_tx_airtime, err_data_rx_airtime, \
+            mgmt_rx_airtime, mgmt_tx_airtime, err_mgmt_rx_airtime,ctrl_rx_airtime, ctrl_tx_airtime, err_ctrl_rx_airtime]
 
-         timeseries_airtime[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_bytes, data_tx_bytes, err_data_rx_bytes, mgmt_common_rx_bytes, mgmt_beacon_rx_bytes, mgmt_tx_bytes, err_mgmt_rx_bytes, ctrl_rx_bytes, ctrl_tx_bytes, err_ctrl_rx_bytes]
+         timeseries_airtime[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_bytes, data_tx_bytes, err_data_rx_bytes, \
+            mgmt_common_rx_bytes, mgmt_beacon_rx_bytes, mgmt_tx_bytes, err_mgmt_rx_bytes, ctrl_rx_bytes, ctrl_tx_bytes, err_ctrl_rx_bytes]
      
          if file_count %10 == 0:
              print file_count
+
 
 def queue_dynamics_plotter(router_id,output_folder):
     '''
@@ -777,10 +781,9 @@ def queue_dynamics_plotter(router_id,output_folder):
     print "damage frame count " , damaged_frames
 
 def airtime_bytes_data_dumper(outfolder_name,router_id,t1,t2,data_fs,data_f_dir):
-    '''
-    Dumps the per minute bytes and airtime statistics of the whole
-    network in dictionary format
-    '''
+    #TODO: does not give correct answer, hence don't forget to fix this
+    #Dumps the per minute bytes and airtime statistics of the whole
+    #network in dictionary format
     airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir)
     pickle_object= []
     pickle_object.append(router_id)
@@ -799,6 +802,256 @@ def airtime_bytes_data_dumper(outfolder_name,router_id,t1,t2,data_fs,data_f_dir)
     pickle_object.append(ctrl_tx_pkt_size)
     pickle_object.append(ctrl_rx_pkt_size)
     pickle_object.append(err_ctrl_rx_pkt_size)
+
+    f_d= outfolder_name+router_id+'.pickle'
+    output_device = open(f_d, 'wb')
+    pickle.dump(pickle_object,output_device)
+    output_device.close()
+
+router_timeseries_bytes=defaultdict(list)
+router_timeseries_airtime=defaultdict(list)
+router_tx_pkt_size=defaultdict(int)
+router_rx_pkt_size=defaultdict(int)
+def router_airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
+     mgmt_dir_components= data_f_dir.split('/')
+     mgmt_dir_components[-2]=re.sub('data','mgmt',mgmt_dir_components[-2])
+     mgmt_f_dir="/".join(mgmt_dir_components)
+     global damaged_frames
+     missing_files=[]
+     file_count=0
+     for data_f_n in data_fs :
+         filename_list.append(data_f_n.split('-'))
+         if not (data_f_n.split('-')[2]=='d'):
+             print "its not a data file ; skip "
+             continue
+
+     filename_list.sort(key=lambda x : int(x[3]))
+     filename_list.sort(key=lambda x : int(x[1]))
+     tt=0
+     for data_f_name_list in filename_list : #data_fs :
+         file_count=file_count+1
+         data_f_name="-".join(data_f_name_list)
+         data_f= gzip.open(data_f_dir+data_f_name,'rb')
+         data_file_content=data_f.read()
+         data_f.close()
+         data_file_current_timestamp=0
+         bismark_id_data_file=0
+         start_64_timestamp_data_file=0
+         for i in xrange(len(data_file_content )):
+             if data_file_content[i]=='\n':
+                 bismark_data_file_header = str(data_file_content[0:i])
+                 ents= bismark_data_file_header.split(' ')
+                 bismark_id_data_file=ents[0]
+                 start_64_timestamp_data_file= int(ents[1])
+                 data_file_seq_no= int(ents[2])
+                 data_file_current_timestamp=int(ents[3])
+                 data_file_header_byte_count =i
+                 break
+
+         data_contents=data_file_content.split('\n----\n')
+         header_and_correct_data_frames = data_contents[0]
+         err_data_frames = data_contents[1]
+         correct_data_frames_missed=data_contents[2]
+         err_data_frames_missed=data_contents[3]
+         correct_data_frames_missed=list(struct.unpack('<I',data_contents[2]))[0]
+         err_data_frames_missed =list(struct.unpack('<I',data_contents[3]))[0]
+
+         mgmt_f_name = data_f_name
+         mgmt_f_name = re.sub("-d-","-m-",mgmt_f_name)
+         try :
+             mgmt_f= gzip.open(mgmt_f_dir+mgmt_f_name,'rb')
+             mgmt_file_content=mgmt_f.read()
+         except :
+             print "MGMT file not present ",mgmt_f_name
+             missing_files.append([mgmt_f_name,data_file_current_timestamp])
+             continue
+
+         mgmt_f.close()
+
+         mgmt_file_current_timestamp=0
+         mgmt_file_seq_no=0
+         bismark_id_mgmt_file=0
+         start_64_timestamp_mgmt_file=0
+
+         ctrl_file_current_timestamp=0
+         ctrl_file_seq_no=0
+         bismark_id_ctrl_file=0
+         start_64_timestamp_ctrl_file=0
+ 
+         for i in xrange(len(mgmt_file_content )):
+             if mgmt_file_content[i]=='\n':
+                 bismark_mgmt_file_header = str(mgmt_file_content[0:i])
+                 ents= bismark_mgmt_file_header.split(' ')
+                 bismark_id_mgmt_file=ents[0]
+                 start_64_timestamp_mgmt_file=int(ents[1])
+                 mgmt_file_seq_no= int(ents[2])
+                 mgmt_file_current_timestamp= int(ents[3])
+                 mgmt_file_header_byte_count =i
+                 break
+         mgmt_contents=mgmt_file_content.split('\n----\n')
+         header_and_beacon_mgmt_frames = mgmt_contents[0]
+         common_mgmt_frames = mgmt_contents[1]
+         err_mgmt_frames=mgmt_contents[2]
+         beacon_mgmt_frames_missed=list(struct.unpack('<I',mgmt_contents[3]))[0]
+         common_mgmt_frames_missed=list(struct.unpack('<I',mgmt_contents[4]))[0]
+         err_mgmt_frames_missed =list(struct.unpack('<I',mgmt_contents[5]))[0]
+
+         file_timestamp=data_file_current_timestamp
+         #done with reading the binary blobs from file ; now check for timestamps are correct
+         '''
+         if  (data_file_current_timestamp < t1-1):
+             continue
+         if (data_file_current_timestamp >t2+1):
+             break
+         '''
+
+         correct_data_frames=header_and_correct_data_frames[data_file_header_byte_count+1:]
+         data_index=0
+         devices_count=set()
+         access_points_count=set()
+         #for counting airtime
+         data_tx_airtime, data_rx_airtime=0,0
+         data_tx_bytes, data_rx_bytes=0,0
+         #for calculating approximate airtime calculation
+         for idx in xrange(0,len(correct_data_frames)-DATA_STRUCT_SIZE ,DATA_STRUCT_SIZE ):
+             frame=correct_data_frames[data_index:data_index+DATA_STRUCT_SIZE]
+             offset,success,tsf= 8,-1,0
+             header = frame[:offset]
+             frame_elem=defaultdict(list)
+             monitor_elem=defaultdict(list)
+             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
+             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
+             if success:
+                 for key in frame_elem.keys():
+                     tsf=key
+                 parse_data_frame(frame,radiotap_len,frame_elem)
+                 temp=frame_elem[tsf]
+                 temp.insert(0,tsf)
+                 if radiotap_len ==RADIOTAP_TX_LEN:
+                     a= temp[12].split(':')
+                     if not( int(a[0],16)& 0x1):
+                         devices_count.add(temp[12])
+                     #datakind,tx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
+                     #TODO Check the descriptor for -1 to find out if the retx count makes sense
+                     if len(temp[9])==0: #there was a retransmission
+                         router_tx_pkt_size[temp[-1]] += 1
+                         data_tx_bytes += temp[-1]
+                         if temp[3]>65.0 :
+                             data_tx_airtime=data_tx_airtime+(temp[-1]*1.0/temp[3])
+                         else:
+                             data_tx_airtime=data_tx_airtime+(temp[-1]*1.0/(2.0*temp[3])) # there is 2X2 MIMO
+                     elif len(temp[9])>0 and not(temp[2]==-1):
+                         data_tx_bytes += temp[-1]
+                         router_tx_pkt_size[temp[-1]] +=1
+                         if temp[3]>65.0:
+                             data_tx_airtime +=(temp[-1]*1.0/temp[3])
+                         else:
+                             data_tx_airtime +=(temp[-1]*1.0/(2.0*temp[3]))
+                         for rt_retx_pair in temp[9]:
+                             data_tx_bytes +=rt_retx_pair[1]*temp[-1]
+                             router_tx_pkt_size[temp[-1]] += rt_retx_pair[1]
+                             if rt_retx_pair[0]<65.0:
+                                 data_tx_airtime +=(temp[-1]*1.0*rt_retx_pair[1]/rt_retx_pair[0])
+                             else:
+                                 data_tx_airtime=data_tx_airtime+(temp[-1]*rt_retx_pair[1]/(2.0*rt_retx_pair[0]))
+                     elif temp[2]==-1:
+                         router_tx_pkt_size[temp[-1]] +=1
+                         data_tx_bytes += temp[-1]
+                         data_tx_pkt_size[temp[-1]] +=1
+                         if temp[3]>65.0:
+                             data_tx_aitime +=(temp[-1]*1.0/2.0*temp[3])
+                         else :
+                             data_tx_aitime +=(temp[-1]*1.0/temp[3])
+                 elif radiotap_len==RADIOTAP_RX_LEN :
+                     #datakind,rx,non-corrupted,src mac,dest mac,packetsize,bitrate,retranmission
+                     a= temp[12].split(':')
+                     if not( int(a[0],16)& 0x1):
+                         devices_count.add(temp[12])
+                     a= temp[13].split(':')
+                     if not( int(a[0],16)& 0x1):
+                         devices_count.add(temp[13])
+                     if temp[12] in Station:
+                         if temp[16][1] ==1 : #check for retransmission
+                             router_rx_pkt_size[temp[10]] +=2
+                             data_rx_bytes +=2*temp[10]
+                             if temp[8]>65.0:
+                                 data_rx_airtime += 2*(temp[10]*1.0/temp[8])
+                             else:
+                                 data_rx_airtime += 2*(temp[10]*0.5/temp[8])
+                         else:
+                             router_rx_pkt_size[temp[10]] +=1
+                             data_rx_bytes +=temp[10]
+                             if temp[8]>65.0:
+                                 data_rx_airtime=data_rx_airtime+(temp[10]*1.0/temp[8])
+                             else:
+                                 data_rx_airtime=data_rx_airtime+(temp[10]*0.5/temp[8])
+
+                 else:
+                     print "impossible ratdiotap detected ; Report CERN"
+                     damaged_frame +=1
+
+             #TODO: add the retransmissions count
+             else:
+                print "success denied; incorrect data frame"
+                damaged_frames +=1
+             data_index=data_index+DATA_STRUCT_SIZE
+             del frame_elem
+             del monitor_elem
+
+         beacon_mgmt_frames=header_and_beacon_mgmt_frames[mgmt_file_header_byte_count+1:]
+         mgmt_index=0
+         for idx in xrange(0,len(beacon_mgmt_frames)-MGMT_BEACON_STRUCT_SIZE ,MGMT_BEACON_STRUCT_SIZE ):
+             frame=beacon_mgmt_frames[mgmt_index:mgmt_index+MGMT_BEACON_STRUCT_SIZE]
+             offset,success,tsf= 8,-1,0
+             header = frame[:offset]
+             frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
+             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
+             if not( radiotap_len == RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
+                 print "the radiotap header is not correct "
+                 sys.exit(1)
+             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
+             if success :
+                 for key in frame_elem.keys():
+                     tsf=key
+                 parse_mgmt_beacon_frame(frame,radiotap_len,frame_elem)
+                 temp=frame_elem[tsf]
+                 temp.insert(0,tsf)
+                 if radiotap_len == RADIOTAP_TX_LEN:
+                     print "beacon transmitted by AP !" #beacon is on a separate hardware queue, hence this won't come true
+                     sys.exit(1)
+                 elif radiotap_len ==RADIOTAP_RX_LEN :
+                     a= temp[12].split(':')
+                     if not( int(a[0],16)& 0x1):
+                         access_points_count.add(temp[12])
+                 else :
+                    print "impossible radiotap len detected ; Report CERN"
+             else :
+                 print "success denied"
+             mgmt_index=mgmt_index+MGMT_BEACON_STRUCT_SIZE
+             del frame_elem
+             del monitor_elem
+
+         router_timeseries_bytes[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_airtime,data_tx_airtime]
+         router_timeseries_airtime[file_timestamp]=[len(devices_count),len(access_points_count),data_rx_bytes, data_tx_bytes]
+         del access_points_count
+         del devices_count
+         if file_count %10 == 0:
+             print file_count
+
+
+
+def router_airtime_bytes_data_dumper(outfolder_name,router_id,t1,t2,data_fs,data_f_dir):
+    '''
+    Dumps the per minute bytes and airtime statistics of the whole
+    network in dictionary format
+    '''
+    router_airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir)
+    pickle_object= []
+    pickle_object.append(router_id)
+    pickle_object.append(router_timeseries_bytes)
+    pickle_object.append(router_timeseries_airtime)
+    pickle_object.append(router_tx_pkt_size)
+    pickle_object.append(router_rx_pkt_size)
 
     f_d= outfolder_name+router_id+'.pickle'
     output_device = open(f_d, 'wb')
@@ -829,4 +1082,5 @@ if __name__=='__main__':
     #for plotting queue sizes with time
     #queue_file_reader(t1,t2,data_fs)
     #queue_dynamics_plotter(router_id,output_folder)
-    airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)    
+    #airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
+    router_airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
