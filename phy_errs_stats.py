@@ -345,35 +345,39 @@ def raw_file_reader(t1,t2):
         cck_err.sort()
         ofdm_err=phy_ofdm_err_time_series.keys()
         ofdm_err.sort()
-        s=0
-        for i in ofdm_err:    
+        s=[]
+        for i in ofdm_err:
+            s=[]
             if len(phy_ofdm_err_time_series[i])>1:
                 k=0
                 a=phy_ofdm_err_time_series[i]
-                d= sum (map ( lambda x:x  , [  i for i in a] ))
+                d= sum (map ( lambda x:x, [i for i in a] ))
                 s=[i,d]
             else :
                 a=phy_ofdm_err_time_series[i]
                 s=[i,a[0]]
             ofdm_err_seq.append(s)
 
-
-        for i in cck_err:    
+        s=[]
+        for i in cck_err:
+            s=[]
             if len(phy_cck_err_time_series[i])>1:
                 k=0
                 a=phy_cck_err_time_series[i]
-                d= sum (map ( lambda x:x  , [  i for i in a] ))
+                d= sum (map ( lambda x:x, [i for i in a] ))
                 s=[i,d]
             else :
                 a=phy_cck_err_time_series[i]
                 s=[i,a[0]]
             cck_err_seq.append(s)
 
+        s=[]
         for i in err:
+            s=[]
             if len(phy_err_time_series[i])>1:
                 k=0
                 a=phy_err_time_series[i]
-                d= sum (map ( lambda x:x  , [  i for i in a] ))
+                d= sum (map ( lambda x:x, [i for i in a] ))
                 s=[i,d]
             else :
                 a=phy_err_time_series[i]
@@ -592,9 +596,9 @@ def bad_fcs_file_reader(t1,t2):
         err,err_seq=[],[] 
         err=phy_err_time_series.keys()
         err.sort()
-        s=0
-
+        s=[]
         for i in err:
+            s=[]
             if len(phy_err_time_series[i])>1:
                 k=0
                 a=phy_err_time_series[i]
@@ -604,8 +608,7 @@ def bad_fcs_file_reader(t1,t2):
                 a=phy_err_time_series[i]
                 s=[i,a[0]]
             err_seq.append(s)
-#        phy_ofdm= sum (map ( lambda x:x  , [i[3]  for i in temp_errs] ))
-        Physical_errors[file_timestamp].append([err_seq])
+        Physical_errors[file_timestamp].append(err_seq)
 
 
 if __name__=='__main__':
@@ -624,8 +627,8 @@ if __name__=='__main__':
     [t1,t2] = timeStamp_Conversion(time1,time2,router_id)
     data_fs=os.listdir(data_f_dir)
     print "now processing the files to calculate time "
-    #raw_file_reader(t1,t2)
-    bad_fcs_file_reader(t1,t2)
+    raw_file_reader(t1,t2)
+    #bad_fcs_file_reader(t1,t2)
     output_device = open(outfile_name, 'wb')
     pickle.dump([router_id,Physical_errors],output_device)
     output_device.close()
