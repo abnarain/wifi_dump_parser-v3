@@ -374,18 +374,19 @@ def bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name):
     #now use the rates to be plotted in scatter plot
     rate_map=defaultdict(list)
     for device_id,l_rate_pairs in rate_pairs_per_device.iteritems():
-        actual_rate_pairs=[]
+        actual_rate_pairs=defaultdict(int)
         for i in l_rate_pairs :
-            actual_rate_pairs.append([i[0],i[2]])
+            actual_rate_pairs[tuple([i[0],i[2]])] +=1
         rate_map[device_id]=actual_rate_pairs
         del actual_rate_pairs
-        
+    print "done first parse"    
+    print rate_map
     bitrate_up_down_link(router_id,
                          rate_map,
                          "Device tx bitrate", 
                          "AP tx bitrate",
                          "Scatterplot of bitrates received and transmitted by AP",
-                         outfile_name)
+                         outfile_name+router_id+'_rate_assym.png')
     
 
 
@@ -530,7 +531,7 @@ def persistent_station_plot(persistent_station_data_set,timeperiod,router_id,out
                       'Devices connected to home router',
                       '% time they were connected with the router[in one day',
                       'Total time spent by devices connected to the router',
-                      outfolder_name+router_id+'stations_connected.png')
+                      outfolder_name+router_id+'_stations_connected.png')
 
 def router_utilization_throughput_plot(airtime_data_set,bytes_data_set,outfolder_name):
     util=[]
@@ -626,7 +627,7 @@ if  __name__ == '__main__':
     print "going to plot " 
     contention_per_access_class(contention_per_access_class_table,home_ap_2_table,home_device_2_table,outfile_name)
     '''
-    #code for analysis of packet traces
+    #code for analysis of station packet traces from routers
     '''
     home_stations_packet_dump=defaultdict(list)
     home_stations_packet_dump=per_station_data_pickle_reader(_folder_1,router_id)
@@ -639,6 +640,8 @@ if  __name__ == '__main__':
     [airtime_data_set,bytes_data_set]=router_bytes_airtime_pickle_reader(_folder_1,router_id)
     router_utilization_throughput_plot(airtime_data_set,bytes_data_set,outfile_name)
     '''
+   
     persistent_station_data_set,timeperiod=defaultdict(list),[]    
     [timeperiod,persistent_station_data_set]=persistent_station_pickle_reader(_folder_1,router_id)
     persistent_station_plot(persistent_station_data_set,timeperiod,router_id,outfile_name)
+    
