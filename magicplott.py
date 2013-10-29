@@ -214,6 +214,7 @@ def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_na
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     _subplot = fig.add_subplot(1,1,1)
     rect1=_subplot.bar(ind,y_axis,width,color='b')
+    _subplot.set_xlim([0,1])
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
     _subplot.set_ylabel(y_axis_label,fontsize=17)
     _subplot.set_xlabel(x_axis_label,fontsize=17)
@@ -467,13 +468,15 @@ def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title,out
     i=0
     max_x=0
     max_y=0
-    for device_id, rate_tuples in rate_map.iteritems(): 
+    for device_id, rate_dict in rate_map.iteritems(): 
         if len(rate_map) >=2:
-            _subplot = fig.add_subplot(len(rate_map)/2,2,i)
+            _subplot = fig.add_subplot((len(rate_map)/2) +1 ,2,i)
         else :
             _subplot = fig.add_subplot(1,2,i)
-        for rate_tuple in rate_tuples:
-            _subplot.scatter(rate_tuple[0],rate_tuple[1],color=color[i])
+        rate_sum=sum(rate_dict.values()) 
+        for rate_tuple,freq in rate_dict.iteritems():
+            rate_tuple=list(rate_tuple)
+            _subplot.scatter(rate_tuple[0],rate_tuple[1],s=freq*100/rate_sum,color=color[i])
             if rate_tuple[0]>max_x:
                 max_x=rate_tuple[0]
             if rate_tuple[1]>max_y:
@@ -481,8 +484,10 @@ def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title,out
         _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
         _subplot.set_ylabel(y_axis_label)
         _subplot.set_xlabel(x_axis_label+'( '+device_id+' )')
-        _subplot.set_xlim([0,max_x+20])
-        _subplot.set_ylim([0,max_y+20])
+        _subplot.set_xticks([1.0,2.0,5.5,9.0,12.0,18.0,24.0,36.0,48.0,54.0,65.0,117.0,130.0])
+        _subplot.set_yticks([1.0,2.0,5.5,9.0,12.0,18.0,24.0,36.0,48.0,54.0,65.0,117.0,130.0])
+        _subplot.set_xlim([0,max_x+2])
+        _subplot.set_ylim([0,max_y+2])
         labels = _subplot.get_xticklabels()
         for label in labels:
             label.set_rotation(30)
