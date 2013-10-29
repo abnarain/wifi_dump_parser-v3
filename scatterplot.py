@@ -491,6 +491,47 @@ def router_bytes_airtime_pickle_reader(dump_input_folder,router_id):
             return [_f_content[1],_f_content[2]]
 
 
+def persistent_station_pickle_reader(dump_input_folder,router_id):
+    '''
+    Reads the pickle to get an array of following elements
+    router_id
+    station with timestamp  -dictionary
+    '''
+    data_fs=os.listdir(dump_input_folder)
+    for f_name in data_fs :
+        if f_name.split('.')[0]==router_id :
+            _f_content= pickle.load(open(dump_input_folder+f_name,'rb'))
+            return [_f_content[1],_f_content[2]]
+
+def persistent_station_plot(persistent_station_data_set,timeperiod,router_id,outfolder_name):
+    percentage_time_per_station=defaultdict(int)
+    for device_id, timestamps in persistent_station_data_set.iteritems():
+        timestamps=list(timestamps)
+        timestamps.sort()
+        prev_timestamp=timestamps[0]
+        for i in range(1, len(timestamps)):
+           if timestamps[i]-prev_timestamp <70 :
+              percentage_time_per_station[device_id] += (timestamps[i]-timestamps[i-1])
+              prev_timestamp=timestamps[i]
+           else :
+              prev_timestamp=timestamps[i]
+        percentage_time_per_station[device_id]= (percentage_time_per_station[device_id]*100.0)/(timeperiod[1]-timeperiod[0])
+    print percentage_time_per_station
+
+    import operator
+    sorted_ = sorted(percentage_time_per_station.iteritems(), key=operator.itemgetter(1))
+    x_axis,y_axis=[],[]
+    for i in sorted_ :
+        x_axis.append(i[0])
+        y_axis.append(i[1])
+
+    bar_graph_plotter(x_axis,
+                      y_axis,
+                      'Devices connected to home router',
+                      '% time they were connected with the router[in one day',
+                      'Total time spent by devices connected to the router',
+                      outfolder_name+router_id+'stations_connected.png')
+
 def router_utilization_throughput_plot(airtime_data_set,bytes_data_set,outfolder_name):
     util=[]
     throughput=[]
@@ -591,8 +632,13 @@ if  __name__ == '__main__':
     home_stations_packet_dump=per_station_data_pickle_reader(_folder_1,router_id)
     bitrate_scatter_plot(home_stations_packet_dump,router_id,outfile_name)
     '''
-
+    #code for analysis of throughput and utilization 
+    '''
     airtime_data_set=defaultdict(list)
     bytes_data_set=defaultdict(list)
     [airtime_data_set,bytes_data_set]=router_bytes_airtime_pickle_reader(_folder_1,router_id)
     router_utilization_throughput_plot(airtime_data_set,bytes_data_set,outfile_name)
+    '''
+    persistent_station_data_set,timeperiod=defaultdict(list),[]    
+    [timeperiod,persistent_station_data_set]=persistent_station_pickle_reader(_folder_1,router_id)
+    persistent_station_plot(persistent_station_data_set,timeperiod,router_id,outfile_name)

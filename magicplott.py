@@ -202,10 +202,6 @@ def plotter_utilization_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,
         canvas.print_figure(outfile_name, dpi = 110)
 
 
-
-
-
-
 def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_name):
     '''
     x-axis is the label for all bitrates observed in home    
@@ -217,7 +213,7 @@ def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_na
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     _subplot = fig.add_subplot(1,1,1)
-    rect1=_subplot.bar(ind,y_axis,color='b')
+    rect1=_subplot.bar(ind,y_axis,width,color='b')
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
     _subplot.set_ylabel(y_axis_label,fontsize=17)
     _subplot.set_xlabel(x_axis_label,fontsize=17)
@@ -519,8 +515,8 @@ def scatter_utilization_throughput(x_axis,y_axis, x_axis_label, y_axis_label, ti
     _subplot.set_ylabel(y_axis_label)
     _subplot.set_xlabel(x_axis_label)
     _subplot.set_title(title)
-    _subplot.set_ylim([0,100])
-    _subplot.set_xlim([0,max_xlim])
+    _subplot.set_xlim([0,100])
+    _subplot.set_ylim([0,max_xlim])
     labels = _subplot.get_xticklabels()
     for label in labels:
         label.set_rotation(30)
