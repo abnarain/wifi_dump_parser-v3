@@ -1,9 +1,8 @@
 #Author : Abhinav Narain
 #Date : Sept 8, 2013
 #Purpose : To read the binary files with data from BISmark deployment in homes
-#Creates a map of mac addresses and bitrates seen every minute
-#Does not differentiate between all the multicast mac address
-#Does not differentiate the bitrates being of multicast/broadcast trasnmissions 
+#Creates a map of mac addresses seen every minute
+#Creates a map of nearby networks seen at home
 import os,sys,re
 import gzip
 import struct 
@@ -23,12 +22,11 @@ missing_files=[]
 
 #The unique set of devices seen in the time period
 ap_macs,device_macs=set(), set()
-#Rate map has the distribution of rates seen per minute
-rate_map=defaultdict(list)
 #device map has the list of devices seen per minute
 device_map=defaultdict(list)
 #ap map has the list of Access Points seen per minute
 ap_map=defaultdict(list)
+ap_network=defaultdict(set)
 
 def file_reader() : 
     data_fs=os.listdir(data_f_dir)
@@ -57,9 +55,6 @@ def file_reader() :
 
         data_contents=data_file_content.split('\n----\n')
         header_and_correct_data_frames = data_contents[0]
-        err_data_frames = data_contents[1]
-        correct_data_frames_missed=data_contents[2]
-        err_data_frames_missed=data_contents[3]
             
         mgmt_f_name = data_f_name
         mgmt_f_name = re.sub("-d-","-m-",mgmt_f_name)
@@ -78,7 +73,6 @@ def file_reader() :
         bismark_id_mgmt_file=0
         start_64_timestamp_mgmt_file=0
         
-
         for i in xrange(len(mgmt_file_content )):
             if mgmt_file_content[i]=='\n':
                 bismark_mgmt_file_header = str(mgmt_file_content[0:i])
@@ -91,11 +85,6 @@ def file_reader() :
                 break
         mgmt_contents=mgmt_file_content.split('\n----\n')
         header_and_beacon_mgmt_frames = mgmt_contents[0] 
-        common_mgmt_frames = mgmt_contents[1]
-        err_mgmt_frames=mgmt_contents[2]
-        beacon_mgmt_frames_missed=mgmt_contents[3]
-        common_mgmt_frames_missed=mgmt_contents[4]
-        err_mgmt_frames_missed=mgmt_contents[5]
 
         #done with reading the binary blobs from file ; now check for timestamps are correct
         if (not ( mgmt_file_current_timestamp == data_file_current_timestamp )) :
@@ -111,7 +100,7 @@ def file_reader() :
         if ( len(data_contents) != 4 or len(mgmt_contents) !=6) :
             print "for data", len(data_contents), "for mgmt", len(mgmt_contents) 
             print "file is malformed or the order of input folders is wrong "
-            continue 
+            continue
         
         #The following code block parses the data file 	
         #print "----------done with missed .. now with actual data "
@@ -131,41 +120,36 @@ def file_reader() :
                 for key in frame_elem.keys():
                     tsf=key                                    
                 parse_data_frame(frame,radiotap_len,frame_elem)
-                if radiotap_len ==RADIOTAP_RX_LEN :
-                    rate.append(frame_elem[tsf][7])
-                    a= frame_elem[tsf][11].split(':')
-                    if  not (a[0] =='ff' and a[1] =='ff' and a[2] =='ff' ):
-                        if not (a[0] =='33' and a[1] =='33'  ) :
-                            device_macs.add(frame_elem[tsf][11])
-                            device_local_map.add(frame_elem[tsf][11])            
-                    try:        
-                        a= frame_elem[tsf][12].split(':')
+                temp=frame_elem[tsf]
+                temp.insert(0,tsf)
+                if radiotap_len ==RADIOTAP_RX_LEN : #if the destn address is 0x1 then, it is a multicast frame
+                    a= temp[12].split(':')
+                    if not(int(a[0],16) &0x1):
+                        device_macs.add(temp[12])
+                        device_local_map.add(temp[12]) 
+                    try:
+                        a= frame_elem[tsf][13].split(':')
                     except :
                         print "problem with mac element "
                         print frame_elem
                         continue
-                    if  not (a[0] =='ff' and a[1] =='ff' and a[2] =='ff' ):
-                        if not (a[0] =='33' and a[1] =='33'  ) :
-                            device_macs.add(frame_elem[tsf][12])
-                            device_local_map.add(frame_elem[tsf][12])
+                    if not(int(a[0],16) &0x1):
+                        device_macs.add(temp[13])
+                        device_local_map.add(temp[13])
+                        if not(temp[13] in ap_network[temp[12]]) :
+                            ap_network[temp[12]].add(temp[13])
                 elif radiotap_len ==RADIOTAP_TX_LEN :
-                    rate.append(frame_elem[tsf][2])
+                    print temp
+                    a= frame_elem[tsf][12].split(':')
+                    if not(int(a[0],16) &0x1):
+                        device_macs.add(temp[12])
+                        device_local_map.add(temp[12])
             else:
                 print "data frames; success denied"                    
             data_index=data_index+DATA_STRUCT_SIZE
             del frame_elem
             del monitor_elem
         device_map[file_timestamp]=device_local_map
-        def histogram(L):
-            d = {}
-            for x in L:
-                if x in d:
-                    d[x] += 1
-                else:
-                    d[x] = 1
-            return d
-        rate_map[file_timestamp]= histogram(rate)
-        rate=[]
         del device_local_map
         #The following code block parses the mgmt files 
         beacon_mgmt_frames=header_and_beacon_mgmt_frames[mgmt_file_header_byte_count+1:]
@@ -177,51 +161,28 @@ def file_reader() :
             header = frame[:offset]
             frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
             (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-            print "beacon"
             if not( radiotap_len == RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
-                print "the radiotap header is not correct "		
+                print "the radiotap header is not correct"	
                 sys.exit(1)
             (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
             if success ==1:
                 for key in frame_elem.keys():
-                    tsf=key           
+                    tsf=key 
                 parse_mgmt_beacon_frame(frame,radiotap_len,frame_elem)
+                temp=frame_elem[tsf]
+                temp.insert(0,tsf)
                 if radiotap_len== RADIOTAP_RX_LEN:
-                    a= frame_elem[tsf][11].split(':')            
-                    if  not (a[0] =='ff' and a[1] =='ff' and a[2] =='ff' ) :
-                        if not (a[0] =='33' and a[1] =='33' ) :
-                            ap_macs.add(frame_elem[tsf][11])
-                            ap_local_map.add(frame_elem[tsf][11])
+                    a= temp[12].split(':')
+                    if  not (int(a[0],16) & 0x1):
+                        ap_macs.add(temp[12])
+                        ap_local_map.add(temp[12])
+                        if not(temp[12] in ap_network.keys()):
+                            ap_network[temp[12]].add(temp[12])
             else :
-                print "success denied; beacon frames"        
+                print "success denied; beacon frames" 
             mgmt_index=mgmt_index+MGMT_BEACON_STRUCT_SIZE
             del frame_elem
             del monitor_elem
-        mgmt_index=0
-        for idx in xrange(0,len(common_mgmt_frames)-MGMT_COMMON_STRUCT_SIZE,MGMT_COMMON_STRUCT_SIZE ):
-            global file_timestamp
-            frame=common_mgmt_frames[mgmt_index:mgmt_index+MGMT_COMMON_STRUCT_SIZE]
-            offset,success,tsf= 8,-1,0
-            header = frame[:offset]
-            frame_elem,monitor_elem=defaultdict(list),defaultdict(list)
-            (version,pad,radiotap_len,present_flag)=struct.unpack('<BBHI',header)
-            if not( radiotap_len ==RADIOTAP_RX_LEN or  radiotap_len == RADIOTAP_TX_LEN) :
-                print "the radiotap header is not correct "
-                sys.exit(1)
-            (success,frame_elem,monitor_elem)=parse_radiotap(frame,radiotap_len,present_flag,offset,monitor_elem,frame_elem)
-            if success==1 :
-                for key in frame_elem.keys():
-                    tsf=key
-                temp=frame_elem[tsf]
-                temp.insert(0,tsf)
-                parse_mgmt_common_frame(frame,radiotap_len,frame_elem) # ?? what should be here to parse common frame ?
-                print "common" 
-            else :
-                print "common mgmt success denied"
-            mgmt_index= mgmt_index+MGMT_COMMON_STRUCT_SIZE
-            del frame_elem
-            del monitor_elem
-        
 
         ap_map[file_timestamp]=ap_local_map
         del ap_local_map
@@ -231,15 +192,11 @@ def file_reader() :
         if file_counter %10 == 0:
             print file_counter
                 
-                
-#not needed for phy errs
-
 if __name__=='__main__':
     if len(sys.argv) !=5:	
 	print len(sys.argv)
         print "Usage : python reader.py data/<data.gz> mgmt/<mgmt.gz>  <router_id> <o/p pickle> "
         sys.exit(1)
-#compare regular expression for filenameif argv[1]
 
     data_f_dir=sys.argv[1]
     mgmt_f_dir=sys.argv[2]
@@ -254,14 +211,14 @@ if __name__=='__main__':
     print len(ap_macs)
     print "==========="
     print len(ap_map)
-    print "rate maps are " 
-    print len(rate_map)
+    print "==========="
+    print len(ap_network)
     print "done; writing to a file "
-    global_list=[router_id,ap_macs,device_macs,ap_map,device_map,rate_map]
+    global_list=[router_id,ap_macs,device_macs,ap_map,device_map,ap_network]
     output_device = open(output_file, 'wb')
-    pickle.dump(global_list,output_device )
+    pickle.dump(global_list,output_device)
     output_device.close()
     print "finished writing files" 
     for i in range(0,len(missing_files)):
 	print missing_files[i]
-    print "number of files that can't be located ", len(missing_files)	
+    print "number of files that can't be located ", len(missing_files)
