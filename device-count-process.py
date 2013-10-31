@@ -215,7 +215,7 @@ if __name__=='__main__':
           print i, j
     print "done; writing to a file "
     global_list=[router_id,ap_macs,device_macs,ap_map,device_map,ap_network]
-    output_device = open(output_file, 'wb')
+    output_device = open(output_file+router_id+'.pickle', 'wb')
     pickle.dump(global_list,output_device)
     output_device.close()
     print "finished writing files" 

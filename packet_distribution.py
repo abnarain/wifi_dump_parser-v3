@@ -285,8 +285,8 @@ def airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
          err_data_frames = data_contents[1]
          correct_data_frames_missed=data_contents[2]
          err_data_frames_missed=data_contents[3]
-         correct_data_frames_missed=list(struct.unpack('<I',data_contents[2]))[0]
-         err_data_frames_missed =list(struct.unpack('<I',data_contents[3]))[0]
+         correct_data_frames_missed=list(struct.unpack('>I',data_contents[2]))[0]
+         err_data_frames_missed =list(struct.unpack('>I',data_contents[3]))[0]
 
          ctrl_f_name = data_f_name
          ctrl_f_name =re.sub("-d-","-c-",ctrl_f_name)
@@ -337,9 +337,9 @@ def airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
          header_and_beacon_mgmt_frames = mgmt_contents[0] 
          common_mgmt_frames = mgmt_contents[1]
          err_mgmt_frames=mgmt_contents[2]
-         beacon_mgmt_frames_missed=list(struct.unpack('<I',mgmt_contents[3]))[0]
-         common_mgmt_frames_missed=list(struct.unpack('<I',mgmt_contents[4]))[0]         
-         err_mgmt_frames_missed =list(struct.unpack('<I',mgmt_contents[5]))[0]
+         beacon_mgmt_frames_missed=list(struct.unpack('>I',mgmt_contents[3]))[0]
+         common_mgmt_frames_missed=list(struct.unpack('>I',mgmt_contents[4]))[0]
+         err_mgmt_frames_missed =list(struct.unpack('>I',mgmt_contents[5]))[0]
 
          for i in xrange(len(ctrl_file_content )):
              if ctrl_file_content[i]=='\n':
@@ -357,8 +357,8 @@ def airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
          correct_ctrl_frames_missed=ctrl_contents[2]
          err_ctrl_frames_missed=ctrl_contents[3]
 
-         correct_ctrl_frames_missed =list(struct.unpack('<I',ctrl_contents[2]))[0]
-         err_ctrl_frames_missed =list(struct.unpack('<I',ctrl_contents[3]))[0]
+         correct_ctrl_frames_missed =list(struct.unpack('>I',ctrl_contents[2]))[0]
+         err_ctrl_frames_missed =list(struct.unpack('>I',ctrl_contents[3]))[0]
 
         #done with reading the binary blobs from file ; now check for timestamps are correct
          if (not (ctrl_file_current_timestamp == mgmt_file_current_timestamp == data_file_current_timestamp )) :
@@ -1200,6 +1200,5 @@ if __name__=='__main__':
     #queue_file_reader(t1,t2,data_fs)
     #queue_dynamics_plotter(router_id,output_folder)
     #airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
-    #router_airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
-
-    persistent_station_data_dumper(output_folder,router_id,t1,t2,data_fs)
+    router_airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
+    #persistent_station_data_dumper(output_folder,router_id,t1,t2,data_fs)
