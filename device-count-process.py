@@ -96,7 +96,7 @@ def file_reader() :
             print "sequence number don't match "
             sys.exit(1)
 
-        
+
         if ( len(data_contents) != 4 or len(mgmt_contents) !=6) :
             print "for data", len(data_contents), "for mgmt", len(mgmt_contents) 
             print "file is malformed or the order of input folders is wrong "
@@ -124,26 +124,29 @@ def file_reader() :
                 temp.insert(0,tsf)
                 if radiotap_len ==RADIOTAP_RX_LEN : #if the destn address is 0x1 then, it is a multicast frame
                     a= temp[12].split(':')
-                    if not(int(a[0],16) &0x1):
+                    [f_type,f_subtype]=temp[17]
+                    if not(int(a[0],16) &0x1) and f_type==1 and f_subtype==3:
                         device_macs.add(temp[12])
-                        device_local_map.add(temp[12]) 
+                        device_local_map.add(temp[12])
                     try:
-                        a= frame_elem[tsf][13].split(':')
+                        b= temp[13].split(':')
                     except :
                         print "problem with mac element "
                         print frame_elem
+                        sys.exit(1)
                         continue
-                    if not(int(a[0],16) &0x1):
-                        device_macs.add(temp[13])
+                    if not(int(b[0],16) &0x1) and f_type==1 and f_subtype==3:
+                        device_macs.add(temp[13])   
                         device_local_map.add(temp[13])
-                        if not(temp[13] in ap_network[temp[12]]) :
-                            ap_network[temp[12]].add(temp[13])
-                elif radiotap_len ==RADIOTAP_TX_LEN :
-                    print temp
-                    a= frame_elem[tsf][12].split(':')
-                    if not(int(a[0],16) &0x1):
-                        device_macs.add(temp[12])
-                        device_local_map.add(temp[12])
+                        
+                    if not(int(b[0],16) &0x1) and not(int(a[0],16) &0x1) and f_type==1 and f_subtype==3:
+                        if temp[12] in Station:
+                            ap_network[temp[13]].add(temp[12])
+                        if temp[13] in ap_network.keys(): 
+                            ap_network[temp[13]].add(temp[12])
+                            
+                elif radiotap_len ==RADIOTAP_TX_LEN:
+                    pass 
             else:
                 print "data frames; success denied"                    
             data_index=data_index+DATA_STRUCT_SIZE
@@ -177,7 +180,7 @@ def file_reader() :
                         ap_macs.add(temp[12])
                         ap_local_map.add(temp[12])
                         if not(temp[12] in ap_network.keys()):
-                            ap_network[temp[12]].add(temp[12])
+                            ap_network[temp[12]].add('')
             else :
                 print "success denied; beacon frames" 
             mgmt_index=mgmt_index+MGMT_BEACON_STRUCT_SIZE
@@ -203,16 +206,13 @@ if __name__=='__main__':
     router_id=sys.argv[3]
     output_file=sys.argv[4]
     file_reader()
-    print "mac address of devices "
-    print len(device_macs)
-    print "device macs "
-    print len(device_map)
-    print "mac address of aps"
-    print len(ap_macs)
-    print "==========="
-    print len(ap_map)
-    print "==========="
-    print len(ap_network)
+    print "no of unique mac address of devices ", len(device_macs)
+    #print "router macs ", device_macs
+    print "no of unique mac address of aps", len(ap_macs)
+    print " mac address of APs ", ap_macs
+    print "Len of ap network", len(ap_network)
+    for i,j in ap_network.iteritems():
+          print i, j
     print "done; writing to a file "
     global_list=[router_id,ap_macs,device_macs,ap_map,device_map,ap_network]
     output_device = open(output_file, 'wb')
