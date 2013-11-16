@@ -58,7 +58,7 @@ rts_by_rts_cts_table={
 	'OWC43DC7B0AE69' : [1165795 *100.0 / (1165795 +3009114) ,1177221 *100.0 / (1177221 +1805217)]
 }
 
-if 0: #__name__=='__ma
+if  __name__=='__main__':
    '''
    This main works to plot the RTS+CTS percentage for each home to the 
    RTS+CTS+ACK frames in the home
@@ -76,7 +76,7 @@ if 0: #__name__=='__ma
    plotter_boxplot(home_labels,
                    home_vals,
                    'RouterIds',
-                   '%of RTS+CTS frames in control frames collected',
+                   'Percentage of RTS+CTS frames in Control traffic',
                    'Distribution of Control Traffic in homes',
                    image_file)
 
@@ -118,7 +118,7 @@ if 0: #__name__=='__main__':
                    'Noise Floor in different homes',
                    image_file)
 
-if __name__=='__main__': 
+if 0: #__name__=='__main__': 
     if len(sys.argv)!=2:                                                
         print "Usage : file.py <imagefile.png> "
         sys.exit(1)
