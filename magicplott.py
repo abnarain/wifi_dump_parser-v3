@@ -14,8 +14,13 @@ except ImportError:
     import pickle
 LEGEND_PROP = matplotlib.font_manager.FontProperties(size=7)
 # Figure dimensions                                                                                                   
-fig_width = 14
-fig_length = 14.25
+
+if 1 :
+    fig_width = 10
+    fig_length = 10.25
+else :
+    fig_width = 14
+    fig_length = 14.25
 # Can be used to adjust the border and spacing of the figure    
 fig_left = 0.12
 fig_right = 0.94
@@ -214,10 +219,11 @@ def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_na
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     _subplot = fig.add_subplot(1,1,1)
     rect1=_subplot.bar(ind,y_axis,width,color='b')
-    _subplot.set_xlim([0,1])
+    _subplot.set_xlim([0,len(x_axis)])
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
     _subplot.set_ylabel(y_axis_label,fontsize=17)
     _subplot.set_xlabel(x_axis_label,fontsize=17)
+    _subplot.set_ylim([0,100])
     a= [i for i in range(0,len(x_axis))]
     _subplot.set_xticklabels(x_axis, fontsize=17)
     _subplot.set_xticks(a)
@@ -465,11 +471,16 @@ def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title,out
     fig = Figure(linewidth=0.0)
     fig.set_size_inches(fig_width,fig_length, forward=True)
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
-    i=0
+    i,j=0,0
     max_x=0
     max_y=0
-    for device_id, rate_dict in rate_map.iteritems(): 
-        if len(rate_map) >=2:
+    more_than_seven_devices=0
+    for device_id, rate_dict in rate_map.iteritems():
+        print len(rate_map)
+        if len(rate_map)>7:
+            more_than_seven_devices=1
+            break 
+        if len(rate_map) >=2: 
             _subplot = fig.add_subplot((len(rate_map)/2) +1 ,2,i)
         else :
             _subplot = fig.add_subplot(1,2,i)
@@ -492,7 +503,7 @@ def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title,out
         for label in labels:
             label.set_rotation(30)
         i=i+1
-
+    outfile_name=outfile_name+'.png'
     fig.suptitle(title+'('+router_id+')',fontsize=20)
     #fig.tight_layout()
     canvas = FigureCanvasAgg(fig)
@@ -500,6 +511,75 @@ def bitrate_up_down_link(router_id,rate_map,x_axis_label, y_axis_label,title,out
         canvas.print_eps(outfile_name, dpi = 110)
     if '.png' in outfile_name:
         canvas.print_figure(outfile_name, dpi = 110)
+    if not(more_than_seven_devices):
+        return 
+    fig_2 = Figure(linewidth=0.0)
+    fig_2.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    device_count=0
+    devices_plotted=[]
+    for device_id, rate_dict in rate_map.iteritems():
+        if device_count <=6:
+            devices_plotted.append(device_id)
+            _subplot = fig.add_subplot(6,2,device_count)
+            rate_sum=sum(rate_dict.values())
+            for rate_tuple,freq in rate_dict.iteritems():
+                rate_tuple=list(rate_tuple)
+                _subplot.scatter(rate_tuple[0],rate_tuple[1],s=freq*100/rate_sum,color=color[i])
+                if rate_tuple[0]>max_x:
+                    max_x=rate_tuple[0]
+                if rate_tuple[1]>max_y:
+                    max_y=rate_tuple[1]
+            _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
+            _subplot.set_ylabel(y_axis_label)
+            _subplot.set_xlabel(x_axis_label+'( '+device_id+' )')
+            _subplot.set_xticks([1.0,2.0,5.5,9.0,12.0,18.0,24.0,36.0,48.0,54.0,65.0,117.0,130.0])
+            _subplot.set_yticks([1.0,2.0,5.5,9.0,12.0,18.0,24.0,36.0,48.0,54.0,65.0,117.0,130.0])
+            _subplot.set_xlim([0,max_x+2])
+            _subplot.set_ylim([0,max_y+2])
+            labels = _subplot.get_xticklabels()
+            for label in labels:
+                label.set_rotation(30)
+            if device_count==6:
+                fig.suptitle(title+'('+router_id+' (part1))',fontsize=20)
+                outfile_name=outfile_name+'_1.png'
+                canvas = FigureCanvasAgg(fig)
+                if '.eps' in outfile_name:
+                    canvas.print_eps(outfile_name, dpi = 110)
+                if '.png' in outfile_name:
+                    canvas.print_figure(outfile_name, dpi = 110)
+            device_count +=1
+            i=i+1
+        else :
+            _subplot_2 = fig_2.add_subplot(len(rate_map)-6,2,j)
+            rate_sum=sum(rate_dict.values())
+            for rate_tuple,freq in rate_dict.iteritems():
+                rate_tuple=list(rate_tuple)
+                _subplot_2.scatter(rate_tuple[0],rate_tuple[1],s=freq*100/rate_sum,color=color[device_count])
+                if rate_tuple[0]>max_x:
+                    max_x=rate_tuple[0]
+                if rate_tuple[1]>max_y:
+                    max_y=rate_tuple[1]
+            _subplot_2.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
+            _subplot_2.set_ylabel(y_axis_label)
+            _subplot_2.set_xlabel(x_axis_label+'( '+device_id+' )')
+            _subplot_2.set_xticks([1.0,2.0,5.5,9.0,12.0,18.0,24.0,36.0,48.0,54.0,65.0,117.0,130.0])
+            _subplot_2.set_yticks([1.0,2.0,5.5,9.0,12.0,18.0,24.0,36.0,48.0,54.0,65.0,117.0,130.0])
+            _subplot_2.set_xlim([0,max_x+2])
+            _subplot_2.set_ylim([0,max_y+2])
+            labels = _subplot_2.get_xticklabels()
+            for label in labels:
+                label.set_rotation(30)
+            if device_count==max_device_count:
+                outfile_name=outfile_name+'_2.png'
+                fig_2.suptitle(title+'('+router_id+' (part2))',fontsize=20)
+                canvas = FigureCanvasAgg(fig_2)
+                if '.eps' in outfile_name:
+                    canvas.print_eps(outfile_name, dpi = 110)
+                if '.png' in outfile_name:
+                    canvas.print_figure(outfile_name, dpi = 110)
+            device_count +=1
+            j=j+1
 
 def scatter_utilization_throughput(x_axis,y_axis, x_axis_label, y_axis_label, title, outfile_name):
     '''
@@ -522,6 +602,71 @@ def scatter_utilization_throughput(x_axis,y_axis, x_axis_label, y_axis_label, ti
     _subplot.set_title(title)
     _subplot.set_xlim([0,100])
     _subplot.set_ylim([0,max_xlim])
+    labels = _subplot.get_xticklabels()
+    for label in labels:
+        label.set_rotation(30)
+
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)
+
+def scatter_contention_for_quals(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title,outfile_name,xlim,ylim):   
+    '''
+    Plots the contention period(9th percentile) of different homes
+    Input : router list
+    Number of Devices/AP
+    Dictionary of contention delay per access class
+    title
+    file output name
+    {x,y}lim
+    '''
+    ylim=[0,8000]
+    ACCESS_CLASS_MARKERS={
+        0:'+',
+        1:'o',
+        2:'*',
+        3:'x',
+        8:'H'}
+    N_ACCESS_CLASS_MARKERS={
+        'Best Effort':'*'
+        }
+    ac_encountered=[]
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    _subplot = fig.add_subplot(1,1,1)
+    legend=[]
+    sp=[]
+    nsp=[] 
+    for i in range(0,len(router_list)):
+        ac_map=y_axis[i]
+        at=1
+        for ac_class,ac_contention_array in ac_map.iteritems():
+            if  not (ac_class ==2):
+                continue
+            if ac_class in ac_encountered:
+                pass
+            else:
+                tsp=_subplot.scatter(x_axis[i], percentile(ac_contention_array[0],90),s=100,color='b',marker=ACCESS_CLASS_MARKERS[ac_class])
+                ac_encountered.append(ac_class)
+                sp.append(tsp)
+            if at==1:
+                _subplot.scatter(x_axis[i], percentile(ac_contention_array[0],90),s=100,color=color[i],marker=ACCESS_CLASS_MARKERS[ac_class],label=router_list[i])
+                at=0
+            else :
+                _subplot.scatter(x_axis[i], percentile(ac_contention_array[0],90),s=100,color=color[i],marker=ACCESS_CLASS_MARKERS[ac_class]) 
+
+
+    legend2=_subplot.legend(sp,N_ACCESS_CLASS_MARKERS,bbox_to_anchor=(1.9,-0.05), prop=LEGEND_PROP,loc=2)
+    _subplot.add_artist(legend2)
+    _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05),scatterpoints=1)
+    _subplot.set_ylabel(y_axis_label,fontsize=20)
+    _subplot.set_xlabel(x_axis_label,fontsize=20)
+    _subplot.set_title(title,fontsize=20)
+    _subplot.set_xlim(xlim)
+    _subplot.set_ylim(ylim)
     labels = _subplot.get_xticklabels()
     for label in labels:
         label.set_rotation(30)

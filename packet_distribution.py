@@ -712,8 +712,9 @@ def airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir):
              del monitor_elem
          #data (tx, rx),err_data, mgmt (tx,rx), err_mgmt, ctrl (tx,rx), err_ctrl
          #do some calculations about missing frames in each category before logging it 
-         #print "mode is " , correct_data_frames_missed, "marg"
-         #print "start",data_rx_bytes, " shag"
+         print "correct data frames missed" , correct_data_frames_missed, "err data frames missed", err_data_frames_missed
+         print "correct ctrl frames missed", correct_ctrl_frames_missed, "err ctrl frames missed ",err_ctrl_frames_missed
+         print "common, beacon, mgmt frames",common_mgmt_frames_missed, beacon_mgmt_frames_missed, "err mgmt frames missed", err_mgmt_frames_missed
 
          if data_pkt_count and correct_data_frames_missed> 0:
              data_rx_airtime += (correct_data_frames_missed*data_rx_bytes*1.0/ data_pkt_count * mode(local_data_rates))
@@ -778,7 +779,7 @@ def queue_dynamics_plotter(router_id,output_folder):
     print "damage frame count " , damaged_frames
 
 def airtime_bytes_data_dumper(outfolder_name,router_id,t1,t2,data_fs,data_f_dir):
-    #TODO: does not give correct answer, hence don't forget to fix this
+    #TODO: FIXED : there was endianness error while reading missed frames bytes
     #Dumps the per minute bytes and airtime statistics of the whole
     #network in dictionary format
     airtime_bytes_file_content_reader(t1,t2,data_fs,data_f_dir)
@@ -1199,6 +1200,6 @@ if __name__=='__main__':
     #for plotting queue sizes with time
     #queue_file_reader(t1,t2,data_fs)
     #queue_dynamics_plotter(router_id,output_folder)
-    #airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
+    airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
     router_airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
     #persistent_station_data_dumper(output_folder,router_id,t1,t2,data_fs)
