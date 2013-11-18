@@ -360,8 +360,8 @@ def connected_devices_updown_rates_file_reader(t1,t2,data_fs):
 def plot_all_devices_bitrate_distribution(router_id,t1,t2,data_fs):
     '''
     Plots the distribution of bitrates occuring in the whole wireless network
+    Does not do the multicast bitrates distribution. Done in another function 
     '''
-#TODO : fix the multicast/broadcast bitrate to be shown with a different color in the graph
     all_devices_rates_file_reader(t1,t2,data_fs)
     if 0:
         import operator    
@@ -371,13 +371,13 @@ def plot_all_devices_bitrate_distribution(router_id,t1,t2,data_fs):
         agg=agg+v
         
     for k,v in rate_distribution.iteritems():
-        v = v*100.0/ agg
+        v = v*100.0/agg
         rate_distribution[k]=v
     x_axis=rate_distribution.keys()
     x_axis.sort()
     y_axis=[]
     for i in range(0,len(x_axis)):
-        y_axis.append( rate_distribution[x_axis[i]])        
+        y_axis.append(rate_distribution[x_axis[i]])        
 
     bar_graph_plotter(x_axis,
                       y_axis,
@@ -636,11 +636,60 @@ def all_devices_rates_with_multicast_dumper(t1,t2,outfolder_name,data_fs):
     pickle.dump(pickle_object,output_device)
     output_device.close()
 
+def plot_all_devices_multicast_bitrate(input_folder,router_id,outfolder):
+    data_fs=os.listdir(input_folder)
+    err_rates_distribution, rates_with_multicast, rates_without_multicast=defaultdict(int),defaultdict(int),defaultdict(int)
+    for f_name in data_fs :
+        if f_name.split('.')[0]==router_id :
+            _f_content= pickle.load(open(input_folder+f_name,'rb'))
+            router_id= _f_content[0]
+            err_rates_distribution=_f_content[1]
+            rates_with_multicast=_f_content[2]
+            rates_without_multicast=_f_content[3]
+    #print multicast_data
+    agg=0
+    correct_rates_distribution=defaultdict(int)
+    for k,v in rates_with_multicast.items():
+        correct_rates_distribution[k] = v
+    for k,v in rates_without_multicast.items():
+        correct_rates_distribution[k] += v
+    for k,v in correct_rates_distribution.items():
+        agg +=v
+    print agg
+    overall_distribution=defaultdict(int)
+    j=correct_rates_distribution
+    sorted_r= sorted(j.values())
+    from operator import itemgetter
+    r=sorted(j.items(), key=itemgetter(1))    
+    multicast_list=[] 
+    non_multicast_list=[]
+    rates=[]
+    print r
+    for t in r :
+        rates.append(t[0])
+        if t[0] in rates_with_multicast.keys():
+            multicast_list.append(rates_with_multicast[t[0]]*100.0/agg)
+        else:
+            multicast_list.append(0) 
+        if t[0] in rates_without_multicast.keys(): 
+            non_multicast_list.append(rates_without_multicast[t[0]]*100.0/agg)
+        else:
+            non_multicast_list.append(0) 
+    multicast_list.reverse()
+    non_multicast_list.reverse()
+    rates.reverse()
+    bar_graph_stacked_rate_plotter(rates,non_multicast_list,multicast_list,
+                                    "Distribution of bitrates in home ("+router_id+")",
+                                    "Percentage of Occurrence",
+                                    "Wireless bitrates",
+                                    outfolder+router_id+"_rates_.png")
+
+
 
 if __name__=='__main__':
     if len(sys.argv) !=6 :
 	print len(sys.argv)
-	print "Usage : python rate_distribution.py data/<data.gz> <router_id> <t1> <t2> <outputfolder> "
+	print "Usage : python rate_distribution.py data/<data.gz V pickle> <router_id> <t1> <t2> <outputfolder> "
 	sys.exit(1)
 
     data_f_dir=sys.argv[1]
@@ -660,4 +709,6 @@ if __name__=='__main__':
     #For scatterplot of RSSI vs bitrate and histogram of transmitted to received bitrates    
     #device_rate_vs_rssi_plots(t1,t2,data_fs,router_id)
     #per_station_packet_dumper(t1,t2,data_fs,_folder,router_id)
-    all_devices_rates_with_multicast_dumper(t1,t2,_folder,data_fs)
+    #all_devices_rates_with_multicast_dumper(t1,t2,_folder,data_fs)
+
+    plot_all_devices_multicast_bitrate(data_f_dir,router_id,_folder)

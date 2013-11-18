@@ -163,13 +163,13 @@ def plotter_boxplot(x_axis,y_axis, x_axis_label, y_axis_label,title,outfile_name
     _subplot = fig.add_subplot(1,1,1)
     _subplot.boxplot(y_axis,notch=0, sym='+', vert=1, whis=1.5)
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05))
-    _subplot.set_ylabel(y_axis_label)
-    _subplot.set_xlabel(x_axis_label)
+    _subplot.set_ylabel(y_axis_label,fontsize=20)
+    _subplot.set_xlabel(x_axis_label,fontsize=20)
     a= [i for i in range(0,len(x_axis))]
     _subplot.set_xticklabels(x_axis)
     _subplot.set_xticks(a)
     #_subplot.set_ylim([0,100])
-    _subplot.set_title(title)
+    _subplot.set_title(title,fontsize=20)
     labels = _subplot.get_xticklabels()
     for label in labels:
         label.set_rotation(30)    
@@ -237,11 +237,44 @@ def bar_graph_plotter(x_axis,y_axis ,x_axis_label, y_axis_label,title,outfile_na
     if '.png' in outfile_name:
         canvas.print_figure(outfile_name, dpi = 110)
 
+def bar_graph_stacked_rate_plotter(rates,first_list,sec_list,title,x_axis_label,y_axis_label,outfile_name):
+    '''
+    Shows the stacked distribution of muticast bitrates
+    x-axis is the bitrate label
+    y-axis is the frequency of each bitrate normalized by the total number of frames observed
+    '''
+    ind = np.arange(len(rates))  # the x locations for the groups
+    width = 0.35       # the width of the bars
+    fig = Figure(linewidth=0.0)
+    fig.set_size_inches(fig_width,fig_length, forward=True)
+    Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
+    _subplot = fig.add_subplot(1,1,1)
+    rect1=_subplot.bar(ind,first_list,width,color='r')
+    rect2=_subplot.bar(ind,sec_list,width,bottom=first_list,color='b')
+    _subplot.legend((rect1[0],rect2[0]), ('Unicast frames','multicast frames'))
+    _subplot.set_ylabel(y_axis_label,fontsize=17)
+    _subplot.set_xlabel(x_axis_label,fontsize=17)
+    a= [i for i in range(0,len(rates))]
+    _subplot.set_xticklabels(rates)
+    _subplot.set_xticks(a)
+    _subplot.set_ylim([0,100])
+    _subplot.set_title(title,fontsize=17)
+    labels = _subplot.get_xticklabels()
+    for label in labels:
+        label.set_rotation(30)
+ 
+    canvas = FigureCanvasAgg(fig)
+    if '.eps' in outfile_name:
+        canvas.print_eps(outfile_name, dpi = 110)
+    if '.png' in outfile_name:
+        canvas.print_figure(outfile_name, dpi = 110)
+
 def bar_graph_plotter_distr(x_axis_1,y_axis_1 ,x_axis_2, y_axis_2,x_axis_label, y_axis_label,title_1,title_2,outfile_name):
     '''
     Depricated as Snoeren mentioned a scatterplot with specs to be plotted
 
     Shows the distribution of bitrates uplink and downlink as a bar graph
+    Separate bar graphs for each path
     x-axis is the bitrate label
     y-axis is the frequency of each bitrate normalized by the total number of frames observed
     '''
