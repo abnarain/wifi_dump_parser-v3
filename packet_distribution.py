@@ -1250,7 +1250,10 @@ def plot_avg_retransmission_vs_devices(input_folder,router_id,outfolder):
             ret_dev_timeseries=_f_content[1]
     dev_retx=defaultdict(list)
     for t,l in ret_dev_timeseries.iteritems():
-        dev_retx[l[2]].append(l[1]*100.0/(l[0]+l[1]))
+        print l
+        print l[0],[1],l[2]
+        if not(l[0]==0 and l[1]==0) :
+            dev_retx[l[2]].append(l[1]*100.0/(l[0]+l[1]))
     print dev_retx
     dev_count=[]
     retx_series=[]
