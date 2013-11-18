@@ -363,7 +363,7 @@ def bar_graph_subplots(device_ids,x_axes,y_axes,x_axis_label, y_axis_label,title
     if '.png' in outfile_name:
         canvas.print_figure(outfile_name, dpi = 110)
 
-def scatter_plot_dev_retx(x_axis,y_axis,x_axis_label, y_axis_label, title, outfile_name,xlim,ylim):
+def scatter_plot_dev_retx(router_list,x_axis,y_axis,x_axis_label, y_axis_label, title, outfile_name,xlim,ylim):
     '''
     Plots the retransmission in network(90th percentile) vs number of devices per interval
     '''
@@ -372,11 +372,12 @@ def scatter_plot_dev_retx(x_axis,y_axis,x_axis_label, y_axis_label, title, outfi
     Figure.subplots_adjust(fig, left = fig_left, right = fig_right, bottom = fig_bottom, top = fig_top, hspace = fig_hspace)
     _subplot = fig.add_subplot(1,1,1)
     legend=[]
-    _subplot.scatter(x_axis,y_axis,s=50,color='b') 
+    for i in range(0,len(router_list)):
+        _subplot.scatter(x_axis[i],y_axis[i],s=50,color=color[i],marker='*',label=router_list[i]) 
     _subplot.legend(loc=0, prop=LEGEND_PROP,bbox_to_anchor=(0.1,- 0.05),scatterpoints=1)
-    _subplot.set_ylabel(y_axis_label)
-    _subplot.set_xlabel(x_axis_label)
-    _subplot.set_title(title)
+    _subplot.set_ylabel(y_axis_label,fontsize=17)
+    _subplot.set_xlabel(x_axis_label,fontsize=17)
+    _subplot.set_title(title,fontsize=17)
     _subplot.set_xlim(xlim)
     _subplot.set_ylim(ylim)
     labels = _subplot.get_xticklabels()

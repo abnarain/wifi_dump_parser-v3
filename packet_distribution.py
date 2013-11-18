@@ -1240,33 +1240,36 @@ def overall_retransmission_devices(t1,t2,outfolder_name,data_fs):
     pickle.dump(pickle_object,output_device)
     output_device.close()
 
-def plot_avg_retransmission_vs_devices(input_folder,router_id,outfolder):
+def plot_avg_retransmission_vs_devices(input_folder,outfolder):
     data_fs=os.listdir(input_folder)
-    ret_dev_timeseries=defaultdict(list)
+    router_ret_dev_map=defaultdict(list)
+    router_list=[]
+    per_router_dev_count,per_router_retx_series=[],[]
     for f_name in data_fs :
-        if f_name.split('.')[0]==router_id :
-            _f_content= pickle.load(open(input_folder+f_name,'rb'))
-            router_id= _f_content[0]
-            ret_dev_timeseries=_f_content[1]
-    dev_retx=defaultdict(list)
-    for t,l in ret_dev_timeseries.iteritems():
-        print l
-        print l[0],[1],l[2]
-        if not(l[0]==0 and l[1]==0) :
-            dev_retx[l[2]].append(l[1]*100.0/(l[0]+l[1]))
-    print dev_retx
-    dev_count=[]
-    retx_series=[]
-    for i,j in dev_retx.iteritems():
-        dev_count.append(i)
-        retx_series.append(percentile(j,90))
+        _f_content= pickle.load(open(input_folder+f_name,'rb'))
+        _id= _f_content[0]
+        router_ret_dev_map[_f_content[0]]=_f_content[1]
+    
+    for r_id,retx_dev_timeseries in router_ret_dev_map.iteritems():
+        dev_retx=defaultdict(list)
+        for t, l in retx_dev_timeseries.iteritems():
+            if not(l[0]==0 and l[1]==0):
+                dev_retx[l[2]].append(l[1]*100.0/(l[0]+l[1]))
+        dev_count=[]
+        retx_series=[]
+        for i,j in dev_retx.iteritems():
+            dev_count.append(i)
+            retx_series.append(percentile(j,90))
+        router_list.append(r_id)
+        per_router_dev_count.append(dev_count)
+        per_router_retx_series.append(retx_series)
         
-    scatter_plot_dev_retx(dev_count,retx_series,
-                          "number of devices per 60 sec",
+    scatter_plot_dev_retx(router_list,per_router_dev_count,per_router_retx_series,
+                          "number of devices per update interval",
                            "Percentage of retransmitted frames", 
                            "Variation of retransmissions in network with number of devices",
-                           outfolder+router_id+'_retx_dev.png',
-                           [0,121],
+                           outfolder+'variation_retx_dev.png',
+                           [0,60],
                            [0,100])
 
 
@@ -1301,4 +1304,4 @@ if __name__=='__main__':
     #router_airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
     #persistent_station_data_dumper(output_folder,router_id,t1,t2,data_fs)
     #overall_retransmission_devices(t1,t2,output_folder,data_fs)
-    plot_avg_retransmission_vs_devices(data_f_dir,router_id,output_folder)
+    plot_avg_retransmission_vs_devices(data_f_dir,output_folder)
