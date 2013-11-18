@@ -1212,7 +1212,7 @@ def overall_retransmission_devices_reader(t1,t2,data_fs):
                             data_pkt_count += 1
                         else:
                             data_pkt_count += 1
-                        if temp[-2][1]==2:
+                        if temp[-2][1]==2 or temp[-2][1]==1:
                             a= temp[12].split(':')
                             if not( int(a[0],16)& 0x1):
                                 temp_devices_count.add(temp[12])
@@ -1239,6 +1239,34 @@ def overall_retransmission_devices(t1,t2,outfolder_name,data_fs):
     output_device = open(f_d, 'wb')
     pickle.dump(pickle_object,output_device)
     output_device.close()
+
+def plot_avg_retransmission_vs_devices(input_folder,router_id,outfolder):
+    data_fs=os.listdir(input_folder)
+    ret_dev_timeseries=defaultdict(list)
+    for f_name in data_fs :
+        if f_name.split('.')[0]==router_id :
+            _f_content= pickle.load(open(input_folder+f_name,'rb'))
+            router_id= _f_content[0]
+            ret_dev_timeseries=_f_content[1]
+    dev_retx=defaultdict(list)
+    for t,l in ret_dev_timeseries.iteritems():
+        dev_retx[l[2]].append(l[1]*100.0/(l[0]+l[1]))
+    print dev_retx
+    dev_count=[]
+    retx_series=[]
+    for i,j in dev_retx.iteritems():
+        dev_count.append(i)
+        retx_series.append(percentile(j,90))
+        
+    scatter_plot_dev_retx(dev_count,retx_series,
+                          "number of devices per 60 sec",
+                           "Percentage of retransmitted frames", 
+                           "Variation of retransmissions in network with number of devices",
+                           outfolder+router_id+'_retx_dev.png',
+                           [0,121],
+                           [0,100])
+
+
 
 if __name__=='__main__':
     '''
@@ -1269,4 +1297,5 @@ if __name__=='__main__':
     #processes downlink traffic from the router to the devices
     #router_airtime_bytes_data_dumper(output_folder,router_id,t1,t2,data_fs,data_f_dir)
     #persistent_station_data_dumper(output_folder,router_id,t1,t2,data_fs)
-    overall_retransmission_devices(t1,t2,output_folder,data_fs)
+    #overall_retransmission_devices(t1,t2,output_folder,data_fs)
+    plot_avg_retransmission_vs_devices(data_f_dir,router_id,output_folder)
